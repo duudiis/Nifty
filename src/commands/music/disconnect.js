@@ -1,0 +1,74 @@
+const Commands = require("../../structures/Commands");
+
+const DiscordVoice = require('@discordjs/voice');
+const { MessageEmbed } = require("discord.js");
+
+module.exports = class Disconnect extends Commands {
+
+    constructor(client) {
+        super(client);
+        this.client = client;
+
+        this.name = "disconnect";
+        this.aliases = ["dc", "fuckoff", "die", "leave", "quit", "reset"];
+
+        this.description = "Resets the player, clears the queue, and leaves the voice channel";
+        this.category = "music";
+
+        this.usage = "disconnect";
+        this.options = []
+
+        this.enabled = true;
+    }
+
+    async runAsMessage(message) {
+
+        const response = await this.disconnect(message);
+
+        if (response.code == "error") { return message.reply({ embeds: [response.embed] }); };
+        if (response.code == "success") { return message.react("👋") };
+
+    }
+
+    async runAsInteraction(interaction) {
+
+        const response = await this.disconnect(interaction);
+        return interaction.editReply({ embeds: [response.embed] });
+
+    }
+
+    async disconnect(command) {
+
+        const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
+
+        const voiceChannel = command.member.voice.channel;
+        if (!voiceChannel) { return { code: "error", embed: errorEmbed.setDescription("You have to be connected to a voice channel before you can use this command!") } };
+
+        let existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
+        if (existingConnection && existingConnection.joinConfig.channelId != voiceChannel.id) { return { code: "error", embed: errorEmbed.setDescription("Someone else is already listening to music in different channel!") } };
+
+        let resetEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
+            .setDescription("Reset the player")
+
+        if (!existingConnection) { return { code: "success", embed: resetEmbed } };
+
+        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
+
+        if (playerData.channelId && playerData.messageId) {
+
+            const announcesChannel = this.client.channels.cache.get(playerData.channelId);
+            try { let lastNowPlayingMessage = await announcesChannel.messages.fetch(playerData.messageId); lastNowPlayingMessage.delete().catch(o_O => { }) } catch (e) { };
+
+        }
+
+        this.client.database.db("guilds").collection("players").deleteOne({ guildId: command.guild.id });
+        this.client.database.db("queues").collection(command.guild.id).deleteMany({});
+
+        try { existingConnection.state.subscription.player.stop(); } catch (e) { }
+        existingConnection.destroy();
+
+        return { code: "success", embed: resetEmbed };
+
+    }
+
+}
