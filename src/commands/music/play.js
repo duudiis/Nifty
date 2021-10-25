@@ -75,8 +75,6 @@ module.exports = class Play extends Commands {
 			this.client.player.updatePlayer(existingConnection, command.guild.id);
 		}
 
-		console.log(`[commands/play] stopped: ${playerData.stopped} | new: ${Math.max(0, queueData.length - inputTracks.length)} | old: ${queueData.length - inputTracks.length}`);
-
 		if (inputTracks.length == 1) {
 
 			let queuedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })

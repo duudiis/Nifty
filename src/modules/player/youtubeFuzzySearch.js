@@ -30,9 +30,7 @@ module.exports = class YoutubeFuzzySearch extends Modules {
                 if (durationArray.length == 2) { lengthSeconds = (+durationArray[0]) * 60 + (+durationArray[1]) };
                 if (durationArray.length == 3) { lengthSeconds = (+durationArray[0]) * 60 * 60 + (+durationArray[1]) * 60 + (+durationArray[2]) };
 
-                if (Math.abs(lengthSeconds - trackInfo.duration) <= 3) {
-                    matchingResults.push({ videoUrl: video.url, viewsCount: video.views, videoDuration: lengthSeconds, videoId: video.id });
-                }
+                matchingResults.push({ videoUrl: video.url, videoDuration: lengthSeconds, videoId: video.id });
 
             }
 
@@ -41,9 +39,9 @@ module.exports = class YoutubeFuzzySearch extends Modules {
         if (matchingResults.length == 0) { throw "Couldn't find a matching song on youtube" };
 
         const mostPopular = matchingResults.reduce((x, y) => {
-            return x.viewsCount > y.viewsCount ? x : y;
+            return Math.abs(x.videoDuration - trackInfo.duration) < Math.abs(y.videoDuration - trackInfo.duration) ? x : y;
         })
-
+   
         return mostPopular.videoUrl;
 
     }

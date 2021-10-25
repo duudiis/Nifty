@@ -21,7 +21,7 @@ module.exports = class ConnectionEvents extends Modules {
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
 
-            if (playerData.channelId && playerData.messageId) {
+            if (playerData?.channelId && playerData?.messageId) {
 
                 const announcesChannel = this.client.channels.cache.get(playerData.channelId);
 
@@ -71,7 +71,7 @@ module.exports = class ConnectionEvents extends Modules {
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
 
-            if (playerData.channelId && playerData.messageId) {
+            if (playerData?.channelId && playerData?.messageId) {
 
                 const announcesChannel = this.client.channels.cache.get(playerData.channelId);
 

@@ -59,7 +59,7 @@ module.exports = class Queue extends Commands {
 			.setStyle("SECONDARY")
 			.setCustomId("queuelast1")
 
-		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton)
+		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton);
 
 		const queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
 
@@ -70,10 +70,10 @@ module.exports = class Queue extends Commands {
 
 		}
 
-		let queueMax = Math.ceil(queueData.length / 10)
-		let tracksArray = queueData.slice(0, 10)
+		let queueMax = Math.ceil(queueData.length / 10);
+		let tracksArray = queueData.slice(0, 10);
 
-		let trackList = ""
+		let trackList = "";
 
 		for (const trackId in tracksArray) {
 
@@ -86,17 +86,17 @@ module.exports = class Queue extends Commands {
 
 		}
 
-		if (1 == queueMax) { trackList = trackList + "\n    This is the end of the queue!" } else { trackList = trackList + `\n    ${queueData.length - (1 * 10)} more track(s)` }
+		if (1 == queueMax) { trackList = trackList + "\n    This is the end of the queue!" } else { trackList = trackList + `\n    ${queueData.length - (1 * 10)} more track(s)` };
 
-		return { code: "success", reply: { content: `\`\`\`nim\n${trackList}\`\`\``, components: [buttonsRow] } }
+		return { code: "success", reply: { content: `\`\`\`nim\n${trackList}\`\`\``, components: [buttonsRow] } };
 
 	}
 
 	async toHHMMSS(secs) {
-		let sec_num = parseInt(secs, 10)
-		let hours = Math.floor(sec_num / 3600)
-		let minutes = Math.floor(sec_num / 60) % 60
-		let seconds = sec_num % 60
+		let sec_num = parseInt(secs, 10);
+		let hours = Math.floor(sec_num / 3600);
+		let minutes = Math.floor(sec_num / 60) % 60;
+		let seconds = sec_num % 60;
 
 		return [hours, minutes, seconds]
 			.map(v => v < 10 ? "0" + v : v)
