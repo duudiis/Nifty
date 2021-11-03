@@ -9,7 +9,7 @@ module.exports = class Prefix extends Commands {
 		this.client = client;
 
 		this.name = "prefix";
-		this.aliases = ["pr"];
+		this.aliases = ["pr", "pre"];
 
 		this.description = "Changes the prefix";
 		this.category = "configuration";
