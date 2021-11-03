@@ -16,14 +16,17 @@ module.exports = class MessageCreate extends Events {
         if (message.author.bot) { return };
         if (message.channel.type === "DM") { return };
 
-        let permission = await this.checkPermissions(message);
-        if (permission.code != "success") { return };
-
         let mention = await this.checkMention(message);
-        if (mention.only) { return this.getStarted(message); };
+
+        if (mention.only) {
+            let permission = await this.checkPermissions(message);
+            if (permission.code != "success") { return };
+
+            return this.getStarted(message);
+        };
 
         const prefix = mention.starts ? mention.mention : await this.client.getPrefix(message.guildId);
-        if (!message.content.startsWith(prefix)) { return };
+        if (!message.content.startsWith(prefix)) { return; };
 
         message.formatted = message.content.slice(prefix.length).trim().replace(/ +/g, " ");
         message.array = message.formatted.split(" ");
@@ -34,6 +37,9 @@ module.exports = class MessageCreate extends Events {
         if (!command) { return };
         if (!command.enabled) { return };
         if (command.ownersOnly && !this.client.constants.owners.includes(message.author.id)) { return };
+
+        let permission = await this.checkPermissions(message);
+        if (permission.code != "success") { return };
 
         try { await command.runAsMessage(message) } catch (error) { this.commandError(message); console.log(error) };
 
