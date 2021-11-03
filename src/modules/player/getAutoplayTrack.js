@@ -8,13 +8,21 @@ module.exports = class GetAutoplayTrack extends Modules {
         super(client);
         this.client = client;
 
+        this.blacklisted = ["concert", "live", "cover", "show", "performance", "halftime"]
+
         this.name = "getAutoplayTrack";
         this.subcategory = "player";
     }
 
     async run(guildId) {
 
-        const queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
+        let queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
+
+        queueData = queueData.filter(track => track.type == "youtube");
+        if (!queueData || queueData.length == 0) { throw "Could not AutoPlay from the previous track!"; };
+
+        let queuedIds = queueData.map(track => track.id);
+
         const lastTrack = queueData[Math.floor(Math.random() * queueData.length)];
 
         if (lastTrack.type != "youtube") { throw "Could not AutoPlay from the previous track!"; };
@@ -24,7 +32,7 @@ module.exports = class GetAutoplayTrack extends Modules {
         let relatedTracks = trackInfo?.related_videos;
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
 
-        relatedTracks = relatedTracks.filter(track => !track.title.toLowerCase().includes("live") && !track.title.toLowerCase().includes("cover") && !track.title.toLowerCase().includes("concert"));
+        relatedTracks = relatedTracks.filter(track => !this.blacklisted.some(keyword => track.title.toLowerCase().includes(keyword)) && !queuedIds.some(id => id.includes(track.id)));
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
 
         const relatedTrack = relatedTracks[Math.floor(Math.random() * relatedTracks.length)];
