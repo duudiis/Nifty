@@ -32,15 +32,17 @@ module.exports = class Queue extends Interactions {
 
 		let tracksArray = [];
 
+		let lastMinus = 0;
+
 		if (page.updated == 1) { tracksArray = queueData.slice(0, 10) }
-		else if (page.updated == queueMax) { tracksArray = queueData.slice(-10) }
+		else if (page.updated == queueMax) { tracksArray = queueData.slice(-10); lastMinus = 10 - (queueData.length % 10) }
 		else { tracksArray = queueData.slice((page.updated - 1) * 10, -(queueData.length - (page.updated * 10))) }
 
 		let trackList = ""
 
 		for (let trackId in tracksArray) {
 
-			let trackNumber = `${(parseInt(trackId) + 1) + ((page.updated - 1) * 10)}`.padStart(2, ' '); let currentTop = ""; let currentBottom = "\n"
+			let trackNumber = `${((parseInt(trackId) + 1) + ((page.updated - 1) * 10)) - lastMinus}`.padStart(2, ' '); let currentTop = ""; let currentBottom = "\n"
 			let trackTime = await this.toHHMMSS(tracksArray[trackId].duration);
 
 			if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata?.url == tracksArray[trackId].url && existingConnection?.state?.subscription?.player?.state?.status == "playing") { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }
@@ -49,7 +51,7 @@ module.exports = class Queue extends Interactions {
 
 		}
 
-		if(page.updated == queueMax) { trackList = trackList + "\n    This is the end of the queue!" }else { trackList = trackList + `\n    ${queueData.length - (page.updated * 10)} more track(s)` }
+		if (page.updated == queueMax) { trackList = trackList + "\n    This is the end of the queue!" } else { trackList = trackList + `\n    ${queueData.length - (page.updated * 10)} more track(s)` }
 
 		const buttonsRow = await this.updatedButtons(page.updated);
 		return button.update({ content: `\`\`\`nim\n${trackList}\`\`\``, components: [buttonsRow] })
@@ -88,10 +90,10 @@ module.exports = class Queue extends Interactions {
 		let hours = Math.floor(sec_num / 3600);
 		let minutes = Math.floor(sec_num / 60) % 60;
 		let seconds = sec_num % 60;
-	
-		return [hours,minutes,seconds]
+
+		return [hours, minutes, seconds]
 			.map(v => v < 10 ? "0" + v : v)
-			.filter((v,i) => v !== "00" || i > 0)
+			.filter((v, i) => v !== "00" || i > 0)
 			.join(":")
 	}
 
