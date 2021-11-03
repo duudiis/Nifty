@@ -55,13 +55,13 @@ module.exports = class Skip extends Commands {
             return { code: "success", embed: skippedTrackEmbed };
         };
 
+        this.stopPlayer(existingConnection);
+
         let playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
         let queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
 
         let nextQueueID = playerData.queueID + 1;
         let nextQueue = queueData[nextQueueID];
-
-        this.stopPlayer(existingConnection);
 
         if (!nextQueue && playerData.autoplay == "on") {
 
