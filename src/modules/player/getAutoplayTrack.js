@@ -21,7 +21,10 @@ module.exports = class GetAutoplayTrack extends Modules {
 
         const trackInfo = await ytdl.getInfo(lastTrack.url);
 
-        const relatedTracks = trackInfo?.related_videos;
+        let relatedTracks = trackInfo?.related_videos;
+        if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
+
+        relatedTracks = relatedTracks.filter(track => !track.title.toLowerCase().includes("live") && !track.title.toLowerCase().includes("cover") && !track.title.toLowerCase().includes("concert"));
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
 
         const relatedTrack = relatedTracks[Math.floor(Math.random() * relatedTracks.length)];

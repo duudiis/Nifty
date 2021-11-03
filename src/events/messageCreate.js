@@ -16,9 +16,13 @@ module.exports = class MessageCreate extends Events {
         if (message.author.bot) { return };
         if (message.channel.type === "DM") { return };
 
-        if (message.content == `<@!${this.client.user.id}>`) { return this.getStarted(message) };
+        let permission = await this.checkPermissions(message);
+        if (permission.code != "success") { return };
 
-        const prefix = message.content.startsWith(`<@!${this.client.user.id}>`) ? `<@!${this.client.user.id}>` : await this.client.getPrefix(message.guildId);
+        let mention = await this.checkMention(message);
+        if (mention.only) { return this.getStarted(message); };
+
+        const prefix = mention.starts ? mention.mention : await this.client.getPrefix(message.guildId);
         if (!message.content.startsWith(prefix)) { return };
 
         message.formatted = message.content.slice(prefix.length).trim().replace(/ +/g, " ");
@@ -41,6 +45,46 @@ module.exports = class MessageCreate extends Events {
             .setDescription(`You can play music by joining a voice channel and typing \`/play\`. The command accepts song names, video links, and playlist links.`)
 
         message.reply({ embeds: [getStartedEmbed] })
+
+    }
+
+    async checkMention(message) {
+
+        let mention = null;
+
+        let only = false;
+        let starts = false;
+
+        if (message.content == `<@${this.client.user.id}>`) { mention = `<@${this.client.user.id}>`; only = true; };
+        if (message.content == `<@!${this.client.user.id}>`) { mention = `<@!${this.client.user.id}>`; only = true; };
+
+        if (message.content.startsWith(`<@${this.client.user.id}>`)) { mention = `<@${this.client.user.id}>`; starts = true };
+        if (message.content.startsWith(`<@!${this.client.user.id}>`)) { mention = `<@!${this.client.user.id}>`; starts = true };
+
+        return { mention, only, starts };
+
+    }
+
+    async checkPermissions(message) {
+
+        const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
+
+        if (!message.channel.permissionsFor(this.client.user.id).has("SEND_MESSAGES")) {
+            try { await message.author.send({ embeds: [errorEmbed.setDescription("I do not have permission to **send messages** in that channel!")] }); } catch (error) { }
+            return { code: "error", missing: "SEND_MESSAGES" };
+        };
+
+        if (!message.channel.permissionsFor(this.client.user.id).has("EMBED_LINKS")) {
+            try { await message.channel.send({ content: "> I do not have permission to **embed links** in this channel!" }); } catch (error) { }
+            return { code: "error", missing: "EMBED_LINKS" };
+        };
+
+        if (!message.channel.permissionsFor(this.client.user.id).has("ADD_REACTIONS")) {
+            try { await message.channel.send({ embeds: [errorEmbed.setDescription("I do not have permission to **add reactions** in this channel!")] }); } catch (error) { }
+            return { code: "error", missing: "ADD_REACTIONS" };
+        };
+
+        return { code: "success" };
 
     }
 

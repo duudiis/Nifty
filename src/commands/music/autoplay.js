@@ -71,7 +71,7 @@ module.exports = class Autoplay extends Commands {
             "off": "on"
         }
 
-        mode = nextAutoplay[playerAutoplay];
+        let mode = nextAutoplay[playerAutoplay];
 
         const response = await this.autoplay(mode, interaction);
         return interaction.editReply({ embeds: [response.embed] });
