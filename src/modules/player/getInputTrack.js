@@ -120,7 +120,7 @@ module.exports = class GetInputTrack extends Modules {
         const searchResults = await ytsr(input, { pages: 1 });
         if (!searchResults) { throw "No matches found!" };
 
-        const video = searchResults.items.find(video => video.type == "video");
+        const video = searchResults.items.find(video => video.type == "video" && video.duration);
         if (!video) { throw "No matches found!" };
 
         let durationArray = video.duration.toString().split(':');

@@ -29,19 +29,19 @@ module.exports = class NowPlaying extends Commands {
 
     async runAsMessage(message) {
 
-        const response = await this.nowplaying(message);
+        const response = await this.nowPlaying(message);
         return message.reply({ embeds: [response.embed] });
 
     }
 
     async runAsInteraction(interaction) {
 
-        const response = await this.nowplaying(interaction);
+        const response = await this.nowPlaying(interaction);
         return interaction.editReply({ embeds: [response.embed] });
 
     }
 
-    async nowplaying(command) {
+    async nowPlaying(command) {
 
         const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
 

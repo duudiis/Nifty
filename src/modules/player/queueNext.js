@@ -1,8 +1,7 @@
 const Modules = require("../../structures/Modules");
 
 const DiscordVoice = require('@discordjs/voice');
-
-const ytdl = require('ytdl-core');
+const { MessageEmbed } = require("discord.js");
 
 module.exports = class QueueNext extends Modules {
 
@@ -16,8 +15,8 @@ module.exports = class QueueNext extends Modules {
 
     async run(connection, guildId) {
 
-        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
-        const queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
+        let playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
+        let queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
 
         if (!playerData || !queueData) { return };
 
@@ -26,7 +25,30 @@ module.exports = class QueueNext extends Modules {
         let nextQueueID = playerData.queueID + 1;
         let nextQueue = queueData[nextQueueID];
 
-        if(!nextQueue && playerData.loop == "queue") {
+        if (!nextQueue && playerData.autoplay == "on") {
+
+            try { await this.client.player.getAutoplayTrack(guildId); } catch (error) {
+
+                await this.client.database.db("guilds").collection("players").updateOne({ guildId: guildId }, { $set: { stopped: true } }, { upsert: true })
+
+                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
+
+                let errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
+                    .setDescription(`${error.message ? error.message : error}`)
+
+                announcesChannel.send({ embeds: [errorEmbed] });
+                return console.log(error);
+
+            };
+
+            queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
+
+            nextQueueID = queueData.length - 1;
+            nextQueue = queueData[nextQueueID];
+
+        }
+
+        if (!nextQueue && playerData.loop == "queue") {
 
             nextQueueID = 0;
             nextQueue = queueData[0];

@@ -44,7 +44,12 @@ module.exports = class Loop extends Commands {
 
     async runAsMessage(message) {
 
+        const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
+
         const input = message.array.slice(1).join(" ");
+
+        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
+        if(playerData?.autoplay == "on") { return message.reply({ embeds: [ errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") ] }); };
 
         let mode = undefined;
 
@@ -54,7 +59,6 @@ module.exports = class Loop extends Commands {
 
         if (!mode) {
 
-            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
             let playerLoop = playerData?.loop;
 
             if (!playerLoop) { playerLoop = "disabled" };
@@ -76,7 +80,12 @@ module.exports = class Loop extends Commands {
 
     async runAsInteraction(interaction) {
 
+        const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
+
         const mode = interaction.options.get("mode").value;
+
+        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
+        if(playerData?.autoplay == "on") { return interaction.editReply({ embeds: [ errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") ] }); };
 
         const response = await this.loop(mode, interaction);
         return interaction.editReply({ embeds: [response.embed] });

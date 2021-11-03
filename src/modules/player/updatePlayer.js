@@ -2,7 +2,7 @@ const Modules = require("../../structures/Modules");
 
 const DiscordVoice = require('@discordjs/voice');
 
-const ytdl = require('ytdl-core');
+const ytdl = require('ytdl-core-discord');
 
 module.exports = class UpdatePlayer extends Modules {
 
@@ -28,7 +28,7 @@ module.exports = class UpdatePlayer extends Modules {
 
         if(playQueue.type == "spotify") { playQueueUrl = await this.client.player.youtubeFuzzySearch(playQueue).catch(error => { return connection.state.subscription.player.emit("error", error) }) };
 
-        const stream = ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21, });
+        const stream = await ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21, });
 
         const playResource = DiscordVoice.createAudioResource(stream, { metadata: playQueue });
 
@@ -41,7 +41,7 @@ module.exports = class UpdatePlayer extends Modules {
 
     async destroyStream(stream, player) {
 
-        stream.on("end", () => { stream.destroy() });
+        stream.once("end", () => { stream.destroy() });
         player.once("idle", () => { stream.destroy() });
 
     }

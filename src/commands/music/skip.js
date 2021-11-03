@@ -55,30 +55,7 @@ module.exports = class Skip extends Commands {
             return { code: "success", embed: skippedTrackEmbed };
         };
 
-        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
-        const queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
-
-        let nextQueueID = playerData.queueID + 1;
-        let nextQueue = queueData[nextQueueID];
-
-        if (!nextQueue) {
-            await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { stopped: true } }, { upsert: true });
-            existingConnection.state.subscription.player.skipExecute = true;
-
-            existingConnection.state.subscription.player.stop();
-
-            setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
-
-            return { code: "success", embed: skippedTrackEmbed };
-        }
-
-        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: nextQueueID } });
-        existingConnection.state.subscription.player.skipExecute = true;
-
         existingConnection.state.subscription.player.stop();
-        this.client.player.updatePlayer(existingConnection, command.guild.id);
-
-        setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
 
         return { code: "success", embed: skippedTrackEmbed };
 
