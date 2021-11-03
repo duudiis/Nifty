@@ -138,7 +138,7 @@ module.exports = class ConnectionEvents extends Modules {
 
     async removeFormatting(string) {
 
-        if (string.length >= 64) { string = string.slice(0, 60).trimEnd() + "…" };
+        if (string.length >= 60) { string = string.slice(0, 56).trimEnd() + "…" };
 
         string = string.replaceAll("*", "\\*");
         string = string.replaceAll("_", "\\_");
