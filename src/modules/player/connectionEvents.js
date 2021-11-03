@@ -87,6 +87,12 @@ module.exports = class ConnectionEvents extends Modules {
 
             this.client.player.queueNext(connection, guildId);
 
+            const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: guildId });
+            let guildAnnounce = guildData?.announce;
+
+            if (!guildAnnounce) { guildAnnounce = "enabled" };
+            if (guildAnnounce == "disabled") { return };
+
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
 
             if (playerData.channelId) {
@@ -103,7 +109,7 @@ module.exports = class ConnectionEvents extends Modules {
                     .setTitle("An error occurred while playing")
                     .setDescription(`${trackData}${error.toString()}`)
 
-                announcesChannel.send({ embeds: [errorEmbed] });
+                announcesChannel.send({ embeds: [errorEmbed] }).then(m => { setTimeout(() => { m.delete().catch(e => { }) }, 10000) });
 
             }
 
