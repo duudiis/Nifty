@@ -35,6 +35,10 @@ module.exports = class MessageCreate extends Events {
         if (!command.enabled) { return };
         if (command.ownersOnly && !this.client.constants.owners.includes(message.author.id)) { return };
 
+        if(command.category == "music") {
+            await this.client.database.db("guilds").collection("players").updateOne({ guildId: message.guild.id }, { $set: { channelId: message.channel.id } }, { upsert: true });
+        };
+
         try { await command.runAsMessage(message) } catch (error) { this.commandError(message); console.log(error) };
 
     }
