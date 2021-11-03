@@ -15,7 +15,7 @@ module.exports = class Jump extends Commands {
         this.description = "Jumps to the specified song in the queue";
         this.category = "music";
 
-        this.usage = "jump { song }";
+        this.usage = "jump { input }";
         this.options = [
             {
                 "name": "input",
