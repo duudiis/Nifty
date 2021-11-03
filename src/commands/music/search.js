@@ -17,7 +17,7 @@ module.exports = class Search extends Commands {
         this.description = "Searches for the input and returns a list of results for you to pick from";
         this.category = "music";
 
-        this.usage = "search { song }";
+        this.usage = "search { input }";
         this.options = [
             {
                 "name": "input",
