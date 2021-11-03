@@ -15,7 +15,7 @@ module.exports = class GetAutoplayTrack extends Modules {
     async run(guildId) {
 
         const queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
-        const lastTrack = queueData[queueData.length - 1];
+        const lastTrack = queueData[Math.floor(Math.random() * queueData.length)];
 
         if (lastTrack.type != "youtube") { throw "Could not AutoPlay from the previous track!"; };
 
