@@ -85,7 +85,7 @@ module.exports = class NowPlaying extends Commands {
 
     async removeFormatting(string) {
 
-        if(string.length >= 56) { string = string.slice(0, 52).trimEnd() + "…" };
+        if(string.length >= 60) { string = string.slice(0, 56).trimEnd() + "…" };
 
 		string = string.replaceAll("*", "\\*");
 		string = string.replaceAll("_", "\\_");
