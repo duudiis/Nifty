@@ -14,7 +14,7 @@ module.exports = class Prefix extends Commands {
 		this.description = "Changes the prefix";
 		this.category = "configuration";
 
-		this.usage = "prefix [ new prefix ]";
+		this.usage = "prefix [ prefix ]";
 		this.options = [
 			{
 				"name": "input",
