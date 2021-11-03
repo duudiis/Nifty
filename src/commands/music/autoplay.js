@@ -59,7 +59,7 @@ module.exports = class Autoplay extends Commands {
 
         const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
 
-        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
+        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
         if(playerData?.loop && playerData?.loop != "disabled") { return interaction.editReply({ embeds: [ errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") ] }); };
 
         let playerAutoplay = playerData?.autoplay;
