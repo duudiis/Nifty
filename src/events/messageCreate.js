@@ -75,7 +75,7 @@ module.exports = class MessageCreate extends Events {
         };
 
         if (!message.channel.permissionsFor(this.client.user.id).has("EMBED_LINKS")) {
-            try { await message.channel.send({ content: "> I do not have permission to **embed links** in this channel!" }); } catch (error) { }
+            try { await message.author.send({ embeds: [errorEmbed.setDescription("I do not have permission to **embed links** in this channel!")] }); } catch (error) { }
             return { code: "error", missing: "EMBED_LINKS" };
         };
 

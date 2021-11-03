@@ -55,7 +55,60 @@ module.exports = class Skip extends Commands {
             return { code: "success", embed: skippedTrackEmbed };
         };
 
+        let playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
+        let queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
+
+        let nextQueueID = playerData.queueID + 1;
+        let nextQueue = queueData[nextQueueID];
+
+        if (!nextQueue && playerData.autoplay == "on") {
+
+            try { await this.client.player.getAutoplayTrack(command.guild.id); } catch (error) {
+
+                await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { stopped: true } }, { upsert: true })
+
+                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
+
+                let errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
+                    .setDescription(`${error.message ? error.message : error}`)
+
+                setTimeout(async () => { announcesChannel.send({ embeds: [errorEmbed] }); }, 1000);
+
+                existingConnection.state.subscription.player.skipExecute = true;
+
+                existingConnection.state.subscription.player.stop();
+
+                setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
+
+                return { code: "success", embed: skippedTrackEmbed };
+
+            };
+
+            queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
+
+            nextQueueID = queueData.length - 1;
+            nextQueue = queueData[nextQueueID];
+
+        }
+
+        if (!nextQueue) {
+            await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { stopped: true } }, { upsert: true });
+            existingConnection.state.subscription.player.skipExecute = true;
+
+            existingConnection.state.subscription.player.stop();
+
+            setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
+
+            return { code: "success", embed: skippedTrackEmbed };
+        }
+
+        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: nextQueueID } });
+        existingConnection.state.subscription.player.skipExecute = true;
+
         existingConnection.state.subscription.player.stop();
+        this.client.player.updatePlayer(existingConnection, command.guild.id);
+
+        setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
 
         return { code: "success", embed: skippedTrackEmbed };
 
