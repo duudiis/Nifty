@@ -10,7 +10,7 @@ module.exports = class Clear extends Commands {
         this.client = client;
 
         this.name = "clear";
-        this.aliases = ["cls"];
+        this.aliases = ["cls", "c"];
 
         this.description = "Makes the bot join your voice channel";
         this.category = "music";
