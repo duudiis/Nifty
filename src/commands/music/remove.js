@@ -109,7 +109,7 @@ module.exports = class Remove extends Commands {
 
     async removeFormatting(string) {
 
-        if(string.length >= 56) { string = string.slice(0, 52).trimEnd() + "…" };
+        if(string.length >= 52) { string = string.slice(0, 48).trimEnd() + "…" };
 
 		string = string.replaceAll("*", "\\*");
 		string = string.replaceAll("_", "\\_");
