@@ -10,7 +10,7 @@ module.exports = class Queue extends Commands {
 		this.client = client;
 
 		this.name = "queue";
-		this.aliases = ["q"];
+		this.aliases = ["q", "que"];
 
 		this.description = "Displays the current queue of tracks";
 		this.category = "music";
