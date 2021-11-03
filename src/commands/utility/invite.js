@@ -2,7 +2,7 @@ const Commands = require("../../structures/Commands");
 
 const { MessageButton, MessageActionRow } = require("discord.js");
 
-module.exports = class Help extends Commands {
+module.exports = class Invite extends Commands {
 
     constructor(client) {
         super(client);
