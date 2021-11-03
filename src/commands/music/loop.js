@@ -10,7 +10,7 @@ module.exports = class Loop extends Commands {
         this.client = client;
 
         this.name = "loop";
-        this.aliases = ["l"];
+        this.aliases = ["l", "looping"];
 
         this.description = "Changes the looping mode";
         this.category = "music";
