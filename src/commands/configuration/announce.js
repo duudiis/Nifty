@@ -27,8 +27,8 @@ module.exports = class Announce extends Commands {
 
         let mode = undefined;
 
-        if (input.includes("on") || input.includes("enabled") || input.includes("enable") || input.includes("e") || input.includes("yes")) { mode = "enabled" };
-        if (input.includes("off") || input.includes("disabled") || input.includes("d") || input.includes("disable") || input.includes("no")) { mode = "disabled" };
+        if (input.includes("on") || input.includes("enabled") || input.includes("enable") || input.includes("yes")) { mode = "enabled" };
+        if (input.includes("off") || input.includes("disabled") || input.includes("disable") || input.includes("no")) { mode = "disabled" };
 
         if (!mode) {
 

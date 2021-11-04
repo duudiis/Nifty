@@ -32,7 +32,7 @@ module.exports = class GetAutoplayTrack extends Modules {
         let relatedTracks = trackInfo?.related_videos;
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
 
-        relatedTracks = relatedTracks.filter(track => !this.blacklisted.some(keyword => track.title.toLowerCase().includes(keyword)) && !queuedIds.some(id => id.includes(track.id)));
+        relatedTracks = relatedTracks.filter(track => !this.blacklisted.some(keyword => track.title.toLowerCase().includes(keyword)) && !queuedIds.some(id => id.includes(track.id) && track.length_seconds <= 420));
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
 
         const relatedTrack = relatedTracks[Math.floor(Math.random() * relatedTracks.length)];

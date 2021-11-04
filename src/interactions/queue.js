@@ -29,6 +29,7 @@ module.exports = class Queue extends Interactions {
 		let queueMax = Math.ceil(queueData.length / 10);
 
 		const page = await this.getPage(button, queueMax);
+		if(page.updated > queueMax) { page.updated = queueMax; };
 
 		let tracksArray = [];
 

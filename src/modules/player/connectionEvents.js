@@ -17,6 +17,8 @@ module.exports = class ConnectionEvents extends Modules {
 
         connection.state.subscription.player.on("idle", async () => {
 
+            this.updateTimer(connection, guildId, "create", "playTimer");
+
             this.client.player.queueNext(connection, guildId);
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
@@ -34,6 +36,9 @@ module.exports = class ConnectionEvents extends Modules {
         })
 
         connection.state.subscription.player.on("playing", async () => {
+
+            this.updateTimer(connection, guildId, "reset", "playTimer");
+            this.updateTimer(connection, guildId, "reset", "pauseTimer");
 
             if (!connection?.state?.subscription?.player?.state?.resource?.metadata) { return };
             const npMetadata = connection.state.subscription.player.state.resource.metadata;
@@ -54,7 +59,7 @@ module.exports = class ConnectionEvents extends Modules {
                 if (!guildAnnounce) { guildAnnounce = "enabled" };
                 if (guildAnnounce == "disabled") { return };
 
-                const guild = this.client.guilds.cache.get(guildId)
+                const guild = this.client.guilds.cache.get(guildId);
 
                 let nowPlayingEmbed = new MessageEmbed({ color: guild.me.displayHexColor })
                     .setTitle("Now Playing")
@@ -68,6 +73,8 @@ module.exports = class ConnectionEvents extends Modules {
         })
 
         connection.state.subscription.player.on("paused", async () => {
+
+            this.updateTimer(connection, guildId, "create", "pauseTimer");
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
 
@@ -84,6 +91,8 @@ module.exports = class ConnectionEvents extends Modules {
         })
 
         connection.state.subscription.player.on("error", async (error) => {
+
+            this.updateTimer(connection, guildId, "create", "playTimer");
 
             this.client.player.queueNext(connection, guildId);
 
@@ -109,7 +118,7 @@ module.exports = class ConnectionEvents extends Modules {
                     .setTitle("An error occurred while playing")
                     .setDescription(`${trackData}${error.toString()}`)
 
-                announcesChannel.send({ embeds: [errorEmbed] }).then(m => { setTimeout(() => { m.delete().catch(e => { }) }, 10000) });
+                announcesChannel.send({ embeds: [errorEmbed] }).then(m => { setTimeout(() => { m.delete().catch(e => { }) }, 120000) });
 
             }
 
@@ -133,6 +142,25 @@ module.exports = class ConnectionEvents extends Modules {
             connection.destroy();
 
         })
+
+    }
+
+    async updateTimer(connection, guildId, action, type) {
+
+        const timersTime = {
+            playTimer: 900000,
+            pauseTimer: 3600000
+        }
+
+        if (action == "create") {
+
+            connection[type] = setTimeout(() => { this.client.player.inactivityDisconnect(guildId); }, timersTime[type]);
+
+        } else if (action == "reset") {
+
+            clearTimeout(connection[type]);
+
+        }
 
     }
 

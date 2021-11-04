@@ -29,6 +29,10 @@ module.exports = class JoinChannel extends Modules {
         await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: 0, stopped: true, guildId: command.guild.id, channelId: command.channel.id } }, { upsert: true });
         this.client.player.connectionEvents(connection, command.guild.id).catch(O_o => { });
 
+        voiceChannel.guild.me.voice.setDeaf().catch(e => { });
+
+        connection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(guildId); }, 900000);
+
     }
 
 }
