@@ -31,7 +31,7 @@ module.exports = class JoinChannel extends Modules {
 
         voiceChannel.guild.me.voice.setDeaf().catch(e => { });
 
-        connection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(guildId); }, 900000);
+        connection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(voiceChannel.guild.id); }, 900000);
 
     }
 
