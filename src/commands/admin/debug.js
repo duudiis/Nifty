@@ -12,7 +12,7 @@ module.exports = class Debug extends Commands {
         this.client = client;
 
         this.name = "debug";
-        this.aliases = ["db"];
+        this.aliases = [];
 
         this.description = "Shows current bot stats";
         this.category = "admin";
