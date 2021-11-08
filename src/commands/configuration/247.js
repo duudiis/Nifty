@@ -10,7 +10,7 @@ module.exports = class Forever extends Commands {
         this.client = client;
 
         this.name = "247";
-        this.aliases = ["24/7", "forever", "infinity", "infinite"];
+        this.aliases = ["24/7", "forever", "stay", "infinity", "infinite"];
 
         this.description = "Toggles 24/7 mode";
         this.category = "music";
