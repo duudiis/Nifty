@@ -1,6 +1,6 @@
 {
   "name": "nifty",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "description": "Nifty is a a music bot for Discord.",
   "main": "src/index.js",
   "scripts": {

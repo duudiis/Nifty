@@ -80,34 +80,12 @@ module.exports = class Announce extends Commands {
             return { code: "error", embed: missingPermsEmbed };
         };
 
-        let existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
-
-        if (mode == "disabled") {
-            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
-
-            if (playerData?.channelId && playerData?.messageId) {
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
-                try { let lastNowPlayingMessage = await announcesChannel.messages.fetch(playerData.messageId); lastNowPlayingMessage.delete().catch(o_O => { }) } catch (e) { };
-            }
+        if (mode == "enabled") {
+            setTimeout(() => { this.client.player.updateNpMessage(command.guild.id, "send"); }, 500);
         }
 
-        if (mode == "enabled") {
-            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
-
-            if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata && playerData?.channelId) {
-                const npMetadata = existingConnection.state.subscription.player.state.resource.metadata;
-
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
-
-                let nowPlayingEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-                    .setTitle("Now Playing")
-                    .setDescription(`[${await this.removeFormatting(npMetadata.title)}](${npMetadata.url}) [<@${npMetadata.user}>]`)
-
-                setTimeout(async () => {
-                    const newNowPlayingMessage = await announcesChannel.send({ embeds: [nowPlayingEmbed] });
-                    this.client.database.db("guilds").collection("players").updateOne({ channelId: playerData.channelId }, { $set: { messageId: newNowPlayingMessage.id } }, { upsert: true });
-                }, 500)
-            }
+        if (mode == "disabled") {
+            this.client.player.updateNpMessage(command.guild.id, "delete");
         }
 
         await this.client.database.db("default").collection("guilds").updateOne({ id: command.guild.id }, { $set: { announce: mode } }, { upsert: true });
@@ -121,21 +99,6 @@ module.exports = class Announce extends Commands {
             .setDescription(announcesMessage[mode])
 
         return { code: "success", embed: announceEmbed };
-
-    }
-
-    async removeFormatting(string) {
-
-        if (string.length >= 64) { string = string.slice(0, 60).trimEnd() + "…" };
-
-        string = string.replaceAll("*", "\\*");
-        string = string.replaceAll("_", "\\_");
-        string = string.replaceAll("~", "\\~");
-        string = string.replaceAll("`", "\\`");
-        string = string.replaceAll("[", "\\[");
-        string = string.replaceAll("]", "\\]");
-
-        return string;
 
     }
 

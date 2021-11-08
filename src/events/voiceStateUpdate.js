@@ -17,10 +17,12 @@ module.exports = class VoiceStateUpdate extends Events {
         let existingConnection = DiscordVoice.getVoiceConnection(oldState.guild.id);
         if (!existingConnection) { return; };
 
+        if (oldState.member.id == this.client.user.id) { return this.botStateChange(oldState, newState, existingConnection); };
+
         if (!oldState.channel && newState.channel) {
 
             if (newState.channel.id == existingConnection.joinConfig.channelId) {
-                this.updateTimer(existingConnection, newState.guild.id, "reset"); 
+                this.updateTimer(existingConnection, newState.guild.id, "reset");
             }
 
         } else if (!newState.channel && oldState.channel) {
@@ -36,7 +38,41 @@ module.exports = class VoiceStateUpdate extends Events {
             }
 
             if (newState.channel.id == existingConnection.joinConfig.channelId) {
-                this.updateTimer(existingConnection, newState.guild.id, "reset"); 
+                this.updateTimer(existingConnection, newState.guild.id, "reset");
+            }
+
+        }
+
+    }
+
+    async botStateChange(oldState, newState, existingConnection) {
+
+        if (!newState.channel && oldState.channel) {
+
+            await this.client.player.updateNpMessage(oldState.guild.id, "delete");
+
+            this.client.database.db("guilds").collection("players").deleteOne({ guildId: oldState.guild.id });
+            this.client.database.db("queues").collection(oldState.guild.id).deleteMany({});
+
+            try { existingConnection.state.subscription.player.stop(); } catch (e) { }
+
+            clearTimeout(existingConnection.playTimer); clearTimeout(existingConnection.pauseTimer); clearTimeout(existingConnection.aloneTimer);
+            existingConnection.destroy();
+
+        } else if (newState.channel && oldState.channel && newState.channelId != oldState.channelId) {
+
+            if (newState.channel && newState.channel.members.size == 1) {
+
+                this.updateTimer(existingConnection, newState.guild.id, "create");
+
+            } else if (newState.channel && newState.channel.members.size > 1) {
+
+                this.updateTimer(existingConnection, newState.guild.id, "reset");
+
+            }
+
+            if (newState.channel.type == "GUILD_STAGE_VOICE") {
+                await newState.guild.me.voice.setSuppressed(false).catch(e => { newState.guild.me.voice.setRequestToSpeak(true); });
             }
 
         }
@@ -47,6 +83,7 @@ module.exports = class VoiceStateUpdate extends Events {
 
         if (action == "create") {
 
+            clearTimeout(connection.aloneTimer);
             connection.aloneTimer = setTimeout(() => { this.client.player.inactivityDisconnect(guildId); }, 300000);
 
         } else if (action == "reset") {

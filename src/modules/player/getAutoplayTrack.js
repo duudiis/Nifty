@@ -8,7 +8,7 @@ module.exports = class GetAutoplayTrack extends Modules {
         super(client);
         this.client = client;
 
-        this.blacklisted = ["concert", "live", "cover", "full show", "performance", "halftime"]
+        this.blacklisted = ["concert", "live", "cover", "full show", "performance", "halftime"];
 
         this.name = "getAutoplayTrack";
         this.subcategory = "player";
@@ -32,12 +32,12 @@ module.exports = class GetAutoplayTrack extends Modules {
         let relatedTracks = trackInfo?.related_videos;
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
 
-        relatedTracks = relatedTracks.filter(track => !this.blacklisted.some(keyword => track.title.toLowerCase().includes(keyword)) && !queuedIds.some(id => id.includes(track.id) && track.length_seconds <= 420));
+        relatedTracks = relatedTracks.filter(track => !this.blacklisted.some(keyword => track.title.toLowerCase().includes(keyword)) && !queuedIds.some(id => id.includes(track.id)) && track.length_seconds <= 360);
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
-
+        
         const relatedTrack = relatedTracks[Math.floor(Math.random() * relatedTracks.length)];
         if (!relatedTrack.id || !relatedTrack.length_seconds) { throw "Could not AutoPlay from the previous track!"; };
-
+        
         let track = [{
             title: relatedTrack.title,
             id: relatedTrack.id,

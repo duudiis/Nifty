@@ -15,7 +15,7 @@ module.exports = class YoutubeFuzzySearch extends Modules {
     async run(trackInfo) {
 
         const searchResults = await ytsr(trackInfo.title, { pages: 1 });
-        if (!searchResults.items) { throw "Couldn't find a matching song on youtube" };
+        if (!searchResults.items) { throw "An equivalent video on YouTube was unable to be found!" };
 
         let matchingResults = [];
 
@@ -36,12 +36,12 @@ module.exports = class YoutubeFuzzySearch extends Modules {
 
         }
 
-        if (matchingResults.length == 0) { throw "Couldn't find a matching song on youtube" };
+        if (matchingResults.length == 0) { throw "An equivalent video on YouTube was unable to be found!" };
 
         const mostPopular = matchingResults.reduce((x, y) => {
             return Math.abs(x.videoDuration - trackInfo.duration) < Math.abs(y.videoDuration - trackInfo.duration) ? x : y;
         })
-   
+
         return mostPopular.videoUrl;
 
     }

@@ -46,7 +46,7 @@ module.exports = class NowPlaying extends Commands {
         const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
 
         let existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
-        if (!existingConnection?.state?.subscription?.player?.state?.resource?.metadata || existingConnection?.state?.subscription?.player?.state?.status != "playing") { return { code: "error", embed: errorEmbed.setDescription("You must be playing a track to use this command!") } };
+        if (!existingConnection?.state?.subscription?.player?.state?.resource?.metadata) { return { code: "error", embed: errorEmbed.setDescription("You must be playing a track to use this command!") } };
 
         const nowPlaying = existingConnection.state.subscription.player.state.resource.metadata;
         const timeBar = await this.getTimeBar(existingConnection.state.subscription.player.state.resource.playbackDuration / 1000, nowPlaying.duration);

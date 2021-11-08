@@ -41,6 +41,10 @@ module.exports = class MessageCreate extends Events {
         let permission = await this.checkPermissions(message);
         if (permission.code != "success") { return };
 
+        if (command.category == "music") {
+            this.client.database.db("guilds").collection("players").updateOne({ guildId: message.guild.id }, { $set: { announcesId: message.channel.id } }, { upsert: true });
+        }
+
         try { await command.runAsMessage(message) } catch (error) { this.commandError(message); console.log(error) };
 
     }

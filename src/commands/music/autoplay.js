@@ -23,12 +23,7 @@ module.exports = class Autoplay extends Commands {
 
     async runAsMessage(message) {
 
-        const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
-
         const input = message.array.slice(1).join(" ");
-
-        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
-        if(playerData?.loop && playerData?.loop != "disabled") { return message.reply({ embeds: [ errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") ] }); };
 
         let mode = undefined;
 
@@ -37,8 +32,9 @@ module.exports = class Autoplay extends Commands {
 
         if (!mode) {
 
-            let playerAutoplay = playerData?.autoplay;
+            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
 
+            let playerAutoplay = playerData?.autoplay;
             if (!playerAutoplay) { playerAutoplay = "off" };
 
             let nextAutoplay = {
@@ -57,13 +53,9 @@ module.exports = class Autoplay extends Commands {
 
     async runAsInteraction(interaction) {
 
-        const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
-
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
-        if(playerData?.loop && playerData?.loop != "disabled") { return interaction.editReply({ embeds: [ errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") ] }); };
-
+ 
         let playerAutoplay = playerData?.autoplay;
-
         if (!playerAutoplay) { playerAutoplay = "off" };
 
         let nextAutoplay = {
@@ -88,6 +80,9 @@ module.exports = class Autoplay extends Commands {
         let existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
         if (existingConnection && existingConnection.joinConfig.channelId != voiceChannel.id) { return { code: "error", embed: errorEmbed.setDescription("Someone else is already listening to music in different channel!") } };
 
+        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
+        if(playerData?.loop && playerData?.loop != "disabled") { return { code: "error", embed: errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") } };
+        
         if (!existingConnection) {
             try { await this.client.player.joinChannel(voiceChannel, command) } catch (error) { return { code: "error", embed: errorEmbed.setDescription(`${error.message ? error.message : error}`) }; };
             existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);

@@ -21,17 +21,7 @@ module.exports = class ConnectionEvents extends Modules {
 
             this.client.player.queueNext(connection, guildId);
 
-            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
-
-            if (playerData?.channelId && playerData?.messageId) {
-
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
-
-                try { let lastNowPlayingMessage = await announcesChannel.messages.fetch(playerData.messageId); lastNowPlayingMessage.delete().catch(o_O => { }) } catch (e) { };
-
-                this.client.database.db("guilds").collection("players").updateOne({ messageId: playerData.messageId }, { $set: { messageId: null } }, { upsert: true });
-
-            }
+            this.client.player.updateNpMessage(guildId, "delete");
 
         })
 
@@ -41,52 +31,15 @@ module.exports = class ConnectionEvents extends Modules {
             this.updateTimer(connection, guildId, "reset", "pauseTimer");
 
             if (!connection?.state?.subscription?.player?.state?.resource?.metadata) { return };
-            const npMetadata = connection.state.subscription.player.state.resource.metadata;
+            if ((connection.state.subscription.player.state.resource.playbackDuration / 1000) > 3) { return };
 
-            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
-
-            if (playerData.channelId) {
-
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
-
-                if (playerData.messageId) {
-                    try { let lastNowPlayingMessage = await announcesChannel.messages.fetch(playerData.messageId); lastNowPlayingMessage.delete().catch(o_O => { }) } catch (e) { };
-                }
-
-                const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: guildId });
-                let guildAnnounce = guildData?.announce;
-
-                if (!guildAnnounce) { guildAnnounce = "enabled" };
-                if (guildAnnounce == "disabled") { return };
-
-                const guild = this.client.guilds.cache.get(guildId);
-
-                let nowPlayingEmbed = new MessageEmbed({ color: guild.me.displayHexColor })
-                    .setTitle("Now Playing")
-                    .setDescription(`[${await this.removeFormatting(npMetadata.title)}](${npMetadata.url}) [<@${npMetadata.user}>]`)
-
-                const newNowPlayingMessage = await announcesChannel.send({ embeds: [nowPlayingEmbed] });
-                this.client.database.db("guilds").collection("players").updateOne({ channelId: playerData.channelId }, { $set: { messageId: newNowPlayingMessage.id } }, { upsert: true });
-
-            }
+            this.client.player.updateNpMessage(guildId, "send/delete");
 
         })
 
         connection.state.subscription.player.on("paused", async () => {
 
             this.updateTimer(connection, guildId, "create", "pauseTimer");
-
-            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
-
-            if (playerData?.channelId && playerData?.messageId) {
-
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
-
-                try { let lastNowPlayingMessage = await announcesChannel.messages.fetch(playerData.messageId); lastNowPlayingMessage.delete().catch(o_O => { }) } catch (e) { };
-
-                this.client.database.db("guilds").collection("players").updateOne({ messageId: playerData.messageId }, { $set: { messageId: null } }, { upsert: true });
-
-            }
 
         })
 
@@ -96,17 +49,12 @@ module.exports = class ConnectionEvents extends Modules {
 
             this.client.player.queueNext(connection, guildId);
 
-            const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: guildId });
-            let guildAnnounce = guildData?.announce;
-
-            if (!guildAnnounce) { guildAnnounce = "enabled" };
-            if (guildAnnounce == "disabled") { return };
-
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
 
-            if (playerData.channelId) {
+            if (playerData.announcesId) {
 
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId)
+                const announcesChannel = await this.client.channels.fetch(playerData.announcesId).catch(e => { });
+                if (!announcesChannel || !announcesChannel.permissionsFor(this.client.user.id).has("SEND_MESSAGES") || !announcesChannel.permissionsFor(this.client.user.id).has("EMBED_LINKS")) { return; };
 
                 let trackData = "";
 
@@ -114,32 +62,13 @@ module.exports = class ConnectionEvents extends Modules {
                     trackData = `[${await this.removeFormatting(error.resource.metadata.title)}](${error.resource.metadata.url}) [<@${error.resource.metadata.user}>]\n`
                 }
 
-                let errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
+                const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
                     .setTitle("An error occurred while playing")
                     .setDescription(`${trackData}${error.toString()}`)
 
                 announcesChannel.send({ embeds: [errorEmbed] }).then(m => { setTimeout(() => { m.delete().catch(e => { }) }, 120000) });
 
             }
-
-        })
-
-        connection.on("disconnected", async () => {
-
-            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
-
-            if (playerData.channelId && playerData.messageId) {
-
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
-                try { let lastNowPlayingMessage = await announcesChannel.messages.fetch(playerData.messageId); lastNowPlayingMessage.delete().catch(o_O => { }) } catch (e) { };
-
-            }
-
-            this.client.database.db("guilds").collection("players").deleteOne({ guildId: guildId });
-            this.client.database.db("queues").collection(guildId).deleteMany({});
-
-            try { connection.state.subscription.player.stop(); } catch (e) { }
-            connection.destroy();
 
         })
 
@@ -154,6 +83,7 @@ module.exports = class ConnectionEvents extends Modules {
 
         if (action == "create") {
 
+            clearTimeout(connection[type]);
             connection[type] = setTimeout(() => { this.client.player.inactivityDisconnect(guildId); }, timersTime[type]);
 
         } else if (action == "reset") {

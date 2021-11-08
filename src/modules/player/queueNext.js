@@ -31,15 +31,17 @@ module.exports = class QueueNext extends Modules {
 
                 await this.client.database.db("guilds").collection("players").updateOne({ guildId: guildId }, { $set: { stopped: true } }, { upsert: true })
 
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
+                const announcesChannel = await this.client.channels.fetch(playerData.announcesId).catch(e => { });
 
-                let errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
+                const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
                     .setDescription(`${error.message ? error.message : error}`)
 
-                announcesChannel.send({ embeds: [errorEmbed] });
-                return console.log(error);
+                if (announcesChannel && announcesChannel.permissionsFor(this.client.user.id).has("SEND_MESSAGES") && !announcesChannel.permissionsFor(this.client.user.id).has("EMBED_LINKS")) {
+                    announcesChannel.send({ embeds: [errorEmbed] });
+                }
 
-            };
+                return await this.client.database.db("guilds").collection("players").updateOne({ guildId: guildId }, { $set: { stopped: true } }, { upsert: true });
+            }
 
             queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
 

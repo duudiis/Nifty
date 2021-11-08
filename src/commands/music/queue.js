@@ -80,7 +80,7 @@ module.exports = class Queue extends Commands {
 			let trackNumber = `${(parseInt(trackId) + 1) + ((1 - 1) * 10)}`.padStart(2, ' '); let currentTop = ""; let currentBottom = "\n"
 			let trackTime = await this.toHHMMSS(tracksArray[trackId].duration);
 
-			if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata?.url == tracksArray[trackId].url && existingConnection?.state?.subscription?.player?.state?.status == "playing") { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }
+			if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata?.url == tracksArray[trackId].url) { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }
 
 			trackList = trackList + `${currentTop}${trackNumber}) ${tracksArray[trackId].title.length > 36 ? (tracksArray[trackId].title.slice(0, 36).trimEnd() + "…").padEnd(37, ' ') : tracksArray[trackId].title.padEnd(37, ' ')} ${trackTime} ${currentBottom}`
 

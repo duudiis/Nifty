@@ -15,22 +15,26 @@ module.exports = class UpdatePlayer extends Modules {
     }
 
     async run(connection, guildId) {
-        
+
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
         const queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
 
+        let currentVolume = playerData?.volume;
+        if (!currentVolume) { currentVolume = 100; };
+
         let playQueueID = playerData.queueID;
         let playQueue = queueData[playQueueID];
-        
+
         if (!playQueue) { return };
 
         let playQueueUrl = playQueue.url;
 
-        if(playQueue.type == "spotify") { playQueueUrl = await this.client.player.youtubeFuzzySearch(playQueue).catch(error => { return connection.state.subscription.player.emit("error", error) }) };
+        if (playQueue.type == "spotify") { playQueueUrl = await this.client.player.youtubeFuzzySearch(playQueue).catch(error => { return connection.state.subscription.player.emit("error", error) }) };
 
         const stream = await ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21, });
 
-        const playResource = DiscordVoice.createAudioResource(stream, { metadata: playQueue });
+        const playResource = DiscordVoice.createAudioResource(stream, { inlineVolume: true, metadata: playQueue });
+        playResource.volume.setVolume(currentVolume / 100);
 
         connection.state.subscription.player.play(playResource);
 

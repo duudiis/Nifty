@@ -52,19 +52,14 @@ module.exports = class Disconnect extends Commands {
 
         if (!existingConnection) { return { code: "success", embed: resetEmbed } };
 
-        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
-
-        if (playerData.channelId && playerData.messageId) {
-
-            const announcesChannel = this.client.channels.cache.get(playerData.channelId);
-            try { let lastNowPlayingMessage = await announcesChannel.messages.fetch(playerData.messageId); lastNowPlayingMessage.delete().catch(o_O => { }) } catch (e) { };
-
-        }
+        await this.client.player.updateNpMessage(command.guild.id, "delete");
 
         this.client.database.db("guilds").collection("players").deleteOne({ guildId: command.guild.id });
         this.client.database.db("queues").collection(command.guild.id).deleteMany({});
 
         try { existingConnection.state.subscription.player.stop(); } catch (e) { }
+
+        clearTimeout(existingConnection.playTimer); clearTimeout(existingConnection.pauseTimer); clearTimeout(existingConnection.aloneTimer);
         existingConnection.destroy();
 
         return { code: "success", embed: resetEmbed };

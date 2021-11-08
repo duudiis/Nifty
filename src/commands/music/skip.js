@@ -69,14 +69,10 @@ module.exports = class Skip extends Commands {
 
                 await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { stopped: true } }, { upsert: true })
 
-                const announcesChannel = this.client.channels.cache.get(playerData.channelId);
-
                 let errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
                     .setDescription(`${error.message ? error.message : error}`)
 
-                setTimeout(async () => { announcesChannel.send({ embeds: [errorEmbed] }); }, 1000);
-
-                return { code: "success", embed: skippedTrackEmbed };
+                return { code: "error", embed: errorEmbed };
 
             };
 

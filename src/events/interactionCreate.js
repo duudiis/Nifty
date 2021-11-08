@@ -23,6 +23,10 @@ module.exports = class InteractionCreate extends Events {
 			if (!command.enabled) { return this.commandDisabled(interaction) };
 			if (interaction.channel.type === "DM") { return this.DmCommand(interaction) };
 
+			if (command.category == "music") {
+				this.client.database.db("guilds").collection("players").updateOne({ guildId: interaction.guild.id }, { $set: { announcesId: interaction.channel.id } }, { upsert: true });
+			}
+
 			await interaction.deferReply();
 			try { await command.runAsInteraction(interaction) } catch (error) { this.commandError(interaction); console.log(error) };
 
