@@ -10,7 +10,7 @@ module.exports = class Announce extends Commands {
         this.client = client;
 
         this.name = "announce";
-        this.aliases = ["announces", "announcement", "announcements", "an", "ann", "a"];
+        this.aliases = ["announces", "announcement", "announcements", "an", "ann"];
 
         this.description = "Toggles whether Nifty will announce when songs start playing";
         this.category = "music";
