@@ -10,7 +10,7 @@ module.exports = class Join extends Commands {
         this.client = client;
 
         this.name = "join";
-        this.aliases = ["enter"];
+        this.aliases = [];
 
         this.description = "Makes the bot join your voice channel";
         this.category = "music";
