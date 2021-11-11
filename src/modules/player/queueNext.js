@@ -36,7 +36,7 @@ module.exports = class QueueNext extends Modules {
                 const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
                     .setDescription(`${error.message ? error.message : error}`)
 
-                if (announcesChannel && announcesChannel.permissionsFor(this.client.user.id).has("SEND_MESSAGES") && !announcesChannel.permissionsFor(this.client.user.id).has("EMBED_LINKS")) {
+                if (announcesChannel && announcesChannel.permissionsFor(this.client.user.id).has("SEND_MESSAGES") && announcesChannel.permissionsFor(this.client.user.id).has("EMBED_LINKS")) {
                     announcesChannel.send({ embeds: [errorEmbed] });
                 }
 

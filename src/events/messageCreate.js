@@ -42,7 +42,7 @@ module.exports = class MessageCreate extends Events {
         if (permission.code != "success") { return };
 
         if (command.category == "music") {
-            this.client.database.db("guilds").collection("players").updateOne({ guildId: message.guild.id }, { $set: { announcesId: message.channel.id } }, { upsert: true });
+            this.client.database.db("guilds").collection("players").updateOne({ guildId: message.guild.id }, { $set: { announcesId: message.channel.id } });
         }
 
         try { await command.runAsMessage(message) } catch (error) { this.commandError(message); console.log(error) };
@@ -90,7 +90,7 @@ module.exports = class MessageCreate extends Events {
         };
 
         if (!message.channel.permissionsFor(this.client.user.id).has("ADD_REACTIONS")) {
-            try { await message.channel.send({ embeds: [errorEmbed.setDescription("I do not have permission to **add reactions** in this channel!")] }); } catch (error) { }
+            try { await message.reply({ embeds: [errorEmbed.setDescription("I do not have permission to **add reactions** in this channel!")] }); } catch (error) { }
             return { code: "error", missing: "ADD_REACTIONS" };
         };
 

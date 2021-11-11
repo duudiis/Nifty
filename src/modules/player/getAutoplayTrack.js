@@ -8,7 +8,7 @@ module.exports = class GetAutoplayTrack extends Modules {
         super(client);
         this.client = client;
 
-        this.blacklisted = ["concert", "live", "cover", "full show", "performance", "halftime"];
+        this.blacklisted = ["concert", "live", "cover", "full show", "performance", "halftime", "trailer"];
 
         this.name = "getAutoplayTrack";
         this.subcategory = "player";

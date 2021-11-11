@@ -24,7 +24,7 @@ module.exports = class InteractionCreate extends Events {
 			if (interaction.channel.type === "DM") { return this.DmCommand(interaction) };
 
 			if (command.category == "music") {
-				this.client.database.db("guilds").collection("players").updateOne({ guildId: interaction.guild.id }, { $set: { announcesId: interaction.channel.id } }, { upsert: true });
+				this.client.database.db("guilds").collection("players").updateOne({ guildId: interaction.guild.id }, { $set: { announcesId: interaction.channel.id } });
 			}
 
 			await interaction.deferReply();

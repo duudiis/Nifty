@@ -55,7 +55,7 @@ module.exports = class Clear extends Commands {
             return { code: "success", embed: clearedEmbed };
         }
 
-        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: 0, stopped: true, guildId: command.guild.id, channelId: command.channel.id } }, { upsert: true });
+        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: 0, stopped: true } }, { upsert: true });
         this.client.database.db("queues").collection(command.guild.id).deleteMany({});
 
         existingConnection.state.subscription.player.skipExecute = true;
