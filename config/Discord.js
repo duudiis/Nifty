@@ -1,5 +1,6 @@
 module.exports = {
     allowedMentions: { parse: ['users'] },
+    failIfNotExists: false,
     restTimeOffset: 0,
     retryLimit: 2,
     partials: ['REACTION', 'MESSAGE', 'CHANNEL'],
