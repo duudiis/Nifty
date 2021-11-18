@@ -78,7 +78,7 @@ module.exports = class Play extends Commands {
 		if (inputTracks.length == 1) {
 
 			let queuedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-				.setDescription(`Queued [${await this.removeFormatting(inputTracks[0].title)}](${inputTracks[0].url}) [<@${inputTracks[0].user}>]`)
+				.setDescription(`Queued [${await this.client.removeFormatting(inputTracks[0].title, 54)}](${inputTracks[0].url}) [<@${inputTracks[0].user}>]`)
 
 			return { code: "success", embed: queuedEmbed };
 
@@ -92,21 +92,6 @@ module.exports = class Play extends Commands {
 			return { code: "success", embed: queuedEmbed };
 
 		}
-
-	}
-
-	async removeFormatting(string) {
-
-		if (string.length >= 52) { string = string.slice(0, 48).trimEnd() + "…" };
-
-		string = string.replaceAll("*", "\\*");
-		string = string.replaceAll("_", "\\_");
-		string = string.replaceAll("~", "\\~");
-		string = string.replaceAll("`", "\\`");
-		string = string.replaceAll("[", "\\[");
-		string = string.replaceAll("]", "\\]");
-
-		return string;
 
 	}
 

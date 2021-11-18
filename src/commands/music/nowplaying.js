@@ -52,7 +52,7 @@ module.exports = class NowPlaying extends Commands {
         const timeBar = await this.getTimeBar(existingConnection.state.subscription.player.state.resource.playbackDuration / 1000, nowPlaying.duration);
 
         let nowPlayingEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-            .setDescription(`[${nowPlaying.title}](${nowPlaying.url}) [<@${nowPlaying.user}>]`)
+            .setDescription(`[${await this.client.removeFormatting(nowPlaying.title, 56)}](${nowPlaying.url}) [<@${nowPlaying.user}>]`)
             .setFooter(timeBar)
 
         return { code: "success", embed: nowPlayingEmbed };
@@ -80,21 +80,6 @@ module.exports = class NowPlaying extends Commands {
 		let seconds = sec_num % 60;
 	
 		return [`${hours}h`,`${minutes}m`,`${seconds}s`].filter((v,i) => v.slice(0, -1) !== "0").join(" ");
-
-	}
-
-    async removeFormatting(string) {
-
-        if(string.length >= 60) { string = string.slice(0, 56).trimEnd() + "…" };
-
-		string = string.replaceAll("*", "\\*");
-		string = string.replaceAll("_", "\\_");
-		string = string.replaceAll("~", "\\~");
-		string = string.replaceAll("`", "\\`");
-		string = string.replaceAll("[", "\\[");
-		string = string.replaceAll("]", "\\]");
-
-		return string;
 
 	}
 

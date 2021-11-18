@@ -65,7 +65,7 @@ module.exports = class Search extends Interactions {
 		if (inputTracks.length == 1) {
 
 			let queuedEmbed = new MessageEmbed({ color: interaction.guild.me.displayHexColor })
-				.setDescription(`Queued [${await this.removeFormatting(inputTracks[0].title)}](${inputTracks[0].url}) [<@${inputTracks[0].user}>]`)
+				.setDescription(`Queued [${await this.client.removeFormatting(inputTracks[0].title, 54)}](${inputTracks[0].url}) [<@${inputTracks[0].user}>]`)
 
 			return interaction.editReply({ embeds: [queuedEmbed], components: [] });
 
@@ -79,21 +79,6 @@ module.exports = class Search extends Interactions {
 			return interaction.editReply({ embeds: [queuedEmbed], components: [] });
 
 		}
-
-	}
-
-	async removeFormatting(string) {
-
-		if (string.length >= 52) { string = string.slice(0, 48).trimEnd() + "…" };
-
-		string = string.replaceAll("*", "\\*");
-		string = string.replaceAll("_", "\\_");
-		string = string.replaceAll("~", "\\~");
-		string = string.replaceAll("`", "\\`");
-		string = string.replaceAll("[", "\\[");
-		string = string.replaceAll("]", "\\]");
-
-		return string;
 
 	}
 

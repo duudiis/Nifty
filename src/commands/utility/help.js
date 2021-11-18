@@ -39,7 +39,7 @@ module.exports = class Help extends Commands {
 		const helpEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
 			.setAuthor(this.client.user.username, this.client.user.displayAvatarURL())
 			.setDescription(`${this.client.user.username} is the easiest way to play music in your Discord server. It supports YouTube and Spotify!\n\nTo get started, join a voice channel and \`/play\` a song. You can use song names, video links, and playlist links.\n᲼`)
-			.addField("Invite", `${this.client.user.username} can be added to as many servers as you want! [Click here to add it to yours.](https://discord.com/oauth2/authorize?client_id=${this.client.user.id}&scope=bot%20applications.commands)`)
+			.addField("Invite", `${this.client.user.username} can be added to as many servers as you want! [Click here to add it to yours.](https://discord.com/oauth2/authorize?client_id=${this.client.user.id}&permissions=8&scope=bot%20applications.commands)`)
 
 		return { code: "success", embed: helpEmbed };
 

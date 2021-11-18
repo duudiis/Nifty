@@ -19,7 +19,7 @@ module.exports = class GetInputTrack extends Modules {
 
     async run(input, user) {
 
-        if (input.includes("https://")) {
+        if (input.includes("http://") || input.includes("https://")) {
 
             input = input.replace("<", "").replace(">", "");
 

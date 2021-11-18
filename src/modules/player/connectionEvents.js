@@ -59,7 +59,7 @@ module.exports = class ConnectionEvents extends Modules {
                 let trackData = "";
 
                 if (error?.resource?.metadata) {
-                    trackData = `[${await this.removeFormatting(error.resource.metadata.title)}](${error.resource.metadata.url}) [<@${error.resource.metadata.user}>]\n`
+                    trackData = `[${await this.client.removeFormatting(error.resource.metadata.title, 56)}](${error.resource.metadata.url}) [<@${error.resource.metadata.user}>]\n`
                 }
 
                 const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
@@ -91,21 +91,6 @@ module.exports = class ConnectionEvents extends Modules {
             clearTimeout(connection[type]);
 
         }
-
-    }
-
-    async removeFormatting(string) {
-
-        if (string.length >= 60) { string = string.slice(0, 56).trimEnd() + "…" };
-
-        string = string.replaceAll("*", "\\*");
-        string = string.replaceAll("_", "\\_");
-        string = string.replaceAll("~", "\\~");
-        string = string.replaceAll("`", "\\`");
-        string = string.replaceAll("[", "\\[");
-        string = string.replaceAll("]", "\\]");
-
-        return string;
 
     }
 
