@@ -1,12 +1,12 @@
 const Modules = require("../structures/Modules");
 
-module.exports = class CheckPremium extends Modules {
+module.exports = class GetPremiumState extends Modules {
 
 	constructor(client) {
 		super(client);
 		this.client = client;
 
-		this.name = "checkPremium";
+		this.name = "getPremiumState";
 	}
 
 	async run(guildId) {

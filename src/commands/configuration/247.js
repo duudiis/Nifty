@@ -72,7 +72,7 @@ module.exports = class Forever extends Commands {
 
     async c247(mode, command) {
 
-        if (!(await this.client.checkPremium(command.guild.id))) {
+        if (!(await this.client.getPremiumState(command.guild.id))) {
 
             const missingPremiumEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
                 .setDescription("You need to upgrade this server to use **Premium** commands here!")

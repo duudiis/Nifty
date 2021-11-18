@@ -50,27 +50,12 @@ module.exports = class UpdateNpMessage extends Modules {
 
             let nowPlayingEmbed = new MessageEmbed({ color: guild.me.displayHexColor })
                 .setTitle("Now Playing")
-                .setDescription(`[${await this.removeFormatting(npMetadata.title)}](${npMetadata.url}) [<@${npMetadata.user}>]`)
+                .setDescription(`[${await this.client.removeFormatting(npMetadata.title, 56)}](${npMetadata.url}) [<@${npMetadata.user}>]`)
 
             const newNpMessage = await announcesChannel.send({ embeds: [nowPlayingEmbed] });
             await this.client.database.db("guilds").collection("players").updateOne({ guildId: guildId }, { $set: { channelId: newNpMessage.channel.id, messageId: newNpMessage.id } }, { upsert: true });
 
         }
-
-    }
-
-    async removeFormatting(string) {
-
-        if (string.length >= 60) { string = string.slice(0, 56).trimEnd() + "…" };
-
-        string = string.replaceAll("*", "\\*");
-        string = string.replaceAll("_", "\\_");
-        string = string.replaceAll("~", "\\~");
-        string = string.replaceAll("`", "\\`");
-        string = string.replaceAll("[", "\\[");
-        string = string.replaceAll("]", "\\]");
-
-        return string;
 
     }
 

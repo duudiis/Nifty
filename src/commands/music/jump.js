@@ -107,25 +107,10 @@ module.exports = class Jump extends Commands {
         setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
 
         const jumpedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-            .setDescription(`Jumped to [${await this.removeFormatting(jumpTrack.title)}](${jumpTrack.url}) [<@${jumpTrack.user}>]`)
+            .setDescription(`Jumped to [${await this.client.removeFormatting(jumpTrack.title, 54)}](${jumpTrack.url}) [<@${jumpTrack.user}>]`)
 
         return { code: "success", embed: jumpedEmbed };
 
     }
-
-    async removeFormatting(string) {
-
-        if(string.length >= 56) { string = string.slice(0, 52).trimEnd() + "…" };
-
-		string = string.replaceAll("*", "\\*");
-		string = string.replaceAll("_", "\\_");
-		string = string.replaceAll("~", "\\~");
-		string = string.replaceAll("`", "\\`");
-		string = string.replaceAll("[", "\\[");
-		string = string.replaceAll("]", "\\]");
-
-		return string;
-
-	}
 
 }

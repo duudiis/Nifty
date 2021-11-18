@@ -101,25 +101,10 @@ module.exports = class Remove extends Commands {
         if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata?.url == removeTrack.url) { existingConnection.state.subscription.player.stop() };
 
         const removedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-            .setDescription(`Removed [${await this.removeFormatting(removeTrack.title)}](${removeTrack.url}) [<@${removeTrack.user}>]`)
+            .setDescription(`Removed [${await this.client.removeFormatting(removeTrack.title, 54)}](${removeTrack.url}) [<@${removeTrack.user}>]`)
 
         return { code: "success", embed: removedEmbed };
 
     }
-
-    async removeFormatting(string) {
-
-        if(string.length >= 52) { string = string.slice(0, 48).trimEnd() + "…" };
-
-		string = string.replaceAll("*", "\\*");
-		string = string.replaceAll("_", "\\_");
-		string = string.replaceAll("~", "\\~");
-		string = string.replaceAll("`", "\\`");
-		string = string.replaceAll("[", "\\[");
-		string = string.replaceAll("]", "\\]");
-
-		return string;
-
-	}
 
 }
