@@ -23,6 +23,8 @@ module.exports = class InactivityDisconnect extends Modules {
 
         if (guildData?.forever == "enabled") { return; };
 
+        await this.client.player.updateNpMessage(guildId, "delete");
+
         const guild = this.client.guilds.cache.get(guildId);
 
         this.client.database.db("guilds").collection("players").deleteOne({ guildId: guildId });
@@ -42,8 +44,6 @@ module.exports = class InactivityDisconnect extends Modules {
                 .setDescription(`I left the voice channel because I was inactive for too long.\nIf you are a **Premium** member, you can disable this by typing \`/247\`.`)
 
             announcesChannel.send({ embeds: [inactivityEmbed] }).then(m => { setTimeout(() => { m.delete().catch(e => { }) }, 120000) })
-
-            this.client.player.updateNpMessage(guildId, "delete");
 
         }
 
