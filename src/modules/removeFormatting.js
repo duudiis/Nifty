@@ -17,6 +17,7 @@ module.exports = class RemoveFormatting extends Modules {
 		string = string.replaceAll("_", "\\_");
 		string = string.replaceAll("~", "\\~");
 		string = string.replaceAll("`", "\\`");
+		string = string.replaceAll("|", "\\|");
 		
 		if (string.includes("[") && string.includes("]")) {
 
@@ -26,6 +27,10 @@ module.exports = class RemoveFormatting extends Modules {
 		} else if (!string.includes("[") && string.includes("]")) {
 
 			string = string.replaceAll("]", "\\]");
+
+		} else if (string.includes("[") && !string.includes("]")) {
+
+			string = string.replaceAll("[", "\\[");
 
 		}
 
