@@ -23,7 +23,7 @@ module.exports = class Help extends Commands {
 	async runAsMessage(message) {
 
 		const response = await this.help(message);
-		message.reply({ embeds: [ response.embed ] });
+		message.reply({ embeds: [response.embed] });
 
 	}
 
@@ -37,6 +37,7 @@ module.exports = class Help extends Commands {
 	async help(command) {
 
 		let playCommand = "/play"
+		if (!command.channel.permissionsFor(command.member.id).has("USE_APPLICATION_COMMANDS")) { playCommand = `${await this.client.getPrefix(command.guild.id)}play`; };
 
 		const helpEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
 			.setAuthor(this.client.user.username, this.client.user.displayAvatarURL())

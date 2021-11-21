@@ -75,10 +75,15 @@ module.exports = class Play extends Commands {
 			this.client.player.updatePlayer(existingConnection, command.guild.id);
 		}
 
+		let queuedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor });
+
+		if (existingConnection?.state?.subscription?.player?.state?.status == "paused") {
+			queuedEmbed.setFooter("The bot is currently paused.");
+		}
+
 		if (inputTracks.length == 1) {
 
-			let queuedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-				.setDescription(`Queued [${await this.client.removeFormatting(inputTracks[0].title, 54)}](${inputTracks[0].url}) [<@${inputTracks[0].user}>]`)
+			queuedEmbed.setDescription(`Queued [${await this.client.removeFormatting(inputTracks[0].title, 54)}](${inputTracks[0].url}) [<@${inputTracks[0].user}>]`)
 
 			return { code: "success", embed: queuedEmbed };
 
@@ -86,8 +91,7 @@ module.exports = class Play extends Commands {
 
 		if (inputTracks.length >= 2) {
 
-			let queuedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-				.setDescription(`Queued **${inputTracks.length}** tracks [<@${inputTracks[0].user}>]`)
+			queuedEmbed.setDescription(`Queued **${inputTracks.length}** tracks [<@${inputTracks[0].user}>]`)
 
 			return { code: "success", embed: queuedEmbed };
 

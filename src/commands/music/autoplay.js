@@ -54,7 +54,7 @@ module.exports = class Autoplay extends Commands {
     async runAsInteraction(interaction) {
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
- 
+
         let playerAutoplay = playerData?.autoplay;
         if (!playerAutoplay) { playerAutoplay = "off" };
 
@@ -81,12 +81,16 @@ module.exports = class Autoplay extends Commands {
         if (existingConnection && existingConnection.joinConfig.channelId != voiceChannel.id) { return { code: "error", embed: errorEmbed.setDescription("Someone else is already listening to music in different channel!") } };
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
-        if(playerData?.loop && playerData?.loop != "disabled") { return { code: "error", embed: errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") } };
-        
+        if (playerData?.loop && playerData?.loop != "disabled") { return { code: "error", embed: errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") } };
+
         if (!existingConnection) {
             try { await this.client.player.joinChannel(voiceChannel, command) } catch (error) { return { code: "error", embed: errorEmbed.setDescription(`${error.message ? error.message : error}`) }; };
             existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
         };
+
+        if (mode == "on" && existingConnection?.state?.subscription?.player?.state?.status == "idle") {
+            this.client.player.queueNext(existingConnection, command.guild.id);
+        }
 
         await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { autoplay: mode } }, { upsert: true });
 
