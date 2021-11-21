@@ -62,10 +62,15 @@ module.exports = class Search extends Interactions {
 			this.client.player.updatePlayer(existingConnection, interaction.guild.id);
 		};
 
+		let queuedEmbed = new MessageEmbed({ color: interaction.guild.me.displayHexColor });
+
+		if (existingConnection?.state?.subscription?.player?.state?.status == "paused") {
+			queuedEmbed.setFooter("The bot is currently paused.");
+		}
+
 		if (inputTracks.length == 1) {
 
-			let queuedEmbed = new MessageEmbed({ color: interaction.guild.me.displayHexColor })
-				.setDescription(`Queued [${await this.client.removeFormatting(inputTracks[0].title, 54)}](${inputTracks[0].url}) [<@${inputTracks[0].user}>]`)
+			queuedEmbed.setDescription(`Queued [${await this.client.removeFormatting(inputTracks[0].title, 54)}](${inputTracks[0].url}) [<@${inputTracks[0].user}>]`)
 
 			return interaction.editReply({ embeds: [queuedEmbed], components: [] });
 
@@ -73,8 +78,7 @@ module.exports = class Search extends Interactions {
 
 		if (inputTracks.length >= 2) {
 
-			let queuedEmbed = new MessageEmbed({ color: interaction.guild.me.displayHexColor })
-				.setDescription(`Queued **${inputTracks.length}** tracks [<@${inputTracks[0].user}>]`)
+			queuedEmbed.setDescription(`Queued **${inputTracks.length}** tracks [<@${inputTracks[0].user}>]`)
 
 			return interaction.editReply({ embeds: [queuedEmbed], components: [] });
 

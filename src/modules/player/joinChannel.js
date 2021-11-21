@@ -23,8 +23,8 @@ module.exports = class JoinChannel extends Modules {
             adapterCreator: voiceChannel.guild.voiceAdapterCreator,
         })
 
-        const player = DiscordVoice.createAudioPlayer()
-        connection.subscribe(player)
+        const player = DiscordVoice.createAudioPlayer();
+        connection.subscribe(player);
 
         await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: 0, stopped: true, guildId: command.guild.id, announcesId: command.channel.id } }, { upsert: true });
         this.client.player.connectionEvents(connection, command.guild.id).catch(O_o => { });
@@ -32,7 +32,7 @@ module.exports = class JoinChannel extends Modules {
         voiceChannel.guild.me.voice.setDeaf().catch(e => { });
 
         if(voiceChannel.type == "GUILD_STAGE_VOICE") {
-            await voiceChannel.guild.me.voice.setSuppressed(false).catch(e => { voiceChannel.guild.me.voice.setRequestToSpeak(true); });
+            await voiceChannel.guild.me.voice.setSuppressed(false).catch(e => { voiceChannel.guild.me.voice.setRequestToSpeak(true).catch(e => {}); });
         }
 
         connection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(voiceChannel.guild.id); }, 900000);

@@ -18,26 +18,27 @@ module.exports = class VoiceStateUpdate extends Events {
         if (!existingConnection) { return; };
 
         if (oldState.member.id == this.client.user.id) { return this.botStateChange(oldState, newState, existingConnection); };
+        if (newState.member.user.bot) { return; };
 
         if (!oldState.channel && newState.channel) {
 
-            if (newState.channel.id == existingConnection.joinConfig.channelId) {
+            if (newState.channel.id == newState.guild?.me?.voice?.channel?.id) {
                 this.updateTimer(existingConnection, newState.guild.id, "reset");
             }
 
         } else if (!newState.channel && oldState.channel) {
 
-            if (oldState.channel.id == existingConnection.joinConfig.channelId && oldState.channel.members.size == 1) {
+            if (oldState.channel.id == newState.guild?.me?.voice?.channel?.id && oldState.channel.members.filter(member => !member.user.bot).size == 0) {
                 this.updateTimer(existingConnection, oldState.guild.id, "create");
             }
 
         } else if (newState.channel && oldState.channel && newState.channelId != oldState.channelId) {
 
-            if (oldState.channel.id == existingConnection.joinConfig.channelId && oldState.channel.members.size == 1) {
+            if (oldState.channel.id == newState.guild?.me?.voice?.channel?.id && oldState.channel.members.filter(member => !member.user.bot).size == 0) {
                 this.updateTimer(existingConnection, oldState.guild.id, "create");
             }
 
-            if (newState.channel.id == existingConnection.joinConfig.channelId) {
+            if (newState.channel.id == newState.guild?.me?.voice?.channel?.id) {
                 this.updateTimer(existingConnection, newState.guild.id, "reset");
             }
 
@@ -61,18 +62,18 @@ module.exports = class VoiceStateUpdate extends Events {
 
         } else if (newState.channel && oldState.channel && newState.channelId != oldState.channelId) {
 
-            if (newState.channel && newState.channel.members.size == 1) {
+            if (newState.channel && newState.channel.members.filter(member => !member.user.bot).size == 0 && oldState.channel.members.filter(member => !member.user.bot).size != 0) {
 
                 this.updateTimer(existingConnection, newState.guild.id, "create");
 
-            } else if (newState.channel && newState.channel.members.size > 1) {
+            } else if (newState.channel && newState.channel.members.filter(member => !member.user.bot).size > 0) {
 
                 this.updateTimer(existingConnection, newState.guild.id, "reset");
 
             }
 
             if (newState.channel.type == "GUILD_STAGE_VOICE") {
-                await newState.guild.me.voice.setSuppressed(false).catch(e => { newState.guild.me.voice.setRequestToSpeak(true); });
+                await newState.guild.me.voice.setSuppressed(false).catch(e => { newState.guild.me.voice.setRequestToSpeak(true).catch(e => {}); });
             }
 
         }

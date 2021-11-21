@@ -89,6 +89,31 @@ module.exports = class Forever extends Commands {
             return { code: "error", embed: missingPermsEmbed };
         };
 
+        let existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
+
+        if (mode == "enabled" && existingConnection) {
+            clearTimeout(existingConnection.playTimer); clearTimeout(existingConnection.pauseTimer); clearTimeout(existingConnection.aloneTimer);
+        }
+
+        if (mode == "disabled" && existingConnection) {
+
+            if (command?.guild?.me?.voice?.channel?.members?.filter(member => !member.user.bot).size == 0) {
+                clearTimeout(existingConnection.aloneTimer);
+                existingConnection.aloneTimer = setTimeout(() => { this.client.player.inactivityDisconnect(command.guild.id); }, 300000);
+            }
+
+            if (existingConnection?.state?.subscription?.player?.state?.status == "idle") {
+                clearTimeout(existingConnection.playTimer);
+                existingConnection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(guildId); }, 900000);
+            }
+
+            if (existingConnection?.state?.subscription?.player?.state?.status == "paused") {
+                clearTimeout(existingConnection.pauseTimer);
+                existingConnection.pauseTimer = setTimeout(() => { this.client.player.inactivityDisconnect(guildId); }, 3600000);
+            }
+
+        }
+
         await this.client.database.db("default").collection("guilds").updateOne({ id: command.guild.id }, { $set: { forever: mode } }, { upsert: true });
 
         let foreverMessage = {

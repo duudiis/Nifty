@@ -51,8 +51,11 @@ module.exports = class MessageCreate extends Events {
 
     async getStarted(message) {
 
+        let playCommand = "/play"
+        if (!message.channel.permissionsFor(command.member.id).has("USE_APPLICATION_COMMANDS")) { playCommand = `${await this.client.getPrefix(command.guild.id)}play`; };
+
         const getStartedEmbed = new MessageEmbed({ color: "#202225" })
-            .setDescription(`You can play music by joining a voice channel and typing \`/play\`. The command accepts song names, video links, and playlist links.`)
+            .setDescription(`You can play music by joining a voice channel and typing \`${playCommand}\`. The command accepts song names, video links, and playlist links.`)
 
         message.reply({ embeds: [getStartedEmbed] })
 
