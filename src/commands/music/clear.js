@@ -3,7 +3,7 @@ const Commands = require("../../structures/Commands");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Clear extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);
@@ -56,13 +56,13 @@ module.exports = class Clear extends Commands {
         }
 
         await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: 0, stopped: true } }, { upsert: true });
-        this.client.database.db("queues").collection(command.guild.id).deleteMany({});
+        this.client.database.db("queues").collection(command.guild.id).drop().catch(e => {});
 
         existingConnection.state.subscription.player.skipExecute = true;
 
         existingConnection.state.subscription.player.stop()
 
-        setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
+        setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 2000);
 
         return { code: "success", embed: clearedEmbed };
 

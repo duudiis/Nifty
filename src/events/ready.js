@@ -3,7 +3,7 @@ const Events = require("../structures/Events");
 const Constants = require("../../config/Constants")
 const Slash = require("../utils/Slash");
 
-module.exports = class Ready extends Events {
+module.exports = class extends Events {
 
 	constructor(client) {
 		super(client);
@@ -21,6 +21,8 @@ module.exports = class Ready extends Events {
 
 		console.log(`${this.client.user.username} is now Online`);
 		this.client.user.setActivity('/play', { type: 'LISTENING' });
+
+		setTimeout(async () => { await this.client.player.reconnectPlayers(); }, 2500);
 
 	}
 

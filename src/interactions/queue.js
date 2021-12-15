@@ -3,7 +3,7 @@ const Interactions = require("../structures/Interactions");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed, MessageButton, MessageActionRow } = require("discord.js");
 
-module.exports = class Queue extends Interactions {
+module.exports = class extends Interactions {
 
 	constructor(client) {
 		super(client);
@@ -29,7 +29,7 @@ module.exports = class Queue extends Interactions {
 		let queueMax = Math.ceil(queueData.length / 10);
 
 		const page = await this.getPage(button, queueMax);
-		if(page.updated > queueMax) { page.updated = queueMax; };
+		if (page.updated > queueMax) { page.updated = queueMax; };
 
 		let tracksArray = [];
 
@@ -38,6 +38,8 @@ module.exports = class Queue extends Interactions {
 		if (page.updated == 1) { tracksArray = queueData.slice(0, 10) }
 		else if (page.updated == queueMax) { tracksArray = queueData.slice(-10); lastMinus = 10 - (queueData.length % 10) }
 		else { tracksArray = queueData.slice((page.updated - 1) * 10, -(queueData.length - (page.updated * 10))) }
+
+		if (lastMinus == 10) { lastMinus = 0; };
 
 		let trackList = ""
 

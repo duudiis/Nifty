@@ -1,4 +1,4 @@
-module.exports = class Slash {
+module.exports = class {
 
     constructor(client) {
         this.client = client;

@@ -7,7 +7,7 @@ const Spotify = require('spotify-url-info')
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
 
-module.exports = class GetInputTrack extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);

@@ -3,7 +3,7 @@ const Commands = require("../../structures/Commands");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Disconnect extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);
@@ -54,8 +54,8 @@ module.exports = class Disconnect extends Commands {
 
         await this.client.player.updateNpMessage(command.guild.id, "delete");
 
-        this.client.database.db("guilds").collection("players").deleteOne({ guildId: command.guild.id });
-        this.client.database.db("queues").collection(command.guild.id).deleteMany({});
+        this.client.database.db("guilds").collection("players").deleteMany({ guildId: command.guild.id });
+        this.client.database.db("queues").collection(command.guild.id).drop().catch(e => {});
 
         try { existingConnection.state.subscription.player.stop(); } catch (e) { }
 

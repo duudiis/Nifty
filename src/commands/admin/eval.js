@@ -4,9 +4,9 @@ const os = require('os');
 const util = require('util')
 const nodePackage = require('../../../package.json');
 
-const { MessageEmbed, MessageButton } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 
-module.exports = class Eval extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);

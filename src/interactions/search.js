@@ -5,7 +5,7 @@ const { MessageEmbed } = require("discord.js");
 
 const ytdl = require('ytdl-core');
 
-module.exports = class Search extends Interactions {
+module.exports = class extends Interactions {
 
 	constructor(client) {
 		super(client);

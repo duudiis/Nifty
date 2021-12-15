@@ -2,7 +2,7 @@ const Modules = require("../../structures/Modules");
 
 const DiscordVoice = require('@discordjs/voice');
 
-module.exports = class JoinChannel extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);
@@ -26,7 +26,7 @@ module.exports = class JoinChannel extends Modules {
         const player = DiscordVoice.createAudioPlayer();
         connection.subscribe(player);
 
-        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: 0, stopped: true, guildId: command.guild.id, announcesId: command.channel.id } }, { upsert: true });
+        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: 0, stopped: true, guildId: command.guild.id, announcesId: command.channel.id, voiceId: voiceChannel.id } }, { upsert: true });
         this.client.player.connectionEvents(connection, command.guild.id).catch(O_o => { });
 
         voiceChannel.guild.me.voice.setDeaf().catch(e => { });

@@ -3,7 +3,7 @@ const Commands = require("../../structures/Commands");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Unpause extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);

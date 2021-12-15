@@ -2,7 +2,7 @@ const Modules = require("../../structures/Modules");
 
 const ytsr = require('ytsr');
 
-module.exports = class YoutubeFuzzySearch extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);
@@ -30,7 +30,9 @@ module.exports = class YoutubeFuzzySearch extends Modules {
                 if (durationArray.length == 2) { lengthSeconds = (+durationArray[0]) * 60 + (+durationArray[1]) };
                 if (durationArray.length == 3) { lengthSeconds = (+durationArray[0]) * 60 * 60 + (+durationArray[1]) * 60 + (+durationArray[2]) };
 
-                matchingResults.push({ videoUrl: video.url, videoDuration: lengthSeconds, videoId: video.id });
+                if (Math.abs(lengthSeconds - trackInfo.duration) <= 2) {
+                    matchingResults.push({ videoUrl: video.url, viewsCount: video.views, videoDuration: lengthSeconds, videoId: video.id });
+                }
 
             }
 
@@ -39,7 +41,7 @@ module.exports = class YoutubeFuzzySearch extends Modules {
         if (matchingResults.length == 0) { throw "An equivalent video on YouTube was unable to be found!" };
 
         const mostPopular = matchingResults.reduce((x, y) => {
-            return Math.abs(x.videoDuration - trackInfo.duration) < Math.abs(y.videoDuration - trackInfo.duration) ? x : y;
+            return x.viewsCount > y.viewsCount ? x : y;
         })
 
         return mostPopular.videoUrl;

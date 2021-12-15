@@ -2,7 +2,7 @@ const Events = require("../structures/Events");
 
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class GuildDelete extends Events {
+module.exports = class extends Events {
 
     constructor(client) {
         super(client);
@@ -13,10 +13,10 @@ module.exports = class GuildDelete extends Events {
 
     async run(guild) {
 
-        this.client.database.db("default").collection("guilds").deleteOne({ id: guild.id });
+        this.client.database.db("default").collection("guilds").deleteMany({ id: guild.id });
 
-        this.client.database.db("guilds").collection("players").deleteOne({ guildId: guild.id });
-        this.client.database.db("queues").collection(guild.id).deleteMany({});
+        this.client.database.db("guilds").collection("players").deleteMany({ guildId: guild.id });
+        this.client.database.db("queues").collection(guild.id).drop().catch(e => {});
 
     }
 

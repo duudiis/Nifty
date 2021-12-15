@@ -3,7 +3,7 @@ const Commands = require("../../structures/Commands");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Stop extends Commands {
+module.exports = class extends Commands {
 
 	constructor(client) {
 		super(client);
@@ -60,7 +60,7 @@ module.exports = class Stop extends Commands {
 
 		existingConnection.state.subscription.player.stop();
 
-		setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
+		setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 2000);
 
 		return { code: "success", embed: stoppedEmbed };
 

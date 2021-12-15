@@ -2,7 +2,7 @@ const Events = require("../structures/Events");
 
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class InteractionCreate extends Events {
+module.exports = class extends Events {
 
 	constructor(client) {
 		super(client);
@@ -17,9 +17,7 @@ module.exports = class InteractionCreate extends Events {
 
 			const command = this.client.commands.get(interaction.commandName);
 
-			if (command.ignoreSlash) { return };
-
-			if (!command) { return this.unknownCommand(interaction) };
+			if (!command || command.ignoreSlash) { return this.unknownCommand(interaction) };
 			if (!command.enabled) { return this.commandDisabled(interaction) };
 			if (interaction.channel.type === "DM") { return this.DmCommand(interaction) };
 
@@ -49,7 +47,7 @@ module.exports = class InteractionCreate extends Events {
 	async unknownCommand(interaction) {
 
 		const unknownEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
-			.setDescription(`Unknown command`)
+			.setDescription(`Unknown command.`)
 
 		interaction.reply({ embeds: [unknownEmbed] })
 
@@ -67,7 +65,7 @@ module.exports = class InteractionCreate extends Events {
 	async DmCommand(interaction) {
 
 		const DmEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
-			.setDescription(`You can't use commands in my DMs`)
+			.setDescription(`This command can only be run in a server!`)
 
 		interaction.reply({ embeds: [DmEmbed] })
 
