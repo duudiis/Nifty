@@ -3,9 +3,9 @@ const Commands = require("../../structures/Commands");
 const os = require('os');
 const nodePackage = require('../../../package.json');
 
-const { MessageEmbed, MessageButton } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 
-module.exports = class Debug extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);

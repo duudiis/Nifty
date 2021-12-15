@@ -1,6 +1,6 @@
 const Modules = require("../structures/Modules");
 
-module.exports = class GetPremiumState extends Modules {
+module.exports = class extends Modules {
 
 	constructor(client) {
 		super(client);

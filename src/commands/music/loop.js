@@ -3,7 +3,7 @@ const Commands = require("../../structures/Commands");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Loop extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);
@@ -48,9 +48,9 @@ module.exports = class Loop extends Commands {
 
         let mode = undefined;
 
-        if (input.includes("queue") || input.includes("q")) { mode = "queue" };
-        if (input.includes("track") || input.includes("t")) { mode = "track" };
-        if (input.includes("off") || input.includes("disabled") || input.includes("d") || input.includes("disable")) { mode = "disabled" };
+        if (this.client.constants.keywords.loop.queue.includes(input.toLowerCase())) { mode = "queue" };
+        if (this.client.constants.keywords.loop.track.includes(input.toLowerCase())) { mode = "track" };
+        if (this.client.constants.keywords.disabled.includes(input.toLowerCase())) { mode = "disabled" };
 
         if (!mode) {
 
@@ -94,11 +94,11 @@ module.exports = class Loop extends Commands {
         if (existingConnection && existingConnection.joinConfig.channelId != voiceChannel.id) { return { code: "error", embed: errorEmbed.setDescription("Someone else is already listening to music in different channel!") } };
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
-        if(playerData?.autoplay == "on") { return { code: "error", embed: errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") }; };
-        
+        if (playerData?.autoplay == "on") { return { code: "error", embed: errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") }; };
+
         if (!existingConnection) {
             try { await this.client.player.joinChannel(voiceChannel, command) } catch (error) { return { code: "error", embed: errorEmbed.setDescription(`${error.message ? error.message : error}`) }; };
-            existingConnection = DiscordVoice.getVoiceConnection(command.guild.id); 
+            existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
         };
 
         await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { loop: mode } }, { upsert: true });

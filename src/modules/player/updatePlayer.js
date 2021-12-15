@@ -4,7 +4,7 @@ const DiscordVoice = require('@discordjs/voice');
 
 const ytdl = require('ytdl-core-discord');
 
-module.exports = class UpdatePlayer extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);

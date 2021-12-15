@@ -3,7 +3,7 @@ const Modules = require("../../structures/Modules");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class QueueNext extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);
@@ -51,6 +51,13 @@ module.exports = class QueueNext extends Modules {
         }
 
         if (!nextQueue && playerData.loop == "queue") {
+
+            if (playerData.shuffle == "on") {
+                let newQueue = await this.client.shuffleArray(queueData);
+                
+                await this.client.database.db("queues").collection(guildId).drop().catch(e => {});
+                await this.client.database.db("queues").collection(guildId).insertMany(newQueue);
+            }
 
             nextQueueID = 0;
             nextQueue = queueData[0];

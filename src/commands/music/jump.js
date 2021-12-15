@@ -3,7 +3,7 @@ const Commands = require("../../structures/Commands");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Jump extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);
@@ -59,55 +59,26 @@ module.exports = class Jump extends Commands {
         let existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
         if (existingConnection && existingConnection.joinConfig.channelId != voiceChannel.id) { return { code: "error", embed: errorEmbed.setDescription("Someone else is already listening to music in different channel!") } };
 
-        if (!existingConnection) { 
+        if (!existingConnection) {
             try { await this.client.player.joinChannel(voiceChannel, command) } catch (error) { return { code: "error", embed: errorEmbed.setDescription(`${error.message ? error.message : error}`) }; };
-            existingConnection = DiscordVoice.getVoiceConnection(command.guild.id); 
+            existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
         };
 
-        const queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
+        let jumpTarget = undefined;
+        try { jumpTarget = await this.client.player.findTrack(input, command.guild.id) } catch (error) { return { code: "error", embed: errorEmbed.setDescription(`${error.message ? error.message : error}`) }; };
 
-        if (input == "first") { input = "1" };
-        if (input == "last") { input = `${queueData.length}` };
+        if (!jumpTarget) { return { code: "error", embed: errorEmbed.setDescription(`A track could not be found for "${input}"!`) }; };
 
-        let jumpTrack = null;
-        let jumpId = null;
-
-        if (input.match(/^(\+|-)[0-9]+/)) {
-
-            const inputInt = parseInt(input);
-            if (inputInt == 0) { return { code: "error", embed: errorEmbed.setDescription(`A track could not be found for "${input}"!`) } }
-
-            const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
-
-            inputInt > 0 ? jumpId = playerData.queueID + inputInt : jumpId = playerData.queueID - Math.abs(inputInt);
-            jumpTrack = queueData[jumpId];
-
-        } else if (parseInt(input) == input) {
-
-            jumpId = parseInt(input) - 1;
-            jumpTrack = queueData[jumpId];
-
-        } else {
-
-            jumpTrack = queueData.find(track => track.title.toLowerCase().includes(input.toLowerCase()));
-            if (!jumpTrack) { return { code: "error", embed: errorEmbed.setDescription(`A track could not be found for "${input}"!`) } };
-
-            jumpId = queueData.map(track => track.url).indexOf(jumpTrack.url);
-            if (!jumpId) { return { code: "error", embed: errorEmbed.setDescription(`A track could not be found for "${input}"!`) } };
-        }
-
-        if (!jumpTrack) { return { code: "error", embed: errorEmbed.setDescription(`A track could not be found for "${input}"!`) } };
-
-        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: jumpId } });
+        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: jumpTarget.id } });
         existingConnection.state.subscription.player.skipExecute = true;
 
         existingConnection.state.subscription.player.stop();
         this.client.player.updatePlayer(existingConnection, command.guild.id);
 
-        setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
+        setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 2000);
 
         const jumpedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-            .setDescription(`Jumped to [${await this.client.removeFormatting(jumpTrack.title, 54)}](${jumpTrack.url}) [<@${jumpTrack.user}>]`)
+            .setDescription(`Jumped to [${await this.client.removeFormatting(jumpTarget.track.title, 54)}](${jumpTarget.track.url}) [<@${jumpTarget.track.user}>]`)
 
         return { code: "success", embed: jumpedEmbed };
 

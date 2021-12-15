@@ -9,13 +9,13 @@ module.exports = class extends Commands {
         super(client);
         this.client = client;
 
-        this.name = "autoplay";
-        this.aliases = ["ap", "auto"];
+        this.name = "shuffle";
+        this.aliases = ["shu", "sh", "random", "randomize", "randomizer"];
 
-        this.description = "Toggles whether Nifty will automatically play related songs after the queue has run out";
+        this.description = "Shuffles the queue";
         this.category = "music";
 
-        this.usage = "autoplay";
+        this.usage = "shuffle";
         this.options = []
 
         this.enabled = true;
@@ -34,19 +34,19 @@ module.exports = class extends Commands {
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
 
-            let playerAutoplay = playerData?.autoplay;
-            if (!playerAutoplay) { playerAutoplay = "off" };
+            let playerShuffle = playerData?.shuffle;
+            if (!playerShuffle) { playerShuffle = "off" };
 
-            let nextAutoplay = {
+            let nextShuffle = {
                 "on": "off",
                 "off": "on"
             }
 
-            mode = nextAutoplay[playerAutoplay];
+            mode = nextShuffle[playerShuffle];
 
         };
 
-        const response = await this.autoplay(mode, message);
+        const response = await this.shuffle(mode, message);
         return message.reply({ embeds: [response.embed] });
 
     }
@@ -55,22 +55,22 @@ module.exports = class extends Commands {
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
 
-        let playerAutoplay = playerData?.autoplay;
-        if (!playerAutoplay) { playerAutoplay = "off" };
+        let playerShuffle = playerData?.shuffle;
+        if (!playerShuffle) { playerShuffle = "off" };
 
-        let nextAutoplay = {
+        let nextShuffle = {
             "on": "off",
             "off": "on"
         }
 
-        let mode = nextAutoplay[playerAutoplay];
+        let mode = nextShuffle[playerShuffle];
 
-        const response = await this.autoplay(mode, interaction);
+        const response = await this.shuffle(mode, interaction);
         return interaction.editReply({ embeds: [response.embed] });
 
     }
 
-    async autoplay(mode, command) {
+    async shuffle(mode, command) {
 
         const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
 
@@ -85,24 +85,38 @@ module.exports = class extends Commands {
             existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
         };
 
-        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
-        if (playerData?.loop && playerData?.loop != "disabled") { return { code: "error", embed: errorEmbed.setDescription("AutoPlay and Loop cannot both be enabled at the same time!") } };
+        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { shuffle: mode } }, { upsert: true });
+        if (mode == "on") { await this.shuffleQueue(command.guild.id); };
 
-        await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { autoplay: mode } }, { upsert: true });
-
-        if (mode == "on" && existingConnection?.state?.subscription?.player?.state?.status == "idle") {
-            this.client.player.queueNext(existingConnection, command.guild.id);
+        let shuffleMessage = {
+            "on": "Shuffle mode has been **enabled**",
+            "off": "Shuffle mode has been **disabled**"
         }
 
-        let autoplayMessage = {
-            "on": "AutoPlay is now **enabled**",
-            "off": "AutoPlay is now **disabled**"
-        }
+        const shuffleEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
+            .setDescription(shuffleMessage[mode])
 
-        const autoplayEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-            .setDescription(autoplayMessage[mode])
+        return { code: "success", embed: shuffleEmbed };
 
-        return { code: "success", embed: autoplayEmbed };
+    }
+
+    async shuffleQueue(guildId) {
+
+        const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
+        const queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
+
+        if (queueData.length == 0) { return; };
+        if (playerData.queueID == queueData.length - 1) { return; };
+
+        let queueBefore = queueData.slice(0, -((queueData.length - playerData.queueID) - 1));
+        let shuffledQueue = queueData.slice((playerData.queueID + 1));
+
+        shuffledQueue = await this.client.shuffleArray(shuffledQueue);
+
+        let newQueue = [...queueBefore, ...shuffledQueue];
+
+        await this.client.database.db("queues").collection(guildId).drop().catch(e => {});
+        await this.client.database.db("queues").collection(guildId).insertMany(newQueue);
 
     }
 

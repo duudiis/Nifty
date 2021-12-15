@@ -3,7 +3,7 @@ const Modules = require("../../structures/Modules");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class ConnectionEvents extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);
@@ -31,7 +31,7 @@ module.exports = class ConnectionEvents extends Modules {
             this.updateTimer(connection, guildId, "reset", "pauseTimer");
 
             if (!connection?.state?.subscription?.player?.state?.resource?.metadata) { return };
-            if ((connection.state.subscription.player.state.resource.playbackDuration / 1000) > 3) { return };
+            if ((connection.state.subscription.player.state.resource.playbackDuration / 1000) > 2) { return };
 
             this.client.player.updateNpMessage(guildId, "send/delete");
 

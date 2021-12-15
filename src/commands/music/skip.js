@@ -3,7 +3,7 @@ const Commands = require("../../structures/Commands");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Skip extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);
@@ -83,6 +83,20 @@ module.exports = class Skip extends Commands {
 
         }
 
+        if (!nextQueue && playerData.loop == "queue") {
+
+            if (playerData.shuffle == "on") {
+                let newQueue = await this.client.shuffleArray(queueData);
+                
+                await this.client.database.db("queues").collection(command.guild.id).drop().catch(e => {});
+                await this.client.database.db("queues").collection(command.guild.id).insertMany(newQueue);
+            }
+
+            nextQueueID = 0;
+            nextQueue = queueData[0];
+
+        }
+
         if (!nextQueue) {
             await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { stopped: true } }, { upsert: true });
             return { code: "success", embed: skippedTrackEmbed };
@@ -102,7 +116,7 @@ module.exports = class Skip extends Commands {
 
         connection.state.subscription.player.stop();
 
-        setTimeout(async () => { connection.state.subscription.player.skipExecute = false; }, 4000);
+        setTimeout(async () => { connection.state.subscription.player.skipExecute = false; }, 2000);
 
     }
 

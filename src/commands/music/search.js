@@ -5,7 +5,7 @@ const { MessageSelectMenu, MessageActionRow, MessageEmbed } = require("discord.j
 
 const ytsr = require('ytsr');
 
-module.exports = class Search extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);

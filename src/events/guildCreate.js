@@ -2,7 +2,7 @@ const Events = require("../structures/Events");
 
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class GuildCreate extends Events {
+module.exports = class extends Events {
 
 	constructor(client) {
 		super(client);

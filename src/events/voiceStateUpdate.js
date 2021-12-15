@@ -3,7 +3,7 @@ const Events = require("../structures/Events");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class VoiceStateUpdate extends Events {
+module.exports = class extends Events {
 
     constructor(client) {
         super(client);
@@ -52,8 +52,8 @@ module.exports = class VoiceStateUpdate extends Events {
 
             await this.client.player.updateNpMessage(oldState.guild.id, "delete");
 
-            this.client.database.db("guilds").collection("players").deleteOne({ guildId: oldState.guild.id });
-            this.client.database.db("queues").collection(oldState.guild.id).deleteMany({});
+            this.client.database.db("guilds").collection("players").deleteMany({ guildId: oldState.guild.id });
+            this.client.database.db("queues").collection(oldState.guild.id).drop().catch(e => {});
 
             try { existingConnection.state.subscription.player.stop(); } catch (e) { }
 
@@ -61,6 +61,8 @@ module.exports = class VoiceStateUpdate extends Events {
             existingConnection.destroy();
 
         } else if (newState.channel && oldState.channel && newState.channelId != oldState.channelId) {
+
+            await this.client.database.db("guilds").collection("players").updateOne({ guildId: newState.guild.id }, { $set: { voiceId: newState.channel.id } });
 
             if (newState.channel && newState.channel.members.filter(member => !member.user.bot).size == 0 && oldState.channel.members.filter(member => !member.user.bot).size != 0) {
 

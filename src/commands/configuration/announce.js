@@ -1,9 +1,8 @@
 const Commands = require("../../structures/Commands");
 
-const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Announce extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);
@@ -27,8 +26,8 @@ module.exports = class Announce extends Commands {
 
         let mode = undefined;
 
-        if (input.includes("on") || input.includes("enabled") || input.includes("enable") || input.includes("yes")) { mode = "enabled" };
-        if (input.includes("off") || input.includes("disabled") || input.includes("disable") || input.includes("no")) { mode = "disabled" };
+        if (this.client.constants.keywords.enabled.includes(input.toLowerCase())) { mode = "enabled" };
+        if (this.client.constants.keywords.disabled.includes(input.toLowerCase())) { mode = "disabled" };
 
         if (!mode) {
 

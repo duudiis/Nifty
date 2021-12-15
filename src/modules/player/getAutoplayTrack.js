@@ -2,16 +2,16 @@ const Modules = require("../../structures/Modules");
 
 const ytdl = require('ytdl-core');
 
-module.exports = class GetAutoplayTrack extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);
         this.client = client;
 
-        this.blacklisted = ["concert", "live", "cover", "full show", "performance", "halftime", "trailer", "movie", "clip"];
-
         this.name = "getAutoplayTrack";
         this.subcategory = "player";
+
+        this.blacklisted = ["concert", "live", "tour", "cover", "full show", "performance", "halftime", "trailer", "movie", "clip"];
     }
 
     async run(guildId) {

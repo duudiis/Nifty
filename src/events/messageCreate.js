@@ -2,7 +2,7 @@ const Events = require("../structures/Events");
 
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class MessageCreate extends Events {
+module.exports = class extends Events {
 
     constructor(client) {
         super(client);
@@ -52,7 +52,7 @@ module.exports = class MessageCreate extends Events {
     async getStarted(message) {
 
         let playCommand = "/play"
-        if (!message.channel.permissionsFor(command.member.id).has("USE_APPLICATION_COMMANDS")) { playCommand = `${await this.client.getPrefix(command.guild.id)}play`; };
+        if (!message.channel.permissionsFor(message.member.id).has("USE_APPLICATION_COMMANDS")) { playCommand = `${await this.client.getPrefix(message.guild.id)}play`; };
 
         const getStartedEmbed = new MessageEmbed({ color: "#202225" })
             .setDescription(`You can play music by joining a voice channel and typing \`${playCommand}\`. The command accepts song names, video links, and playlist links.`)

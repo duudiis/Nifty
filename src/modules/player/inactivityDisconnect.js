@@ -3,7 +3,7 @@ const Modules = require("../../structures/Modules");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class InactivityDisconnect extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);
@@ -27,8 +27,8 @@ module.exports = class InactivityDisconnect extends Modules {
 
         const guild = this.client.guilds.cache.get(guildId);
 
-        this.client.database.db("guilds").collection("players").deleteOne({ guildId: guildId });
-        this.client.database.db("queues").collection(guildId).deleteMany({});
+        this.client.database.db("guilds").collection("players").deleteMany({ guildId: guildId });
+        this.client.database.db("queues").collection(guildId).drop().catch(e => {});
 
         try { existingConnection.state.subscription.player.stop(); } catch (e) { }
 

@@ -3,7 +3,7 @@ const Modules = require("../../structures/Modules");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class UpdateNpMessage extends Modules {
+module.exports = class extends Modules {
 
     constructor(client) {
         super(client);

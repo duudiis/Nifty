@@ -3,7 +3,7 @@ const Commands = require("../../structures/Commands");
 const DiscordVoice = require('@discordjs/voice');
 const { MessageEmbed } = require("discord.js");
 
-module.exports = class Back extends Commands {
+module.exports = class extends Commands {
 
     constructor(client) {
         super(client);
@@ -61,13 +61,20 @@ module.exports = class Back extends Commands {
         let nextQueueID = playerData.queueID - 1;
         let nextQueue = queueData[nextQueueID];
 
+        if (!nextQueue && playerData.loop == "queue") {
+
+            nextQueueID = queueData.length - 1;
+            nextQueue = queueData[nextQueueID];
+
+        }
+
         if (!nextQueue) {
             await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { stopped: true } }, { upsert: true });
             existingConnection.state.subscription.player.skipExecute = true;
 
             existingConnection.state.subscription.player.stop();
 
-            setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
+            setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 2000);
 
             return { code: "success", embed: skippedTrackEmbed };
         }
@@ -78,7 +85,7 @@ module.exports = class Back extends Commands {
         existingConnection.state.subscription.player.stop();
         this.client.player.updatePlayer(existingConnection, command.guild.id);
 
-        setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 4000);
+        setTimeout(async () => { existingConnection.state.subscription.player.skipExecute = false; }, 2000);
         
         return { code: "success", embed: skippedTrackEmbed };
 
