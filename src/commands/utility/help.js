@@ -15,7 +15,9 @@ module.exports = class extends Commands {
 		this.category = "utility";
 
 		this.usage = "help";
-		this.options = []
+		this.options = [];
+
+		this.requiredPermissions = [];
 
 		this.enabled = true;
 	}

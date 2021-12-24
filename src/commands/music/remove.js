@@ -23,7 +23,9 @@ module.exports = class extends Commands {
                 "type": "STRING",
                 "required": true
             }
-        ]
+        ];
+
+        this.requiredPermissions = ["Manage Queue"];
 
         this.enabled = true;
     }

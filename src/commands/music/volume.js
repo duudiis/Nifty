@@ -22,7 +22,9 @@ module.exports = class extends Commands {
                 "description": "The value to set the volume to",
                 "type": "INTEGER"
             }
-        ]
+        ];
+
+        this.requiredPermissions = ["Manage Player"];
 
         this.enabled = true;
     }

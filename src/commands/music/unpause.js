@@ -16,7 +16,9 @@ module.exports = class extends Commands {
         this.category = "music";
 
         this.usage = "unpause";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = ["Manage Player"];
 
         this.enabled = true;
     }

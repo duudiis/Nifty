@@ -22,7 +22,9 @@ module.exports = class extends Commands {
 				"type": "STRING",
 				"required": false
 			}
-		]
+		];
+
+		this.requiredPermissions = [];
 
 		this.enabled = true;
 		this.ignoreSlash = true;

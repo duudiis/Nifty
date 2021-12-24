@@ -22,7 +22,9 @@ module.exports = class extends Commands {
                 "description": "Display the playing track",
                 "type": "SUB_COMMAND"
             }
-        ]
+        ];
+
+        this.requiredPermissions = ["View Queue"];
 
         this.enabled = true;
     }

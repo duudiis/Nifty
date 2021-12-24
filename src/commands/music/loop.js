@@ -37,7 +37,9 @@ module.exports = class extends Commands {
                 ],
                 "required": true
             }
-        ]
+        ];
+
+        this.requiredPermissions = ["Manage Player"];
 
         this.enabled = true;
     }

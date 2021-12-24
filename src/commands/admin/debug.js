@@ -18,7 +18,9 @@ module.exports = class extends Commands {
         this.category = "admin";
 
         this.usage = "debug";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = [];
 
         this.enabled = true;
         this.ownersOnly = true;

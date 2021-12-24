@@ -15,7 +15,9 @@ module.exports = class extends Commands {
         this.category = "music";
 
         this.usage = "announce";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = [];
 
         this.enabled = true;
     }

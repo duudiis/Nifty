@@ -16,7 +16,9 @@ module.exports = class extends Commands {
         this.category = "music";
 
         this.usage = "clear";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = ["Manage Queue"];
 
         this.enabled = true;
     }
