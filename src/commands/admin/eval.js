@@ -36,7 +36,7 @@ module.exports = class extends Commands {
         const evalEmbed = new MessageEmbed({ color: message.guild.me.displayHexColor })
             .setDescription(`${util.inspect(result)}`)
 
-        message.reply({ embeds: [evalEmbed] });
+        message.channel.send({ embeds: [evalEmbed] });
 
     }
 

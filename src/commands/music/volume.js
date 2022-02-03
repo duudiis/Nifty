@@ -24,7 +24,7 @@ module.exports = class extends Commands {
             }
         ];
 
-        this.requiredPermissions = ["Manage Player"];
+        this.requiredPermissions = ["MANAGE_PLAYER"];
 
         this.enabled = true;
     }
@@ -43,11 +43,11 @@ module.exports = class extends Commands {
             const volumeEmbed = new MessageEmbed({ color: message.guild.me.displayHexColor })
                 .setDescription(`**${currentVolume}%**`)
 
-            return message.reply({ embeds: [volumeEmbed] });
+            return message.channel.send({ embeds: [volumeEmbed] });
         }
 
         const response = await this.volume(value, message);
-        return message.reply({ embeds: [response.embed] });
+        return message.channel.send({ embeds: [response.embed] });
 
     }
 

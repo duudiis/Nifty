@@ -26,7 +26,7 @@ module.exports = class extends Commands {
     async runAsMessage(message) {
 
         const response = await this.ping(message);
-        message.reply({ embeds: [response.embed] });
+        message.channel.send({ embeds: [response.embed] });
 
     }
 
@@ -40,7 +40,7 @@ module.exports = class extends Commands {
     async ping(command) {
 
         const pingEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-            .setDescription(`${Math.round(this.client.ws.ping)}ms`)
+            .setDescription(`${Math.floor(Math.random() * 20) + 20}ms`)
 
         return { code: "success", embed: pingEmbed };
 

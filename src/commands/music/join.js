@@ -18,7 +18,7 @@ module.exports = class extends Commands {
         this.usage = "join";
         this.options = [];
 
-        this.requiredPermissions = ["Manage Player"];
+        this.requiredPermissions = ["MANAGE_PLAYER"];
 
         this.enabled = true;
     }
@@ -27,7 +27,7 @@ module.exports = class extends Commands {
 
         const response = await this.join(message);
 
-        if (response.code == "error") { return message.reply({ embeds: [response.embed] }); };
+        if (response.code == "error") { return message.channel.send({ embeds: [response.embed] }); };
         if (response.code == "success") { return message.react("👌") };
 
     }

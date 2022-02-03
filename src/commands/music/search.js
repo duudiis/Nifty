@@ -27,7 +27,7 @@ module.exports = class extends Commands {
             }
         ];
 
-        this.requiredPermissions = ["Add to Queue"];
+        this.requiredPermissions = ["ADD_TO_QUEUE"];
 
         this.enabled = true;
     }
@@ -38,7 +38,7 @@ module.exports = class extends Commands {
         if (!input) { return };
 
         const response = await this.search(input, message);
-        return message.reply(response.reply);
+        return message.channel.send(response.reply);
 
     }
 

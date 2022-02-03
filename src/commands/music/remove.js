@@ -25,7 +25,7 @@ module.exports = class extends Commands {
             }
         ];
 
-        this.requiredPermissions = ["Manage Queue"];
+        this.requiredPermissions = ["MANAGE_QUEUE"];
 
         this.enabled = true;
     }
@@ -36,7 +36,7 @@ module.exports = class extends Commands {
         if (!input) { return };
 
         const response = await this.remove(input, message);
-        return message.reply({ embeds: [response.embed] });
+        return message.channel.send({ embeds: [response.embed] });
 
     }
 

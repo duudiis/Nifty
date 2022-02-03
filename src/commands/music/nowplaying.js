@@ -24,7 +24,7 @@ module.exports = class extends Commands {
             }
         ];
 
-        this.requiredPermissions = ["View Queue"];
+        this.requiredPermissions = ["VIEW_QUEUE"];
 
         this.enabled = true;
     }
@@ -32,7 +32,7 @@ module.exports = class extends Commands {
     async runAsMessage(message) {
 
         const response = await this.nowPlaying(message);
-        return message.reply({ embeds: [response.embed] });
+        return message.channel.send({ embeds: [response.embed] });
 
     }
 
@@ -55,7 +55,7 @@ module.exports = class extends Commands {
 
         let nowPlayingEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
             .setDescription(`[${await this.client.removeFormatting(nowPlaying.title, 56)}](${nowPlaying.url}) [<@${nowPlaying.user}>]`)
-            .setFooter(timeBar)
+            .setFooter({ text: timeBar })
 
         return { code: "success", embed: nowPlayingEmbed };
 

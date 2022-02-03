@@ -39,7 +39,7 @@ module.exports = class extends Commands {
 			const currentPrefixEmbed = new MessageEmbed({ color: message.guild.me.displayHexColor })
 				.setDescription(`This server's prefix is **${await this.client.getPrefix(message.guildId)}**`)
 
-			return message.reply({ embeds: [currentPrefixEmbed] });
+			return message.channel.send({ embeds: [currentPrefixEmbed] });
 		};
 
 		if (!message.member.permissions.has("MANAGE_GUILD")) {
@@ -47,7 +47,7 @@ module.exports = class extends Commands {
 			const missingPermsEmbed = new MessageEmbed({ color: message.guild.me.displayHexColor })
 				.setDescription("You must have the `Manage Server` permission to use this command!")
 
-			return message.reply({ embeds: [missingPermsEmbed] });
+			return message.channel.send({ embeds: [missingPermsEmbed] });
 		};
 
 		const prefixEmbed = new MessageEmbed({ color: message.guild.me.displayHexColor })
@@ -57,7 +57,7 @@ module.exports = class extends Commands {
 
 		await this.client.database.db("default").collection("guilds").updateOne({ id: message.guildId }, { $set: { prefix: newPrefix } }, { upsert: true })
 
-		return message.reply({ embeds: [prefixEmbed] });
+		return message.channel.send({ embeds: [prefixEmbed] });
 
 	}
 

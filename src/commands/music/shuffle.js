@@ -18,7 +18,7 @@ module.exports = class extends Commands {
         this.usage = "shuffle";
         this.options = [];
 
-        this.requiredPermissions = ["Manage Queue"];
+        this.requiredPermissions = ["MANAGE_QUEUE"];
 
         this.enabled = true;
     }
@@ -49,7 +49,7 @@ module.exports = class extends Commands {
         };
 
         const response = await this.shuffle(mode, message);
-        return message.reply({ embeds: [response.embed] });
+        return message.channel.send({ embeds: [response.embed] });
 
     }
 

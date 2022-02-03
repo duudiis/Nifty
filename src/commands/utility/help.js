@@ -25,7 +25,7 @@ module.exports = class extends Commands {
 	async runAsMessage(message) {
 
 		const response = await this.help(message);
-		message.reply({ embeds: [response.embed] });
+		message.channel.send({ embeds: [response.embed] });
 
 	}
 
@@ -42,7 +42,7 @@ module.exports = class extends Commands {
 		if (!command.channel.permissionsFor(command.member.id).has("USE_APPLICATION_COMMANDS")) { playCommand = `${await this.client.getPrefix(command.guild.id)}play`; };
 
 		const helpEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-			.setAuthor(this.client.user.username, this.client.user.displayAvatarURL())
+			.setAuthor({ name: this.client.user.username, iconURL: this.client.user.displayAvatarURL() })
 			.setDescription(`${this.client.user.username} is the easiest way to play music in your Discord server. It supports YouTube and Spotify!\n\nTo get started, join a voice channel and \`${playCommand}\` a song. You can use song names, video links, and playlist links.\n᲼`)
 			.addField("Invite", `${this.client.user.username} can be added to as many servers as you want! [Click here to add it to yours.](https://discord.com/oauth2/authorize?client_id=${this.client.user.id}&permissions=8&scope=bot%20applications.commands)`)
 

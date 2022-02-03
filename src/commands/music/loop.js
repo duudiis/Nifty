@@ -39,7 +39,7 @@ module.exports = class extends Commands {
             }
         ];
 
-        this.requiredPermissions = ["Manage Player"];
+        this.requiredPermissions = ["MANAGE_PLAYER"];
 
         this.enabled = true;
     }
@@ -72,7 +72,7 @@ module.exports = class extends Commands {
         };
 
         const response = await this.loop(mode, message);
-        return message.reply({ embeds: [response.embed] });
+        return message.channel.send({ embeds: [response.embed] });
 
     }
 

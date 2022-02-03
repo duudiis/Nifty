@@ -65,7 +65,7 @@ module.exports = class extends Interactions {
 		let queuedEmbed = new MessageEmbed({ color: interaction.guild.me.displayHexColor });
 
 		if (existingConnection?.state?.subscription?.player?.state?.status == "paused") {
-			queuedEmbed.setFooter("The bot is currently paused.");
+			queuedEmbed.setFooter({ text: "The bot is currently paused." });
 		}
 
 		if (inputTracks.length == 1) {

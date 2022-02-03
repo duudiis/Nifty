@@ -31,7 +31,7 @@ module.exports = class extends Commands {
             }
         ];
 
-        this.requiredPermissions = ["Manage Queue"];
+        this.requiredPermissions = ["MANAGE_QUEUE"];
 
         this.enabled = true;
     }
@@ -45,7 +45,7 @@ module.exports = class extends Commands {
         if (!position) { return; };
 
         const response = await this.move(track, position, message);
-        return message.reply({ embeds: [response.embed] });
+        return message.channel.send({ embeds: [response.embed] });
 
     }
 
@@ -85,9 +85,9 @@ module.exports = class extends Commands {
         let originalPosition = position;
 
         if (this.client.constants.keywords.first.includes(position.toLowerCase())) { position = "1" };
-        if (this.client.constants.keywords.next.includes(position.toLowerCase())) { position = `${playerData.queueID + 1}` };
-        if (this.client.constants.keywords.current.includes(position.toLowerCase())) { position = `${playerData.queueID + 1}` };
-        if (this.client.constants.keywords.back.includes(position.toLowerCase())) { position = `${playerData.queueID}` };
+        if (this.client.constants.keywords.next.includes(position.toLowerCase())) { position = `${playerData.queueID + 2}` };
+        if (this.client.constants.keywords.current.includes(position.toLowerCase())) { position = `${playerData.queueID + 2}` };
+        if (this.client.constants.keywords.back.includes(position.toLowerCase())) { position = `${playerData.queueID + 1}` };
         if (this.client.constants.keywords.last.includes(position.toLowerCase())) { position = `${queueData.length}` };
 
         if (parseInt(position) != position) { return { code: "error", embed: errorEmbed.setDescription(`The new position "${originalPosition}" is not valid!`) }; }

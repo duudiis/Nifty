@@ -1,7 +1,7 @@
 const Interactions = require("../structures/Interactions");
 
 const DiscordVoice = require('@discordjs/voice');
-const { MessageEmbed, MessageButton, MessageActionRow } = require("discord.js");
+const { MessageButton, MessageActionRow } = require("discord.js");
 
 module.exports = class extends Interactions {
 
@@ -14,7 +14,9 @@ module.exports = class extends Interactions {
 
 	async run(button) {
 
+		const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: button.guild.id });
 		const queueData = await this.client.database.db("queues").collection(button.guild.id).find({}).toArray();
+
 		const existingConnection = DiscordVoice.getVoiceConnection(button.guild.id);
 
 		if (!queueData || queueData.length == 0) {
@@ -41,20 +43,21 @@ module.exports = class extends Interactions {
 
 		if (lastMinus == 10) { lastMinus = 0; };
 
+		let padStart = (((parseInt(tracksArray.length - 1) + 1) + ((page.updated - 1) * 10)) - lastMinus).toString().length;
 		let trackList = ""
 
 		for (let trackId in tracksArray) {
 
-			let trackNumber = `${((parseInt(trackId) + 1) + ((page.updated - 1) * 10)) - lastMinus}`.padStart(2, ' '); let currentTop = ""; let currentBottom = "\n"
+			let trackNumber = `${((parseInt(trackId) + 1) + ((page.updated - 1) * 10)) - lastMinus}`.padStart(padStart, ' '); let currentTop = ""; let currentBottom = "\n"
 			let trackTime = await this.toHHMMSS(tracksArray[trackId].duration);
 
-			if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata?.url == tracksArray[trackId].url) { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }
+			if ((trackNumber - 1) == playerData.queueID && existingConnection?.state?.subscription?.player?.state?.status != "idle") { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }
 
 			trackList = trackList + `${currentTop}${trackNumber}) ${tracksArray[trackId].title.length > 36 ? (tracksArray[trackId].title.slice(0, 36).trimEnd() + "…").padEnd(37, ' ') : tracksArray[trackId].title.padEnd(37, ' ')} ${trackTime} ${currentBottom}`
 
 		}
 
-		if (page.updated == queueMax) { trackList = trackList + "\n    This is the end of the queue!" } else { trackList = trackList + `\n    ${queueData.length - (page.updated * 10)} more track(s)` }
+		if (page.updated == queueMax) { trackList = trackList + "\n" + "This is the end of the queue!".padStart(padStart + 31, ' '); } else { trackList = trackList + "\n" + `${queueData.length - (page.updated * 10)} more track(s)`.padStart(padStart + 16 + ((queueData.length - (page.updated * 10)).toString().length), ' '); }
 
 		const buttonsRow = await this.updatedButtons(page.updated);
 		return button.update({ content: `\`\`\`nim\n${trackList}\`\`\``, components: [buttonsRow] })
