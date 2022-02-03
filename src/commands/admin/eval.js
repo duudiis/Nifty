@@ -19,7 +19,9 @@ module.exports = class extends Commands {
         this.category = "admin";
 
         this.usage = "eval { code }";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = [];
 
         this.enabled = true;
         this.ownersOnly = true;
@@ -34,7 +36,7 @@ module.exports = class extends Commands {
         const evalEmbed = new MessageEmbed({ color: message.guild.me.displayHexColor })
             .setDescription(`${util.inspect(result)}`)
 
-        message.reply({ embeds: [evalEmbed] });
+        message.channel.send({ embeds: [evalEmbed] });
 
     }
 

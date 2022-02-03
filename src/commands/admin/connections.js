@@ -13,7 +13,9 @@ module.exports = class extends Commands {
         this.category = "admin";
 
         this.usage = "connections";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = [];
 
         this.enabled = true;
         this.ownersOnly = true;
@@ -23,7 +25,7 @@ module.exports = class extends Commands {
     async runAsMessage(message) {
 
         const playersData = await this.client.database.db("guilds").collection("players").find({}).toArray()
-        return message.reply({ content: `\`${playersData.length}\`` });
+        return message.channel.send({ content: `\`${playersData.length}\`` });
 
     }
 

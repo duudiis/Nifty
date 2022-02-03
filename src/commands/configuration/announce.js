@@ -15,7 +15,9 @@ module.exports = class extends Commands {
         this.category = "music";
 
         this.usage = "announce";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = [];
 
         this.enabled = true;
     }
@@ -46,7 +48,7 @@ module.exports = class extends Commands {
         };
 
         const response = await this.announce(mode, message);
-        return message.reply({ embeds: [response.embed] });
+        return message.channel.send({ embeds: [response.embed] });
 
     }
 

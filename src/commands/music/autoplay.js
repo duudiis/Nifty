@@ -16,7 +16,9 @@ module.exports = class extends Commands {
         this.category = "music";
 
         this.usage = "autoplay";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = ["MANAGE_PLAYER"];
 
         this.enabled = true;
     }
@@ -47,7 +49,7 @@ module.exports = class extends Commands {
         };
 
         const response = await this.autoplay(mode, message);
-        return message.reply({ embeds: [response.embed] });
+        return message.channel.send({ embeds: [response.embed] });
 
     }
 

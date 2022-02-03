@@ -27,10 +27,7 @@ module.exports = class extends Modules {
 
         const guild = this.client.guilds.cache.get(guildId);
 
-        this.client.database.db("guilds").collection("players").deleteMany({ guildId: guildId });
-        this.client.database.db("queues").collection(guildId).drop().catch(e => {});
-
-        try { existingConnection.state.subscription.player.stop(); } catch (e) { }
+        try { existingConnection.state.subscription.player.stop(); } catch (e) { };
 
         clearTimeout(existingConnection.playTimer); clearTimeout(existingConnection.pauseTimer); clearTimeout(existingConnection.aloneTimer);
         existingConnection.destroy();
@@ -41,11 +38,14 @@ module.exports = class extends Modules {
             if (!announcesChannel || !announcesChannel.permissionsFor(this.client.user.id).has("SEND_MESSAGES") || !announcesChannel.permissionsFor(this.client.user.id).has("EMBED_LINKS")) { return; };
 
             const inactivityEmbed = new MessageEmbed({ color: guild.me.displayHexColor })
-                .setDescription(`I left the voice channel because I was inactive for too long.\nIf you are a **Premium** member, you can disable this by typing \`/247\`.`)
+                .setDescription(`I left the voice channel because I was inactive for too long.\nYou can disable this by typing \`/247\`.`)
 
-            announcesChannel.send({ embeds: [inactivityEmbed] }).then(m => { setTimeout(() => { m.delete().catch(e => { }) }, 120000) })
+            announcesChannel.send({ embeds: [inactivityEmbed] }).then(m => { setTimeout(() => { m.delete().catch(e => { }) }, 120000) });
 
         }
+
+        this.client.database.db("guilds").collection("players").deleteMany({ guildId: guildId });
+        this.client.database.db("queues").collection(guildId).drop().catch(e => { });
 
     }
 

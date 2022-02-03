@@ -23,7 +23,9 @@ module.exports = class extends Commands {
 				"type": "STRING",
 				"required": true
 			}
-		]
+		];
+
+		this.requiredPermissions = ["ADD_TO_QUEUE"];
 
 		this.enabled = true;
 	}
@@ -34,7 +36,7 @@ module.exports = class extends Commands {
 		if (!input) { return this.client.commands.get("unpause").runAsMessage(message, true) };
 
 		const response = await this.play(input, message);
-		return message.reply({ embeds: [response.embed] });
+		return message.channel.send({ embeds: [response.embed] });
 
 	}
 
@@ -78,7 +80,7 @@ module.exports = class extends Commands {
 		let queuedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor });
 
 		if (existingConnection?.state?.subscription?.player?.state?.status == "paused") {
-			queuedEmbed.setFooter("The bot is currently paused.");
+			queuedEmbed.setFooter({ text: "The bot is currently paused." });
 		}
 
 		if (inputTracks.length == 1) {

@@ -8,7 +8,7 @@ const client = new Discord.Client(require("../config/Discord"));
 Mongo.MongoClient.connect(process.env.MONGO_URI, { useUnifiedTopology: true }, function (error, response) { client.database = response })
 Mongo.MongoClient.connect(process.env.GLOBAL_MONGO_URI, { useUnifiedTopology: true }, function (error, response) { client.global = response })
 
-process.on('unhandledRejection', error => { console.log(error) });
+process.on('unhandledRejection', error => { client.logError(error).catch(e => { });; });
 
 const path = require("path");
 const fs = require("fs").promises;

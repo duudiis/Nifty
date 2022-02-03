@@ -1,7 +1,6 @@
 const Events = require("../structures/Events");
 
 const DiscordVoice = require('@discordjs/voice');
-const { MessageEmbed } = require("discord.js");
 
 module.exports = class extends Events {
 

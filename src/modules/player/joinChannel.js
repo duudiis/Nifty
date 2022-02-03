@@ -14,6 +14,7 @@ module.exports = class extends Modules {
 
     async run(voiceChannel, command) {
 
+        if (!voiceChannel.permissionsFor(this.client.user.id).has("VIEW_CHANNEL")) { throw "I do not have permission to **view** your voice channel!"; };
         if (!voiceChannel.permissionsFor(this.client.user.id).has("CONNECT")) { throw "I do not have permission to **connect** to your voice channel!"; };
         if (!voiceChannel.permissionsFor(this.client.user.id).has("SPEAK")) { throw "I do not have permission to **speak** in your voice channel!"; };
 

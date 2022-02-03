@@ -10,7 +10,9 @@ module.exports = class Commands {
         this.category = "";
 
         this.usage = "";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = [];
 
         this.enabled = true;
         this.ownersOnly = false;

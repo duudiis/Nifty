@@ -13,22 +13,33 @@ module.exports = class extends Events {
 
 	async run(interaction) {
 
+		const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
+
+		if (interaction?.guild?.me?.isCommunicationDisabled()) {
+			return interaction.reply({ embeds: [errorEmbed.setDescription("I do not have permission to **communicate** in this server!")] });
+		};
+
 		if (interaction.isCommand()) {
 
 			const command = this.client.commands.get(interaction.commandName);
 
-			if (!command || command.ignoreSlash) { return this.unknownCommand(interaction) };
-			if (!command.enabled) { return this.commandDisabled(interaction) };
-			if (interaction.channel.type === "DM") { return this.DmCommand(interaction) };
+			if (!command || command.ignoreSlash) { return interaction.reply({ embeds: [errorEmbed.setDescription("Unknown command.")] }) };
+			if (!command.enabled) { return interaction.reply({ embeds: [errorEmbed.setDescription("This command is currently disabled!")] }) };
+			if (interaction.channel.type === "DM") { return interaction.reply({ embeds: [errorEmbed.setDescription("This command can only be run in a server!")] }) };
+
+			let userPermissions = await this.checkUserPermissions(command, interaction);
+			if (userPermissions.code != "success") { return };
 
 			if (command.category == "music") {
 				this.client.database.db("guilds").collection("players").updateOne({ guildId: interaction.guild.id }, { $set: { announcesId: interaction.channel.id } });
 			}
 
 			await interaction.deferReply();
-			try { await command.runAsInteraction(interaction) } catch (error) { this.commandError(interaction); console.log(error) };
+			try { await command.runAsInteraction(interaction) } catch (error) { interaction.editReply({ embeds: [errorEmbed.setDescription("An error occurred")] }); this.client.logError(error, interaction).catch(e => { }); };
 
-		} else {
+		}
+
+		if (interaction.isMessageComponent()) {
 
 			let interactionId = interaction.customId;
 
@@ -38,45 +49,24 @@ module.exports = class extends Events {
 			const interactionFile = this.client.interactions.get(interactionId);
 			if (!interactionFile) { return };
 
-			try { await interactionFile.run(interaction) } catch (error) { console.log(error) };
+			try { await interactionFile.run(interaction) } catch (error) { this.client.logError(error, interaction).catch(e => { }); };
 
 		}
 
 	}
 
-	async unknownCommand(interaction) {
+	async checkUserPermissions(command, interaction) {
 
-		const unknownEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
-			.setDescription(`Unknown command.`)
+		const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
 
-		interaction.reply({ embeds: [unknownEmbed] })
+		const userPerms = await this.client.getUserPerms(interaction.guild.id, interaction.member.id);
 
-	}
+		if (!command.requiredPermissions.every(permission => userPerms.array.includes(permission))) {
+			try { await interaction.reply({ embeds: [errorEmbed.setDescription("You do not have permission to use this command!")] }); } catch (error) { };
+			return { code: "error" };
+		}
 
-	async commandDisabled(interaction) {
-
-		const disabledEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
-			.setDescription(`This command is currently disabled!`)
-
-		interaction.reply({ embeds: [disabledEmbed] })
-
-	}
-
-	async DmCommand(interaction) {
-
-		const DmEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
-			.setDescription(`This command can only be run in a server!`)
-
-		interaction.reply({ embeds: [DmEmbed] })
-
-	}
-
-	async commandError(interaction) {
-
-		const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error })
-			.setDescription(`An error occurred`)
-
-		interaction.editReply({ embeds: [errorEmbed] })
+		return { code: "success" };
 
 	}
 

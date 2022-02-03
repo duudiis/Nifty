@@ -18,7 +18,9 @@ module.exports = class extends Commands {
         this.category = "admin";
 
         this.usage = "debug";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = [];
 
         this.enabled = true;
         this.ownersOnly = true;
@@ -31,13 +33,13 @@ module.exports = class extends Commands {
         const ramUsage = (process.memoryUsage().rss / 1024 / 1024).toFixed(2);
 
         const debugEmbed = new MessageEmbed({ color: message.guild.me.displayHexColor })
-            .setAuthor(`${this.client.user.username} v${nodePackage.version}`, this.client.user.displayAvatarURL())
+            .setAuthor({ name: `${this.client.user.username} v${nodePackage.version}`, iconURL: this.client.user.displayAvatarURL() })
             .setDescription(`Running for **${Math.round((this.client.uptime / 1000) / 3600)} hours** on **${os.hostname()}**.`)
             .addField(`${(ramUsage / ramTotal * 100).toFixed(1)}% of RAM`, `${ramUsage.toLocaleString()} / ${ramTotal.toLocaleString()} MB`, true)
             .addField(`${(os.loadavg()[0] * 100).toFixed(1)}% of CPU`, `${os.cpus().length}c @ ${(os.cpus()[0].speed / 1000).toFixed(1)}GHz`, true)
-            .setFooter(`using Node.js ${process.version}`)
+            .setFooter({ text: `using Node.js ${process.version}` })
 
-        return message.reply({ embeds: [debugEmbed] })
+        return message.channel.send({ embeds: [debugEmbed] })
 
     }
 

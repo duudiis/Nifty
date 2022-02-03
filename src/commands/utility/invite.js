@@ -15,7 +15,9 @@ module.exports = class extends Commands {
         this.category = "utility";
 
         this.usage = "invite";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = [];
 
         this.enabled = true;
     }
@@ -23,7 +25,7 @@ module.exports = class extends Commands {
     async runAsMessage(message) {
 
         const response = await this.invite(message);
-        message.reply(response.reply);
+        message.channel.send(response.reply);
 
     }
 

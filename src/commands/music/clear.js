@@ -16,7 +16,9 @@ module.exports = class extends Commands {
         this.category = "music";
 
         this.usage = "clear";
-        this.options = []
+        this.options = [];
+
+        this.requiredPermissions = ["MANAGE_QUEUE"];
 
         this.enabled = true;
     }
@@ -25,7 +27,7 @@ module.exports = class extends Commands {
 
         const response = await this.clear(message);
 
-        if (response.code == "error") { return message.reply({ embeds: [response.embed] }); };
+        if (response.code == "error") { return message.channel.send({ embeds: [response.embed] }); };
         if (response.code == "success") { return message.react("👌") };
 
     }

@@ -16,7 +16,9 @@ module.exports = class extends Commands {
 		this.category = "music";
 
 		this.usage = "queue";
-		this.options = []
+		this.options = [];
+
+		this.requiredPermissions = ["VIEW_QUEUE"];
 
 		this.enabled = true;
 	}
@@ -24,7 +26,7 @@ module.exports = class extends Commands {
 	async runAsMessage(message) {
 
 		const response = await this.queue(message);
-		return message.reply(response.reply);
+		return message.channel.send(response.reply);
 
 	}
 
@@ -61,6 +63,7 @@ module.exports = class extends Commands {
 
 		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton);
 
+		const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
 		const queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
 
 		if (!queueData || queueData.length == 0) {
@@ -73,20 +76,21 @@ module.exports = class extends Commands {
 		let queueMax = Math.ceil(queueData.length / 10);
 		let tracksArray = queueData.slice(0, 10);
 
+		let padStart = ((parseInt(tracksArray.length - 1) + 1) + ((1 - 1) * 10)).toString().length;
 		let trackList = "";
-
+		
 		for (const trackId in tracksArray) {
-
-			let trackNumber = `${(parseInt(trackId) + 1) + ((1 - 1) * 10)}`.padStart(2, ' '); let currentTop = ""; let currentBottom = "\n"
+			
+			let trackNumber = `${(parseInt(trackId) + 1) + ((1 - 1) * 10)}`.padStart(padStart, ' '); let currentTop = ""; let currentBottom = "\n"
 			let trackTime = await this.toHHMMSS(tracksArray[trackId].duration);
 
-			if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata?.url == tracksArray[trackId].url) { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }
+			if ((trackNumber - 1) == playerData.queueID && existingConnection?.state?.subscription?.player?.state?.status != "idle") { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }
 
 			trackList = trackList + `${currentTop}${trackNumber}) ${tracksArray[trackId].title.length > 36 ? (tracksArray[trackId].title.slice(0, 36).trimEnd() + "…").padEnd(37, ' ') : tracksArray[trackId].title.padEnd(37, ' ')} ${trackTime} ${currentBottom}`
 
 		}
 
-		if (1 == queueMax) { trackList = trackList + "\n    This is the end of the queue!" } else { trackList = trackList + `\n    ${queueData.length - (1 * 10)} more track(s)` };
+		if (1 == queueMax) { trackList = trackList + "\n" + "This is the end of the queue!".padStart(padStart + 31, ' '); } else { trackList = trackList + "\n" + `${queueData.length - (1 * 10)} more track(s)`.padStart(padStart + 16 + ((queueData.length - (1 * 10)).toString().length), ' '); };
 
 		return { code: "success", reply: { content: `\`\`\`nim\n${trackList}\`\`\``, components: [buttonsRow] } };
 
