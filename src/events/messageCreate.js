@@ -48,7 +48,7 @@ module.exports = class extends Events {
             this.client.database.db("guilds").collection("players").updateOne({ guildId: message.guild.id }, { $set: { announcesId: message.channel.id } });
         }
 
-        try { await command.runAsMessage(message) } catch (error) { this.commandError(message); this.client.logError(error, message).catch(e => { });; };
+        try { await command.runAsMessage(message) } catch (error) { this.commandError(message); console.log(error); };
         this.slashCommands(message);
 
     }
@@ -147,7 +147,7 @@ module.exports = class extends Events {
 
         let random = Math.random();
 
-        if (random < 0.05) {
+        if (random < 0.01) {
             return message.channel.send({ embeds: [slashEmbed] });
         }
 

@@ -32,13 +32,13 @@ module.exports = class extends Modules {
         clearTimeout(existingConnection.playTimer); clearTimeout(existingConnection.pauseTimer); clearTimeout(existingConnection.aloneTimer);
         existingConnection.destroy();
 
-        if (playerData?.channelId) {
-
+        if (playerData?.announcesId) {
+ 
             const announcesChannel = await this.client.channels.fetch(playerData.announcesId).catch(e => { });
             if (!announcesChannel || !announcesChannel.permissionsFor(this.client.user.id).has("SEND_MESSAGES") || !announcesChannel.permissionsFor(this.client.user.id).has("EMBED_LINKS")) { return; };
 
             const inactivityEmbed = new MessageEmbed({ color: guild.me.displayHexColor })
-                .setDescription(`I left the voice channel because I was inactive for too long.\nYou can disable this by typing \`/247\`.`)
+                .setDescription(`I left the voice channel because I was inactive for too long.\nIf you are a **Premium** member, you can disable this by typing \`/247\`.`)
 
             announcesChannel.send({ embeds: [inactivityEmbed] }).then(m => { setTimeout(() => { m.delete().catch(e => { }) }, 120000) });
 
