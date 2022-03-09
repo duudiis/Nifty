@@ -19,7 +19,7 @@ module.exports = class extends Modules {
         for (const playerData of playersData) {
 
             const guild = this.client.guilds.cache.get(playerData.guildId);
-            if (!guild) { this.killPlayer(guild.id); continue; };
+            if (!guild) { this.killPlayer(playerData?.guildId); continue; };
 
             await this.client.player.updateNpMessage(guild.id, "delete");
 

@@ -35,7 +35,7 @@ module.exports = class extends Events {
 			}
 
 			await interaction.deferReply();
-			try { await command.runAsInteraction(interaction) } catch (error) { interaction.editReply({ embeds: [errorEmbed.setDescription("An error occurred")] }); this.client.logError(error, interaction).catch(e => { }); };
+			try { await command.runAsInteraction(interaction) } catch (error) { interaction.editReply({ embeds: [errorEmbed.setDescription("An error occurred")] }); console.log(error); };
 
 		}
 
@@ -49,7 +49,7 @@ module.exports = class extends Events {
 			const interactionFile = this.client.interactions.get(interactionId);
 			if (!interactionFile) { return };
 
-			try { await interactionFile.run(interaction) } catch (error) { this.client.logError(error, interaction).catch(e => { }); };
+			try { await interactionFile.run(interaction) } catch (error) { console.log(error); };
 
 		}
 
