@@ -8,12 +8,28 @@ module.exports = class extends Modules {
         this.client = client;
 
         this.name = "getUserPerms";
+
+        this.users = new Map();
+        this.roles = new Map();
     }
 
-    async run(guildId, memberId) {
+    async run(guildId, memberId, fetchMember = false, force = false) {
 
         const guild = this.client.guilds.cache.get(guildId);
-        const member = await guild.members.fetch(memberId);
+
+        if (guild.roles.cache.has(memberId)) {
+
+            var roleData = await this.client.database.db("perms").collection(guildId).findOne({ id: memberId });
+            this.roles.set(memberId, roleData);
+            return;
+
+        }
+
+        if (fetchMember) {
+            var member = await guild.members.fetch(memberId);
+        } else {
+            var member = guild.members.cache.get(memberId);
+        }
 
         let userPerms = {
             addToQueue: {
@@ -35,7 +51,16 @@ module.exports = class extends Modules {
             array: []
         };
 
-        const userData = await this.client.database.db("perms").collection(guildId).findOne({ id: memberId });
+        if (this.users.has(`${guildId}:${memberId}`) && !force) {
+
+            var userData = this.users.get(`${guildId}:${memberId}`);
+
+        } else {
+
+            var userData = await this.client.database.db("perms").collection(guildId).findOne({ id: memberId });
+            this.users.set(`${guildId}:${memberId}`, userData);
+
+        }
 
         if (userData?.ADD_TO_QUEUE && userData?.ADD_TO_QUEUE != "CLEAR" && userPerms.addToQueue.value == "CLEAR") {
             userPerms.addToQueue.value = userData?.ADD_TO_QUEUE || "ALLOW";
@@ -59,7 +84,16 @@ module.exports = class extends Modules {
 
         for (const memberRole of member.roles.cache.values()) {
 
-            const roleData = await this.client.database.db("perms").collection(guildId).findOne({ id: memberRole.id });
+            if (this.roles.has(memberRole.id) && !force) {
+
+                var roleData = this.roles.get(memberRole.id);
+
+            } else {
+
+                var roleData = await this.client.database.db("perms").collection(guildId).findOne({ id: memberRole.id });
+                this.roles.set(memberRole.id, roleData);
+
+            }
 
             if (roleData?.ADD_TO_QUEUE && roleData?.ADD_TO_QUEUE != "CLEAR" && userPerms.addToQueue.value == "CLEAR") {
                 userPerms.addToQueue.value = roleData?.ADD_TO_QUEUE || "ALLOW";

@@ -55,7 +55,8 @@ module.exports = class extends Commands {
 
 		if (newPrefix == "reset") { newPrefix = process.env.DEFAULT_PREFIX; prefixEmbed.setDescription("This server's prefix has been reset.") };
 
-		await this.client.database.db("default").collection("guilds").updateOne({ id: message.guildId }, { $set: { prefix: newPrefix } }, { upsert: true })
+		await this.client.database.db("default").collection("guilds").updateOne({ id: message.guildId }, { $set: { prefix: newPrefix } }, { upsert: true });
+		this.client.getPrefix(message.guild.id, true);
 
 		return message.channel.send({ embeds: [prefixEmbed] });
 
