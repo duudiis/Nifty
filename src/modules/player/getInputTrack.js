@@ -2,7 +2,8 @@ const Modules = require("../../structures/Modules");
 
 const ytdl = require('ytdl-core');
 
-const Spotify = require('spotify-url-info')
+const fetch = require('isomorphic-unfetch');
+const Spotify = require('spotify-url-info')(fetch);
 
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
