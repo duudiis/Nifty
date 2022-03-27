@@ -166,7 +166,7 @@ module.exports = class extends Commands {
 
         } else {
 
-            const userPerms = await this.client.getUserPerms(command.guild.id, entity);
+            const userPerms = await this.client.getUserPerms(command.guild.id, entity, true);
 
             const permsViewUserEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
                 .setDescription(`<@${entity}>**'s Permissions**\n\n**Add to Queue**\n${permsDict[userPerms.addToQueue.value]} ${await this.getEntityInformation(command.guild, userPerms.addToQueue.entity)}\n**View Queue**\n${permsDict[userPerms.viewQueue.value]} ${await this.getEntityInformation(command.guild, userPerms.viewQueue.entity)}\n**Manage Queue**\n${permsDict[userPerms.manageQueue.value]} ${await this.getEntityInformation(command.guild, userPerms.manageQueue.entity)}\n**Manage Player**\n${permsDict[userPerms.managePlayer.value]} ${await this.getEntityInformation(command.guild, userPerms.managePlayer.entity)}`)
@@ -192,6 +192,8 @@ module.exports = class extends Commands {
         } else {
             await this.client.database.db("perms").collection(command.guild.id).updateOne({ id: entity }, { $set: { [permission]: action } }, { upsert: true });
         }
+
+        this.client.getUserPerms(command.guild.id, entity, true, true);
 
         let actionDict = {
             "ALLOW": "**Granted** these permissions to",

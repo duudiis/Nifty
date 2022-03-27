@@ -6,14 +6,26 @@ module.exports = class extends Modules {
 		super(client);
 		this.client = client;
 
-        this.name = "getPrefix";
+		this.name = "getPrefix";
+
+		this.prefixes = new Map();
 	}
 
-	async run(guildId) {
+	async run(guildId, force = false) {
+		
+		if (this.prefixes.has(guildId) && !force) {
 
-		const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: guildId });
-        return guildData?.prefix ? guildData.prefix : process.env.DEFAULT_PREFIX;
+			return this.prefixes.get(guildId);
 
-    }
+		} else {
+
+			const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: guildId });
+			this.prefixes.set(guildId, guildData?.prefix ? guildData.prefix : process.env.DEFAULT_PREFIX);
+
+			return guildData?.prefix ? guildData.prefix : process.env.DEFAULT_PREFIX;
+
+		}
+
+	}
 
 }
