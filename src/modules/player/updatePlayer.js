@@ -29,9 +29,14 @@ module.exports = class extends Modules {
 
         let playQueueUrl = playQueue.url;
 
-        if (playQueue.type == "spotify") { playQueueUrl = await this.client.player.youtubeFuzzySearch(playQueue).catch(error => { return connection.state.subscription.player.emit("error", error) }) };
+        if (playQueue.type == "spotify") { playQueueUrl = await this.client.player.youtubeFuzzySearch(playQueue).catch(error => { return connection.state.subscription.player.emit("error", error) }); };
 
-        const stream = await ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21, });
+        try {
+            var stream = await ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21 });
+        } catch (error) {
+            return connection.state.subscription.player.emit("error", error?.message ?? "An error ocurred");
+        }
+
 
         const playResource = DiscordVoice.createAudioResource(stream, { inlineVolume: true, metadata: playQueue });
         playResource.volume.setVolume(currentVolume / 100);

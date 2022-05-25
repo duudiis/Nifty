@@ -52,7 +52,7 @@ module.exports = class extends Modules {
 
                 } else {
 
-                    const trackInfo = await ytdl.getInfo(input);
+                    const trackInfo = await ytdl.getBasicInfo(input);
 
                     let track = [{
                         title: trackInfo.videoDetails.title,

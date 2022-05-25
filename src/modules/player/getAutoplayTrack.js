@@ -27,7 +27,7 @@ module.exports = class extends Modules {
 
         if (lastTrack.type != "youtube") { throw "Could not AutoPlay from the previous track!"; };
 
-        const trackInfo = await ytdl.getInfo(lastTrack.url);
+        const trackInfo = await ytdl.getBasicInfo(lastTrack.url);
 
         let relatedTracks = trackInfo?.related_videos;
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };

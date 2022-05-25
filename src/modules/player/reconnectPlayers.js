@@ -28,6 +28,7 @@ module.exports = class extends Modules {
             const voiceChannel = await guild.channels.fetch(playerData.voiceId).catch(e => { });;
             if (!voiceChannel) { this.killPlayer(guild.id); continue; };
 
+            if (!voiceChannel.permissionsFor(this.client.user.id).has("VIEW_CHANNEL")) { this.killPlayer(guild.id); continue; };
             if (!voiceChannel.permissionsFor(this.client.user.id).has("CONNECT")) { this.killPlayer(guild.id); continue; };
             if (!voiceChannel.permissionsFor(this.client.user.id).has("SPEAK")) { this.killPlayer(guild.id); continue; };
 
@@ -35,6 +36,7 @@ module.exports = class extends Modules {
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
                 adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+                selfDeaf: false
             })
 
             const player = DiscordVoice.createAudioPlayer();

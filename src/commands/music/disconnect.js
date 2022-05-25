@@ -10,7 +10,7 @@ module.exports = class extends Commands {
         this.client = client;
 
         this.name = "disconnect";
-        this.aliases = ["dc", "fuckoff", "die", "leave", "quit", "reset"];
+        this.aliases = ["dc", "fuckoff", "die", "leave", "quit"];
 
         this.description = "Resets the player, clears the queue, and leaves the voice channel";
         this.category = "music";

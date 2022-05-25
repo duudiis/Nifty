@@ -22,6 +22,7 @@ module.exports = class extends Modules {
             channelId: voiceChannel.id,
             guildId: voiceChannel.guild.id,
             adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+            selfDeaf: false
         })
 
         const player = DiscordVoice.createAudioPlayer();
@@ -32,8 +33,8 @@ module.exports = class extends Modules {
 
         voiceChannel.guild.me.voice.setDeaf().catch(e => { });
 
-        if(voiceChannel.type == "GUILD_STAGE_VOICE") {
-            await voiceChannel.guild.me.voice.setSuppressed(false).catch(e => { voiceChannel.guild.me.voice.setRequestToSpeak(true).catch(e => {}); });
+        if (voiceChannel.type == "GUILD_STAGE_VOICE") {
+            await voiceChannel.guild.me.voice.setSuppressed(false).catch(e => { voiceChannel.guild.me.voice.setRequestToSpeak(true).catch(e => { }); });
         }
 
         connection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(voiceChannel.guild.id); }, 900000);

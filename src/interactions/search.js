@@ -37,7 +37,7 @@ module.exports = class extends Interactions {
 
 		for (const value of interaction.values) {
 
-			let trackInfo = await ytdl.getInfo(value);
+			let trackInfo = await ytdl.getBasicInfo(value);
 
 			let track = {
 				title: trackInfo.videoDetails.title,

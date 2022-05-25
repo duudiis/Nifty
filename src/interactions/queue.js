@@ -44,11 +44,11 @@ module.exports = class extends Interactions {
 		if (lastMinus == 10) { lastMinus = 0; };
 
 		let padStart = (((parseInt(tracksArray.length - 1) + 1) + ((page.updated - 1) * 10)) - lastMinus).toString().length;
-		let trackList = ""
+		let trackList = "";
 
 		for (let trackId in tracksArray) {
 
-			let trackNumber = `${((parseInt(trackId) + 1) + ((page.updated - 1) * 10)) - lastMinus}`.padStart(padStart, ' '); let currentTop = ""; let currentBottom = "\n"
+			let trackNumber = `${((parseInt(trackId) + 1) + ((page.updated - 1) * 10)) - lastMinus}`.padStart(padStart, ' '); let currentTop = ""; let currentBottom = "\n";
 			let trackTime = await this.toHHMMSS(tracksArray[trackId].duration);
 
 			if ((trackNumber - 1) == playerData.queueID && existingConnection?.state?.subscription?.player?.state?.status != "idle") { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }

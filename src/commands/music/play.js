@@ -33,7 +33,7 @@ module.exports = class extends Commands {
 	async runAsMessage(message) {
 
 		const input = message.array.slice(1).join(" ");
-		if (!input) { return this.client.commands.get("unpause").runAsMessage(message, true) };
+		if (!input) { return await this.client.commands.get("unpause").runAsMessage(message, true); };
 
 		const response = await this.play(input, message);
 		return message.channel.send({ embeds: [response.embed] });

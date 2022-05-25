@@ -24,9 +24,7 @@ module.exports = class extends Modules {
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
 
-        let playerShuffle = playerData?.shuffle;
-        if (!playerShuffle) { playerShuffle = "off" };
-
+        let playerShuffle = playerData?.shuffle ?? "off";
         if (playerShuffle == "on") { tracksArray = await this.client.shuffleArray(tracksArray); };
 
         await this.client.database.db("queues").collection(guildId).insertMany(tracksArray);
