@@ -1,12 +1,12 @@
 require('dotenv').config({ path: ".env" });
 
 const Discord = require("discord.js");
-const Mongo = require("mongodb");
+const { MongoClient } = require("mongodb");
 
 const client = new Discord.Client(require("../config/Discord"));
 
-Mongo.MongoClient.connect(process.env.MONGO_URI, { useUnifiedTopology: true }, function (error, response) { client.database = response })
-Mongo.MongoClient.connect(process.env.GLOBAL_MONGO_URI, { useUnifiedTopology: true }, function (error, response) { client.global = response })
+MongoClient.connect(process.env.MONGO_URI, { useUnifiedTopology: true }, function (error, response) { client.database = response });
+MongoClient.connect(process.env.GLOBAL_MONGO_URI, { useUnifiedTopology: true }, function (error, response) { client.global = response });
 
 process.on('unhandledRejection', error => { console.log(error); });
 
@@ -30,7 +30,7 @@ async function startLoaders(directory) {
 
             if (Loader.prototype instanceof Loaders) {
                 const loader = new Loader(client);
-                loader.load();
+                await loader.load();
             }
         }
     }

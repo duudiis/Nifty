@@ -35,16 +35,9 @@ module.exports = class extends Commands {
         if (!mode) {
 
             const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: message.guild.id });
-            let guild247 = guildData?.forever;
+            let guild247 = guildData?.forever  || "disabled";
 
-            if (!guild247) { guild247 = "disabled" };
-
-            let next247 = {
-                "disabled": "enabled",
-                "enabled": "disabled",
-            }
-
-            mode = next247[guild247];
+            mode = guild247 == "disabled" ? "enabled" : "disabled";
 
         };
 
@@ -56,16 +49,9 @@ module.exports = class extends Commands {
     async runAsInteraction(interaction) {
 
         const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: interaction.guild.id });
-        let guild247 = guildData?.forever;
+        let guild247 = guildData?.forever || "disabled";
 
-        if (!guild247) { guild247 = "disabled" };
-
-        let next247 = {
-            "disabled": "enabled",
-            "enabled": "disabled",
-        }
-
-        let mode = next247[guild247];
+        let mode = guild247 == "disabled" ? "enabled" : "disabled";
 
         const response = await this.c247(mode, interaction);
         return interaction.editReply({ embeds: [response.embed] });
@@ -109,13 +95,8 @@ module.exports = class extends Commands {
 
         await this.client.database.db("default").collection("guilds").updateOne({ id: command.guild.id }, { $set: { forever: mode } }, { upsert: true });
 
-        let foreverMessage = {
-            "disabled": "24/7 mode is now **disabled** in this server.",
-            "enabled": "24/7 mode is now **enabled** in this server."
-        }
-
         const foreverEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-            .setDescription(foreverMessage[mode])
+            .setDescription(`24/7 mode is now **${mode}** in this server.`)
 
         return { code: "success", embed: foreverEmbed };
 

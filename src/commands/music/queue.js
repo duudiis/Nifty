@@ -25,6 +25,9 @@ module.exports = class extends Commands {
 
 	async runAsMessage(message) {
 
+		const input = message.array.slice(1).join(" ");
+		if (input) { return await this.client.commands.get("play").runAsMessage(message); };
+
 		const response = await this.queue(message);
 		return message.channel.send(response.reply);
 
@@ -47,33 +50,14 @@ module.exports = class extends Commands {
 		if (!queueData || queueData.length == 0) {
 
 			let queueMessage = "```nim\nThe queue is empty ;-;```"
+			const buttonsRow = await this.getButtonsRow(1);
+
 			return { reply: { content: queueMessage, components: [buttonsRow] } }
 
 		}
 
 		const trackPage = Math.ceil((playerData.queueID + 1) / 10);
-
-		const firstButton = new MessageButton()
-			.setLabel("First")
-			.setStyle("SECONDARY")
-			.setCustomId(`queuefirst${trackPage}`)
-
-		const backButton = new MessageButton()
-			.setLabel("Back")
-			.setStyle("SECONDARY")
-			.setCustomId(`queueback${trackPage}`)
-
-		const nextButton = new MessageButton()
-			.setLabel("Next")
-			.setStyle("SECONDARY")
-			.setCustomId(`queuenext${trackPage}`)
-
-		const lastButton = new MessageButton()
-			.setLabel("Last")
-			.setStyle("SECONDARY")
-			.setCustomId(`queuelast${trackPage}`)
-
-		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton);
+		const buttonsRow = await this.getButtonsRow(trackPage);
 
 		let queueMax = Math.ceil(queueData.length / 10);
 
@@ -104,6 +88,18 @@ module.exports = class extends Commands {
 		if (trackPage == queueMax) { trackList = trackList + "\n" + "This is the end of the queue!".padStart(padStart + 31, ' '); } else { trackList = trackList + "\n" + `${queueData.length - (trackPage * 10)} more track(s)`.padStart(padStart + 16 + ((queueData.length - (trackPage * 10)).toString().length), ' '); }
 
 		return { code: "success", reply: { content: `\`\`\`nim\n${trackList}\`\`\``, components: [buttonsRow] } };
+
+	}
+
+	async getButtonsRow(queuePage) {
+		
+		const firstButton = new MessageButton({ label: "First", style: "SECONDARY", customId: `queuefirst${queuePage}` })
+		const backButton = new MessageButton({ label: "Back", style: "SECONDARY", customId: `queueback${queuePage}` })
+		const nextButton = new MessageButton({ label: "Next", style: "SECONDARY", customId: `queuenext${queuePage}` })
+		const lastButton = new MessageButton({ label: "Last", style: "SECONDARY", customId: `queuelast${queuePage}` })
+
+		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton);
+		return buttonsRow;
 
 	}
 

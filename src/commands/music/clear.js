@@ -12,7 +12,7 @@ module.exports = class extends Commands {
         this.name = "clear";
         this.aliases = ["cls"];
 
-        this.description = "Makes the bot join your voice channel";
+        this.description = "Clears the queue";
         this.category = "music";
 
         this.usage = "clear";

@@ -52,7 +52,7 @@ module.exports = class extends Modules {
 
             connection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(voiceChannel.guild.id); }, 900000);
 
-            if (!player.stopped) { this.client.player.updatePlayer(connection, guild.id); };
+            if (!playerData.stopped) { this.client.player.updatePlayer(connection, guild.id); };
 
         }
 

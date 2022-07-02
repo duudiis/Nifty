@@ -67,18 +67,19 @@ module.exports = class extends Commands {
         };
 
         const searchResults = await ytsr(input, { pages: 1 });
+        if (!searchResults) { throw "No matches found! (810)" };
 
         const videos = searchResults.items.filter(video => video.type == "video");
-        if (!videos) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found!")] } } };
+        if (!videos) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found! (811)")] } } };
 
         const SmOptions = [];
 
         for (const video of videos) {
 
-            if (SmOptions.length >= 25) { continue; };
+            if (SmOptions.length >= 25) { return; };
 
             let option = {
-                label: video.title.length > 80 ? video.title.slice(0, 80) + "..." : video.title,
+                label: video.title.length > 80 ? video.title.slice(0, 80) + "…" : video.title,
                 description: `${video.author.name} · ${video.duration}`,
                 value: video.url
             }

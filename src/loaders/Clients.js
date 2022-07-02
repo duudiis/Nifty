@@ -1,6 +1,6 @@
 const Loaders = require("../structures/Loaders");
 
-const Events = require("../structures/Events");
+const Clients = require("../structures/Clients");
 
 const path = require("path");
 const fs = require("fs").promises;
@@ -11,37 +11,37 @@ module.exports = class extends Loaders {
         super(client);
         this.client = client;
 
-        this.name = "Events";
+        this.name = "Clients";
     }
 
     async load() {
 
-        await this.loadFolder("../events");
+        await this.loadFolder("../clients");
 
     }
 
     async loadFolder(directory) {
         const filePath = path.join(__dirname, directory);
         const files = await fs.readdir(filePath);
-
+    
         for (const file of files) {
             const fileStat = await fs.lstat(path.join(filePath, file));
 
-            if (fileStat.isDirectory()) { await this.loadFolder(path.join(directory, file)) }
+            if (fileStat.isDirectory()) { await this.loadFolder(path.join(directory, file)); }
             else if (file.endsWith(".js")) {
-                const Event = require(path.join(filePath, file));
-
-                if (Event.prototype instanceof Events) {
-                    await this.listenEvent(Event);
+                const Client = require(path.join(filePath, file));
+                
+                if (Client.prototype instanceof Clients) {
+                    await this.registerClient(Client);
                 }
             }
         }
     }
 
-    async listenEvent(Event) {
+    async registerClient(Client) {
 
-        const event = new Event(this.client);
-        this.client.on(event.name, (...args) => event.run(...args));
+        const api = new Client();
+        this.client[api.name] = api;
 
     }
 

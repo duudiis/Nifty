@@ -2,9 +2,6 @@ const Modules = require("../../structures/Modules");
 
 const ytdl = require('ytdl-core');
 
-const fetch = require('isomorphic-unfetch');
-const Spotify = require('spotify-url-info')(fetch);
-
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
 
@@ -16,15 +13,24 @@ module.exports = class extends Modules {
 
         this.name = "getInputTrack";
         this.subcategory = "player";
+
+        this.regex = {
+            youtube: /(?:https?:)\/\/(?:(?:www|m|music)\.)??(?:youtube(?:-nocookie)?\.com|youtu.be)\/(?:embed\/)?(?:[\w?&=#]+)/,
+            spotify: /https?:\/\/open.spotify.com\/(track|artist|playlist|album|show)\/([a-zA-Z0-9]+)|spotify:(track|artist|playlist|album|show):([a-zA-Z0-9]+)/,
+            deezer: /https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]+\/)?(track|artist|album|playlist|show|radio)\/([0-9]+)/,
+            deezerShort: /https?:\/\/deezer\.page\.link\/[A-z0-9]+/,
+            soundcloud: /https?:\/\/(?:(?:www|m)\.)?soundcloud\.com\/([A-z0-9-_]+)\/(sets|[A-z0-9-_]+)(?:\/)?([\w?&=#_-]+)?(?:\/)?(?:[\w\/?&=#_-]+)?/,
+            soundcloudShort: /https?:\/\/soundcloud\.app\.goo\.gl\/[A-z0-9]+/
+        }
     }
 
     async run(input, user) {
 
-        if (input.includes("http://") || input.includes("https://")) {
+        if (input.includes("https://")) {
 
-            input = input.replace("<", "").replace(">", "");
-
-            if (input.includes("youtube.com") || input.includes("youtu.be")) {
+            let youtubeUrl = this.regex.youtube.exec(input);
+            if (youtubeUrl) {
+                input = youtubeUrl[0];
 
                 if (input.includes("?list=")) {
 
@@ -69,48 +75,98 @@ module.exports = class extends Modules {
 
             }
 
-            if (input.includes("spotify.com")) {
+            let spotifyUrl = this.regex.spotify.exec(input);
+            if (spotifyUrl) {
+                input = spotifyUrl[0];
 
-                if (input.includes("episode")) { throw "Podcasts are not supported" };
+                let type = spotifyUrl[1] || spotifyUrl[3];
+                let id = spotifyUrl[2] || spotifyUrl[4];
 
-                if (input.includes("album") || input.includes("playlist")) {
+                if (type == "show") { throw "Podcasts are not supported" };
 
-                    const tracksInfo = await Spotify.getTracks(input);
+                if (type == "track") {
 
-                    let tracks = [];
+                    let track = await this.client.spotify.getTrack(id, user.id);
+                    if (track.code == "error") { throw track?.message || "An error occurred"; };
 
-                    for (const track of tracksInfo) {
+                    return track.track;
 
-                        let trackInfo = {
-                            title: `${track.artists.map(i => i.name).join(", ")} - ${track.name}`,
-                            id: track.id,
-                            type: "spotify",
-                            url: track.external_urls.spotify,
-                            duration: Math.round(track.duration_ms / 1000),
-                            user: user.id
-                        }
+                };
 
-                        tracks.push(trackInfo);
+                if (type == "playlist") {
 
-                    }
+                    let playlist = await this.client.spotify.getPlaylist(id, user.id);
+                    if (playlist.code == "error") { throw playlist?.message || "An error occurred"; };
 
-                    if (tracks.length == 0) { throw "Failed to read playlist tracks" };
-                    return tracks;
+                    return playlist.tracks;
 
-                } else {
+                };
 
-                    const trackInfo = await Spotify.getData(input);
+                if (type == "album") {
 
-                    let track = [{
-                        title: `${trackInfo.artists.map(i => i.name).join(", ")} - ${trackInfo.name}`,
-                        id: trackInfo.id,
-                        type: "spotify",
-                        url: trackInfo.external_urls.spotify,
-                        duration: Math.round(trackInfo.duration_ms / 1000),
-                        user: user.id
-                    }]
+                    let album = await this.client.spotify.getAlbum(id, user.id);
+                    if (album.code == "error") { throw album?.message || "An error occurred"; };
 
-                    return track;
+                    return album.tracks;
+
+                }
+
+                if (type == "artist") {
+
+                    let artist = await this.client.spotify.getArtist(id, user.id);
+                    if (artist.code == "error") { throw artist?.message || "An error occurred"; };
+
+                    return artist.tracks;
+
+                };
+
+            }
+
+            let deezerShortUrl = this.regex.deezerShort.exec(input);
+            if (deezerShortUrl) { input = await this.client.getUrl(deezerShortUrl[0]); };
+
+            let deezerUrl = this.regex.deezer.exec(input);
+            if (deezerUrl) {
+                input = deezerUrl[0];
+
+                let type = deezerUrl[1];
+                let id = deezerUrl[2];
+
+                if (type == "show" || type == "radio") { throw "Podcasts are not supported"; };
+
+                if (type == "track") {
+
+                    let track = await this.client.deezer.getTrack(id, user.id);
+                    if (track.code == "error") { throw track?.message || "An error occurred"; };
+
+                    return track.track;
+
+                }
+
+                if (type == "playlist") {
+
+                    let playlist = await this.client.deezer.getPlaylist(id, user.id);
+                    if (playlist.code == "error") { throw playlist?.message || "An error occurred"; };
+
+                    return playlist.tracks;
+
+                }
+
+                if (type == "album") {
+
+                    let album = await this.client.deezer.getAlbum(id, user.id);
+                    if (album.code == "error") { throw album?.message || "An error occurred"; };
+
+                    return album.tracks;
+
+                }
+
+                if (type == "artist") {
+
+                    let artist = await this.client.deezer.getArtist(id, user.id);
+                    if (artist.code == "error") { throw artist?.message || "An error occurred"; };
+
+                    return artist.tracks;
 
                 }
 
@@ -119,10 +175,10 @@ module.exports = class extends Modules {
         }
 
         const searchResults = await ytsr(input, { pages: 1 });
-        if (!searchResults) { throw "No matches found!" };
+        if (!searchResults) { throw "No matches found! (711)" };
 
         const video = searchResults.items.find(video => video.type == "video" && video.duration);
-        if (!video) { throw "No matches found!" };
+        if (!video) { throw "No matches found! (712)" };
 
         let durationArray = video.duration.toString().split(':');
 
@@ -138,7 +194,7 @@ module.exports = class extends Modules {
             url: video.url,
             duration: lengthSeconds,
             user: user.id
-        }]
+        }];
 
         return track;
 

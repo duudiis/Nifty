@@ -11,7 +11,10 @@ module.exports = class extends Modules {
 
 	async run(string, maxLength) {
 
-		if (string.length >= maxLength) { string = string.slice(0, maxLength - 4).trimEnd() + "…" };
+		// string = string.replace(/ *\([^)]*\) */g, "");
+		// string = string.replace(/ *\[[^\]]*\] */g, "");
+
+		if (string.length >= maxLength) { string = string.slice(0, maxLength - 4).trimEnd() + "…"; };
 
 		string = string.replaceAll("*", "\\*");
 		string = string.replaceAll("_", "\\_");
@@ -19,20 +22,8 @@ module.exports = class extends Modules {
 		string = string.replaceAll("`", "\\`");
 		string = string.replaceAll("|", "\\|");
 		
-		if (string.includes("[") && string.includes("]")) {
-
-			string = string.replaceAll("[", "\\[");
-			string = string.replaceAll("]", "\\]");
-
-		} else if (!string.includes("[") && string.includes("]")) {
-
-			string = string.replaceAll("]", "\\]");
-
-		} else if (string.includes("[") && !string.includes("]")) {
-
-			string = string.replaceAll("[", "\\[");
-
-		}
+		string = string.replaceAll("[", "(");
+		string = string.replaceAll("]", ")");
 
 		return string;
 

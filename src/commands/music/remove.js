@@ -71,10 +71,10 @@ module.exports = class extends Commands {
 
         if (!removeTarget) { return { code: "error", embed: errorEmbed.setDescription(`A track could not be found for "${input}"!`) }; };
 
-        await this.client.database.db("queues").collection(command.guild.id).deleteMany({ url: removeTarget.track.url });
+        await this.client.database.db("queues").collection(command.guild.id).deleteOne(removeTarget.track);
 
         if (playerData.queueID >= removeTarget.id) { await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: playerData.queueID - 1 } }, { upsert: true }); };
-        if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata?.url == removeTarget.track.url) { existingConnection.state.subscription.player.stop() };
+        if (existingConnection?.state?.subscription?.player?.state?.resource?.metadata?._id.toString() == removeTarget.track._id.toString()) { existingConnection.state.subscription.player.stop() };
 
         const removedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
             .setDescription(`Removed [${await this.client.removeFormatting(removeTarget.track.title, 54)}](${removeTarget.track.url}) [<@${removeTarget.track.user}>]`)

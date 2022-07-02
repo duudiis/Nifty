@@ -16,7 +16,7 @@ module.exports = class extends Loaders {
 
     async load() {
 
-        await this.loadFolder("../modules")
+        await this.loadFolder("../modules");
 
     }
 
@@ -28,12 +28,11 @@ module.exports = class extends Loaders {
             const fileStat = await fs.lstat(path.join(filePath, file));
 
             if (fileStat.isDirectory()) { await this.loadFolder(path.join(directory, file)) }
-
             else if (file.endsWith(".js")) {
                 const Module = require(path.join(filePath, file));
 
                 if (Module.prototype instanceof Modules) {
-                    await this.registerModule(Module)
+                    await this.registerModule(Module);
                 }
             }
         }
@@ -41,7 +40,7 @@ module.exports = class extends Loaders {
 
     async registerModule(Module) {
 
-        const module = new Module(this.client)
+        const module = new Module(this.client);
 
         if (module.subcategory) {
 

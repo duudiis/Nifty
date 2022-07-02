@@ -35,16 +35,9 @@ module.exports = class extends Commands {
         if (!mode) {
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
+            let playerShuffle = playerData?.shuffle || "off";
 
-            let playerShuffle = playerData?.shuffle;
-            if (!playerShuffle) { playerShuffle = "off" };
-
-            let nextShuffle = {
-                "on": "off",
-                "off": "on"
-            }
-
-            mode = nextShuffle[playerShuffle];
+            mode = playerShuffle == "off" ? "on" : "off";
 
         };
 
@@ -56,16 +49,9 @@ module.exports = class extends Commands {
     async runAsInteraction(interaction) {
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
+        let playerShuffle = playerData?.shuffle || "off";
 
-        let playerShuffle = playerData?.shuffle;
-        if (!playerShuffle) { playerShuffle = "off" };
-
-        let nextShuffle = {
-            "on": "off",
-            "off": "on"
-        }
-
-        let mode = nextShuffle[playerShuffle];
+        let mode = playerShuffle == "off" ? "on" : "off";
 
         const response = await this.shuffle(mode, interaction);
         return interaction.editReply({ embeds: [response.embed] });

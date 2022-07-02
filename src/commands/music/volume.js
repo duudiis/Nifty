@@ -37,8 +37,7 @@ module.exports = class extends Commands {
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
 
-            let currentVolume = playerData?.volume;
-            if (!currentVolume) { currentVolume = 100; };
+            let currentVolume = playerData?.volume || 100;
 
             const volumeEmbed = new MessageEmbed({ color: message.guild.me.displayHexColor })
                 .setDescription(`**${currentVolume}%**`)
@@ -59,8 +58,7 @@ module.exports = class extends Commands {
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
 
-            let currentVolume = playerData?.volume;
-            if (!currentVolume) { currentVolume = 100; };
+            let currentVolume = playerData?.volume || 100;
 
             const volumeEmbed = new MessageEmbed({ color: interaction.guild.me.displayHexColor })
                 .setDescription(`**${currentVolume}%**`)

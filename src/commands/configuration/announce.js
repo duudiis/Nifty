@@ -34,16 +34,9 @@ module.exports = class extends Commands {
         if (!mode) {
 
             const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: message.guild.id });
-            let guildAnnounce = guildData?.announce;
+            let guildAnnounce = guildData?.announce || "enabled";
 
-            if (!guildAnnounce) { guildAnnounce = "enabled" };
-
-            let nextAnnounce = {
-                "disabled": "enabled",
-                "enabled": "disabled",
-            }
-
-            mode = nextAnnounce[guildAnnounce];
+            mode = guildAnnounce == "enabled" ? "disabled" : "enabled";
 
         };
 
@@ -55,16 +48,9 @@ module.exports = class extends Commands {
     async runAsInteraction(interaction) {
 
         const guildData = await this.client.database.db("default").collection("guilds").findOne({ id: interaction.guild.id });
-        let guildAnnounce = guildData?.announce;
+        let guildAnnounce = guildData?.announce || "enabled";
 
-        if (!guildAnnounce) { guildAnnounce = "enabled" };
-
-        let nextAnnounce = {
-            "disabled": "enabled",
-            "enabled": "disabled",
-        }
-
-        let mode = nextAnnounce[guildAnnounce];
+        let mode = guildAnnounce == "enabled" ? "disabled" : "enabled";
 
         const response = await this.announce(mode, interaction);
         return interaction.editReply({ embeds: [response.embed] });
@@ -91,13 +77,8 @@ module.exports = class extends Commands {
 
         await this.client.database.db("default").collection("guilds").updateOne({ id: command.guild.id }, { $set: { announce: mode } }, { upsert: true });
 
-        let announcesMessage = {
-            "disabled": "**Announcing of tracks** is now **disabled**.",
-            "enabled": "**Announcing of tracks** is now **enabled**."
-        }
-
         const announceEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor })
-            .setDescription(announcesMessage[mode])
+            .setDescription(`**Announcing of tracks** is now **${mode}**.`)
 
         return { code: "success", embed: announceEmbed };
 

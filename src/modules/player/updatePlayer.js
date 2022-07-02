@@ -19,24 +19,28 @@ module.exports = class extends Modules {
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
         const queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
 
-        let currentVolume = playerData?.volume;
-        if (!currentVolume) { currentVolume = 100; };
+        let currentVolume = playerData?.volume || 100;
 
         let playQueueID = playerData.queueID;
         let playQueue = queueData[playQueueID];
 
-        if (!playQueue) { return };
+        if (!playQueue) { return; };
 
         let playQueueUrl = playQueue.url;
 
-        if (playQueue.type == "spotify") { playQueueUrl = await this.client.player.youtubeFuzzySearch(playQueue).catch(error => { return connection.state.subscription.player.emit("error", error) }); };
+        if (playQueue.type == "spotify" || playQueue.type == "deezer") {
+            try {
+                playQueueUrl = await this.client.player.youtubeFuzzySearch(playQueue);
+            } catch (error) {
+                return connection.state.subscription.player.emit("error", error);
+            }
+        };
 
         try {
             var stream = await ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21 });
         } catch (error) {
             return connection.state.subscription.player.emit("error", error?.message ?? "An error ocurred");
         }
-
 
         const playResource = DiscordVoice.createAudioResource(stream, { inlineVolume: true, metadata: playQueue });
         playResource.volume.setVolume(currentVolume / 100);
@@ -50,7 +54,7 @@ module.exports = class extends Modules {
 
     async destroyStream(stream, player) {
 
-        stream.once("end", () => { stream.destroy() });
+        stream.once("close", () => { stream.destroy() });
         player.once("idle", () => { stream.destroy() });
 
     }
