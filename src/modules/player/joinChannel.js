@@ -17,13 +17,14 @@ module.exports = class extends Modules {
         if (!voiceChannel.permissionsFor(this.client.user.id).has("VIEW_CHANNEL")) { throw "I do not have permission to **view** your voice channel!"; };
         if (!voiceChannel.permissionsFor(this.client.user.id).has("CONNECT")) { throw "I do not have permission to **connect** to your voice channel!"; };
         if (!voiceChannel.permissionsFor(this.client.user.id).has("SPEAK")) { throw "I do not have permission to **speak** in your voice channel!"; };
+        if (!voiceChannel.permissionsFor(this.client.user.id).has("MOVE_MEMBERS") && voiceChannel.members.size >= voiceChannel.userLimit) { throw "I do not have permission to **connect** to your voice channel! (Full)"; };
 
         const connection = DiscordVoice.joinVoiceChannel({
             channelId: voiceChannel.id,
             guildId: voiceChannel.guild.id,
             adapterCreator: voiceChannel.guild.voiceAdapterCreator,
             selfDeaf: false
-        })
+        });
 
         const player = DiscordVoice.createAudioPlayer();
         connection.subscribe(player);

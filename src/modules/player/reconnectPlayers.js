@@ -31,6 +31,7 @@ module.exports = class extends Modules {
             if (!voiceChannel.permissionsFor(this.client.user.id).has("VIEW_CHANNEL")) { this.killPlayer(guild.id); continue; };
             if (!voiceChannel.permissionsFor(this.client.user.id).has("CONNECT")) { this.killPlayer(guild.id); continue; };
             if (!voiceChannel.permissionsFor(this.client.user.id).has("SPEAK")) { this.killPlayer(guild.id); continue; };
+            if (!voiceChannel.permissionsFor(this.client.user.id).has("MOVE_MEMBERS") && voiceChannel.members.size >= voiceChannel.userLimit) { this.killPlayer(guild.id); continue; };
 
             const connection = DiscordVoice.joinVoiceChannel({
                 channelId: voiceChannel.id,
