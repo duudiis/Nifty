@@ -57,10 +57,10 @@ module.exports = class extends Commands {
             return { code: "success", embed: pausedEmbed };
         }
 
-        if(existingConnection.state.subscription.player.state.status == "paused" || existingConnection.state.subscription.player.state.status != "playing") { return { code: "success", embed: pausedEmbed } };
+        if (existingConnection.state.subscription.player.state.status == "paused" || existingConnection.state.subscription.player.state.status != "playing") { return { code: "success", embed: pausedEmbed } };
 
         existingConnection.state.subscription.player.pause();
-        
+
         return { code: "success", embed: pausedEmbed };
 
     }

@@ -59,7 +59,7 @@ module.exports = class extends Commands {
         this.client.database.db("guilds").collection("players").deleteMany({ guildId: command.guild.id });
         this.client.database.db("queues").collection(command.guild.id).drop().catch(e => {});
 
-        try { existingConnection.state.subscription.player.stop(); } catch (e) { }
+        try { existingConnection.state.subscription.player.stop(); } catch (e) { };
 
         clearTimeout(existingConnection.playTimer); clearTimeout(existingConnection.pauseTimer); clearTimeout(existingConnection.aloneTimer);
         existingConnection.destroy();

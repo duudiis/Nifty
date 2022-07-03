@@ -59,7 +59,7 @@ module.exports = class extends Commands {
 
         if(existingConnection.state.subscription.player.state.status == "paused") { 
             existingConnection.state.subscription.player.unpause();
-            return { code: "success", embed: unpausedEmbed } 
+            return { code: "success", embed: unpausedEmbed };
         }
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
