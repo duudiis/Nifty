@@ -108,16 +108,14 @@ module.exports = class extends Commands {
 
     async runAsInteraction(interaction) {
 
-        interaction.subcommand = interaction.options._subcommand;
-
-        if (interaction.subcommand == "view") {
+        if (interaction.options._subcommand == "view") {
 
             const entity = interaction.options.get("entity").value;
 
             const response = await this.view(entity, interaction);
             return interaction.editReply({ embeds: [response.embed] });
 
-        } else if (interaction.subcommand == "modify") {
+        } else if (interaction.options._subcommand == "modify") {
 
             const entity = interaction.options.get("entity").value;
             const action = interaction.options.get("action").value;
@@ -126,7 +124,7 @@ module.exports = class extends Commands {
             const response = await this.modify(entity, action, permission, interaction);
             return interaction.editReply({ embeds: [response.embed] });
 
-        }
+        };
 
     }
 
