@@ -2,7 +2,7 @@ const Modules = require("../../structures/Modules");
 
 const DiscordVoice = require('@discordjs/voice');
 
-const ytdl = require('ytdl-core-discord');
+const ytdl = require('ytdl-core');
 
 module.exports = class extends Modules {
 
@@ -37,7 +37,7 @@ module.exports = class extends Modules {
         };
 
         try {
-            var stream = await ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21 });
+            var stream = ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21 });
         } catch (error) {
             return connection.state.subscription.player.emit("error", error?.message ?? "An error ocurred");
         }
