@@ -12,7 +12,7 @@ module.exports = {
 
         loop: {
             queue: ["queue", "all"],
-            track: ["track", "current", "this", "now", "np"]
+            track: ["track", "current", "this", "now", "np", "song"]
         }
     },
 

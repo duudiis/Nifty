@@ -174,6 +174,8 @@ module.exports = class extends Modules {
 
         }
 
+        if (!input) { throw "No matcher found! (710)"; };
+
         const searchResults = await ytsr(input, { pages: 1 });
         if (!searchResults) { throw "No matches found! (711)" };
 

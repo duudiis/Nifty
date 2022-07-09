@@ -42,7 +42,11 @@ module.exports = class extends Commands {
 
 	async runAsInteraction(interaction) {
 
-		const input = interaction.options.get("input").value;
+		let input = interaction?.options?.get("input")?.value;
+
+		if (interaction.isMessageContextMenu()) {
+			input = interaction.targetMessage.content;
+		}
 
 		const response = await this.play(input, interaction);
 		return interaction.editReply({ embeds: [response.embed] });

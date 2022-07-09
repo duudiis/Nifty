@@ -16,8 +16,13 @@ module.exports = class extends Events {
 
 		this.client.constants = Constants;
 
-		this.client.slash = new Slash(this.client);
-		await this.client.slash.verifyCommands();
+		// this.client.slash = new Slash(this.client);
+		// await this.client.slash.verifyCommands();
+
+		this.client.application.commands.create({
+			"name": "Add to Queue",
+			"type": "MESSAGE"
+		})
 
 		console.log(`${this.client.user.username} is now Online`);
 		this.client.user.setActivity('/play', { type: 'LISTENING' });

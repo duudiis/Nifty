@@ -53,6 +53,18 @@ module.exports = class extends Events {
 
 		}
 
+		if (interaction.isMessageContextMenu()) {
+
+			if (interaction.channel.type === "DM") { return interaction.reply({ embeds: [errorEmbed.setDescription("This command can only be run in a server!")] }) };
+
+			const interactionFile = this.client.interactions.get(interaction.commandName);
+			if (!interactionFile) { return };
+
+			await interaction.deferReply();
+			try { await interactionFile.run(interaction) } catch (error) { console.log(error); };
+
+		}
+
 	}
 
 	async checkUserPermissions(command, interaction) {
