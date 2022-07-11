@@ -2,6 +2,7 @@ const Modules = require("../../structures/Modules");
 
 const DiscordVoice = require('@discordjs/voice');
 
+const scdl = require('soundcloud-downloader').default;
 const ytdl = require('ytdl-core');
 
 module.exports = class extends Modules {
@@ -28,7 +29,7 @@ module.exports = class extends Modules {
 
         let playQueueUrl = playQueue.url;
 
-        if (playQueue.type == "spotify" || playQueue.type == "deezer") {
+        if (["spotify", "deezer"].includes(playQueue.type)) {
             try {
                 playQueueUrl = await this.client.player.youtubeFuzzySearch(playQueue);
             } catch (error) {
@@ -37,7 +38,13 @@ module.exports = class extends Modules {
         };
 
         try {
-            var stream = ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21 });
+            
+            if (playQueue.type == "soundcloud") {
+                var stream = await scdl.download(playQueueUrl);
+            } else {
+                var stream = ytdl(playQueueUrl, { quality: 'highestaudio', dlChunkSize: 1 << 30, highWaterMark: 1 << 21 });
+            };
+
         } catch (error) {
             return connection.state.subscription.player.emit("error", error?.message ?? "An error ocurred");
         }

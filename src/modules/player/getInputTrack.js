@@ -1,6 +1,7 @@
 const Modules = require("../../structures/Modules");
 
 const ytdl = require('ytdl-core');
+const scdl = require('soundcloud-downloader').default;
 
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
@@ -15,12 +16,12 @@ module.exports = class extends Modules {
         this.subcategory = "player";
 
         this.regex = {
-            youtube: /(?:https?:)\/\/(?:(?:www|m|music)\.)??(?:youtube(?:-nocookie)?\.com|youtu.be)\/(?:embed\/)?(?:[\w?&=#]+)/,
-            spotify: /https?:\/\/open.spotify.com\/(track|artist|playlist|album|show)\/([a-zA-Z0-9]+)|spotify:(track|artist|playlist|album|show):([a-zA-Z0-9]+)/,
-            deezer: /https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]+\/)?(track|artist|album|playlist|show|radio)\/([0-9]+)/,
-            deezerShort: /https?:\/\/deezer\.page\.link\/[A-z0-9]+/,
-            soundcloud: /https?:\/\/(?:(?:www|m)\.)?soundcloud\.com\/([A-z0-9-_]+)\/(sets|[A-z0-9-_]+)(?:\/)?([\w?&=#_-]+)?(?:\/)?(?:[\w\/?&=#_-]+)?/,
-            soundcloudShort: /https?:\/\/soundcloud\.app\.goo\.gl\/[A-z0-9]+/
+            youtube: /(?:https?:)\/\/(?:(?:www|m|music)\.)??(?:youtube(?:-nocookie)?\.com|youtu.be)\/(?:embed\/)?(?:[\w?&=#-]+)/i,
+            spotify: /https?:\/\/open.spotify.com\/(track|artist|playlist|album|show)\/([a-zA-Z0-9]+)/i,
+            deezer: /https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]+\/)?(track|artist|album|playlist|show|radio)\/([0-9]+)/i,
+            deezerShort: /https?:\/\/deezer\.page\.link\/[A-z0-9]+/i,
+            soundcloud: /https?:\/\/(?:(?:www|m)\.)?soundcloud\.com\/([A-z0-9-_]+)\/(sets|[A-z0-9-_]+)(?:\/)?([\w?&=#_-]+)?(?:\/)?(?:[\w\/?&=#_-]+)?/i,
+            soundcloudShort: /https?:\/\/soundcloud\.app\.goo\.gl\/[A-z0-9]+/i
         }
     }
 
@@ -53,7 +54,7 @@ module.exports = class extends Modules {
 
                     }
 
-                    if (tracks.length == 0) { throw "Failed to read playlist videos" };
+                    if (tracks.length == 0) { throw "Failed to read playlist videos"; };
                     return tracks;
 
                 } else {
@@ -79,8 +80,8 @@ module.exports = class extends Modules {
             if (spotifyUrl) {
                 input = spotifyUrl[0];
 
-                let type = spotifyUrl[1] || spotifyUrl[3];
-                let id = spotifyUrl[2] || spotifyUrl[4];
+                let type = spotifyUrl[1];
+                let id = spotifyUrl[2];
 
                 if (type == "show") { throw "Podcasts are not supported" };
 
@@ -167,6 +168,60 @@ module.exports = class extends Modules {
                     if (artist.code == "error") { throw artist?.message || "An error occurred"; };
 
                     return artist.tracks;
+
+                }
+
+            }
+
+            let soundcloudShortUrl = this.regex.soundcloudShort.exec(input);
+            if (soundcloudShortUrl) { input = await this.client.getUrl(soundcloudShortUrl[0]); };
+
+            let soundcloudUrl = this.regex.soundcloud.exec(input);
+            if (soundcloudUrl) {
+
+                let url = soundcloudUrl[0];
+                let type = soundcloudUrl[2] == "sets" ? "set" : "track";
+
+                if (type == "track") {
+
+                    let trackInfo = await scdl.getInfo(url);
+
+                    let track = [{
+                        title: trackInfo.title,
+                        id: trackInfo.id,
+                        type: "soundcloud",
+                        url: trackInfo.permalink_url,
+                        duration: Math.round(trackInfo.duration / 1000),
+                        user: user.id
+                    }];
+
+                    return track;
+
+                }
+
+                if (type == "set") {
+
+                    let set = await scdl.getSetInfo(url);
+
+                    let tracks = [];
+
+                    for (let track of set.tracks) {
+
+                        let trackInfo = {
+                            title: track.title,
+                            id: track.id,
+                            type: "soundcloud",
+                            url: track.permalink_url,
+                            duration: Math.round(track.duration / 1000),
+                            user: user.id
+                        }
+
+                        tracks.push(trackInfo);
+
+                    }
+
+                    if (tracks.length == 0) { throw "Failed to read set tracks"; };
+                    return tracks;
 
                 }
 
