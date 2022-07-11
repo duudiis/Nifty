@@ -35,7 +35,7 @@ module.exports = class extends Commands {
     async runAsMessage(message) {
 
         const input = message.array.slice(1).join(" ");
-        if (!input) { return };
+        if (!input) { return await this.client.commands.get("skip").runAsMessage(message); };
 
         const response = await this.search(input, message);
         return message.channel.send(response.reply);
@@ -66,6 +66,12 @@ module.exports = class extends Commands {
             existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
         };
 
+        let parsedFlags = await this.client.parseFlags(input).catch(e => { });
+		let flags = parsedFlags?.flags;
+
+		if (parsedFlags.string) { input = parsedFlags.string; };
+		if (!flags) { flags = ["none"]; };
+
         const searchResults = await ytsr(input, { pages: 1 });
         if (!searchResults) { throw "No matches found! (810)" };
 
@@ -92,7 +98,7 @@ module.exports = class extends Commands {
             .setDescription("Select the tracks you want to add to the queue.")
 
         const searchSelectMenu = new MessageSelectMenu()
-            .setCustomId(`search${command.member.id}`)
+            .setCustomId(`search_${command.member.id}_${flags.join(",")}`)
             .setMaxValues(SmOptions.length)
             .setPlaceholder('Make a selection')
             .addOptions(SmOptions)

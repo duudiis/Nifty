@@ -66,10 +66,10 @@ module.exports = class extends Interactions {
 
 	async updatedButtons(page) {
 
-		const firstButton = new MessageButton({ label: "First", style: "SECONDARY", customId: `queuefirst${page}` });
-		const backButton = new MessageButton({ label: "Back", style: "SECONDARY", customId: `queueback${page}` });
-		const nextButton = new MessageButton({ label: "Next", style: "SECONDARY", customId: `queuenext${page}` });
-		const lastButton = new MessageButton({ label: "Last", style: "SECONDARY", customId: `queuelast${page}` });
+		const firstButton = new MessageButton({ label: "First", style: "SECONDARY", customId: `queue_first_${page}` });
+		const backButton = new MessageButton({ label: "Back", style: "SECONDARY", customId: `queue_back_${page}` });
+		const nextButton = new MessageButton({ label: "Next", style: "SECONDARY", customId: `queue_next_${page}` });
+		const lastButton = new MessageButton({ label: "Last", style: "SECONDARY", customId: `queue_last_${page}` });
 
 		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton);
 
@@ -82,10 +82,10 @@ module.exports = class extends Interactions {
 		let currentPage = null;
 		let updatePage = null;
 
-		if (button.customId.includes("first")) { currentPage = parseInt(button.customId.replace("queuefirst", "")); updatePage = 1 };
-		if (button.customId.includes("back")) { currentPage = parseInt(button.customId.replace("queueback", "")); currentPage == 1 ? updatePage = currentPage : updatePage = currentPage - 1 };
-		if (button.customId.includes("next")) { currentPage = parseInt(button.customId.replace("queuenext", "")); currentPage == maxPage ? updatePage = currentPage : updatePage = currentPage + 1 };
-		if (button.customId.includes("last")) { currentPage = parseInt(button.customId.replace("queuelast", "")); updatePage = maxPage };
+		if (button.array[1] == "first") { currentPage = parseInt(button.array[2]); updatePage = 1 };
+		if (button.array[1] == "back") { currentPage = parseInt(button.array[2]); currentPage == 1 ? updatePage = currentPage : updatePage = currentPage - 1 };
+		if (button.array[1] == "next") { currentPage = parseInt(button.array[2]); currentPage == maxPage ? updatePage = currentPage : updatePage = currentPage + 1 };
+		if (button.array[1] == "last") { currentPage = parseInt(button.array[2]); updatePage = maxPage };
 
 		return { code: "success", updated: updatePage, current: currentPage };
 

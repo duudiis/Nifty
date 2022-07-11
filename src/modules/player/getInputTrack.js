@@ -25,7 +25,7 @@ module.exports = class extends Modules {
         }
     }
 
-    async run(input, user) {
+    async run(input, user, allFlag = false) {
 
         if (input.includes("https://")) {
 
@@ -33,7 +33,7 @@ module.exports = class extends Modules {
             if (youtubeUrl) {
                 input = youtubeUrl[0];
 
-                if (input.includes("?list=")) {
+                if (input.includes("?list=") || allFlag) {
 
                     const tracksInfo = await ytpl(input, { limit: Infinity });
 
@@ -229,7 +229,7 @@ module.exports = class extends Modules {
 
         }
 
-        if (!input) { throw "No matcher found! (710)"; };
+        if (!input) { throw "No matches found! (710)"; };
 
         const searchResults = await ytsr(input, { pages: 1 });
         if (!searchResults) { throw "No matches found! (711)" };

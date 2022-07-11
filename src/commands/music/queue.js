@@ -93,10 +93,10 @@ module.exports = class extends Commands {
 
 	async getButtonsRow(queuePage) {
 		
-		const firstButton = new MessageButton({ label: "First", style: "SECONDARY", customId: `queuefirst${queuePage}` })
-		const backButton = new MessageButton({ label: "Back", style: "SECONDARY", customId: `queueback${queuePage}` })
-		const nextButton = new MessageButton({ label: "Next", style: "SECONDARY", customId: `queuenext${queuePage}` })
-		const lastButton = new MessageButton({ label: "Last", style: "SECONDARY", customId: `queuelast${queuePage}` })
+		const firstButton = new MessageButton({ label: "First", style: "SECONDARY", customId: `queue_first_${queuePage}` })
+		const backButton = new MessageButton({ label: "Back", style: "SECONDARY", customId: `queue_back_${queuePage}` })
+		const nextButton = new MessageButton({ label: "Next", style: "SECONDARY", customId: `queue_next_${queuePage}` })
+		const lastButton = new MessageButton({ label: "Last", style: "SECONDARY", customId: `queue_last_${queuePage}` })
 
 		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton);
 		return buttonsRow;
