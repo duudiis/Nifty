@@ -10,7 +10,7 @@ module.exports = class extends Commands {
         this.client = client;
 
         this.name = "back";
-        this.aliases = ["b"];
+        this.aliases = ["b", "previous"];
 
         this.description = "Goes back a song";
         this.category = "music";

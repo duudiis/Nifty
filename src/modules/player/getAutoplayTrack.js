@@ -18,16 +18,24 @@ module.exports = class extends Modules {
 
         let queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
 
-        queueData = queueData.filter(track => track.type == "youtube");
+        queueData = queueData.filter(track => track.type != "soundcloud");
         if (!queueData || queueData.length == 0) { throw "Could not AutoPlay from the previous track!"; };
 
         let queuedIds = queueData.map(track => track.id);
 
         const lastTrack = queueData[Math.floor(Math.random() * queueData.length)];
 
-        if (lastTrack.type != "youtube") { throw "Could not AutoPlay from the previous track!"; };
+        let lastTrackUrl = lastTrack.url;
 
-        const trackInfo = await ytdl.getBasicInfo(lastTrack.url);
+        if (["spotify", "deezer"].includes(lastTrack.type)) {
+            try {
+                lastTrackUrl = await this.client.player.youtubeFuzzySearch(lastTrack);
+            } catch (error) {
+                throw "Could not AutoPlay from the previous track!";
+            }
+        };
+
+        const trackInfo = await ytdl.getBasicInfo(lastTrackUrl);
 
         let relatedTracks = trackInfo?.related_videos;
         if (!relatedTracks || relatedTracks.length == 0) { throw "Could not AutoPlay from the previous track!"; };
