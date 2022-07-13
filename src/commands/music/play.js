@@ -36,6 +36,8 @@ module.exports = class extends Commands {
 		if (!input) { return await this.client.commands.get("unpause").runAsMessage(message, true); };
 
 		const response = await this.play(input, message);
+		if (response.code == "redirect") { return; };
+
 		return message.channel.send({ embeds: [response.embed] });
 
 	}
@@ -49,6 +51,8 @@ module.exports = class extends Commands {
 		}
 
 		const response = await this.play(input, interaction);
+		if (response.code == "redirect") { return; };
+		
 		return interaction.editReply({ embeds: [response.embed] });
 
 	}
@@ -74,6 +78,17 @@ module.exports = class extends Commands {
 		if (parsedFlags.string) { input = parsedFlags.string; };
 		if (!flags) { flags = []; };
 
+		if (flags.includes("choose")) {
+
+			if (command.applicationId) {
+				this.client.commands.get("search").runAsInteraction(command);
+			} else {
+				this.client.commands.get("search").runAsMessage(command);
+			};
+
+			return { code: "redirect" };
+		};
+
 		let inputTracks = [];
 
 		try {
@@ -81,8 +96,8 @@ module.exports = class extends Commands {
 		} catch (error) {
 			return { code: "error", embed: errorEmbed.setDescription(`${error.message ? error.message : error}`) };
 		};
-		
-		let addToQueue = await this.client.player.addToQueue(inputTracks, command.guild.id, flags.includes("shuffle"), flags.includes("next"));
+
+		let addToQueue = await this.client.player.addToQueue(inputTracks, command.guild.id, flags.includes("shuffle"), flags.includes("next"), flags.includes("reverse"));
 
 		const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
 		const queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();

@@ -10,9 +10,11 @@ module.exports = class extends Modules {
 
         this.flags = {
             all: ["-a", "-all"],
-            shuffle: ["-s", "-shuffle"],
+            choose: ["-c", "-choose", "-search"],
+            jump: ["-j", "-jump"],
             next: ["-n", "-next"],
-            jump: ["-j", "-jump"]
+            reverse: ["-r", "-reverse"],
+            shuffle: ["-s", "-shuffle"]
         }
     }
 

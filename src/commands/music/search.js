@@ -35,7 +35,7 @@ module.exports = class extends Commands {
     async runAsMessage(message) {
 
         const input = message.array.slice(1).join(" ");
-        if (!input) { return await this.client.commands.get("skip").runAsMessage(message); };
+        if (!input && message.array[0].toLowerCase() == "s") { return await this.client.commands.get("skip").runAsMessage(message); };
 
         const response = await this.search(input, message);
         return message.channel.send(response.reply);
@@ -67,10 +67,10 @@ module.exports = class extends Commands {
         };
 
         let parsedFlags = await this.client.parseFlags(input).catch(e => { });
-		let flags = parsedFlags?.flags;
+        let flags = parsedFlags?.flags;
 
-		if (parsedFlags.string) { input = parsedFlags.string; };
-		if (!flags) { flags = ["none"]; };
+        if (parsedFlags.string) { input = parsedFlags.string; };
+        if (!flags || flags.length == 0) { flags = ["none"]; };
 
         const searchResults = await ytsr(input, { pages: 1 });
         if (!searchResults) { throw "No matches found! (810)" };

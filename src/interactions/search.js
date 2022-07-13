@@ -54,7 +54,7 @@ module.exports = class extends Interactions {
 
 		}
 
-		let addToQueue = await this.client.player.addToQueue(inputTracks, interaction.guild.id, flags.includes("shuffle"), flags.includes("next"));
+		let addToQueue = await this.client.player.addToQueue(inputTracks, interaction.guild.id, flags.includes("shuffle"), flags.includes("next"), flags.includes("reverse"));
 
 		const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
 		const queueData = await this.client.database.db("queues").collection(interaction.guild.id).find({}).toArray();
