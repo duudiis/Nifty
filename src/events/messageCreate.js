@@ -13,14 +13,14 @@ module.exports = class extends Events {
 
     async run(message) {
 
-        if (message.author.bot) { return };
-        if (message.channel.type === "DM") { return };
+        if (message.author.bot) { return; };
+        if (message.channel.type === "DM") { return; };
 
         let mention = await this.checkMention(message);
 
         if (mention.only) {
             let permission = await this.checkBotPermissions(message);
-            if (permission.code != "success") { return };
+            if (permission.code != "success") { return; };
 
             return this.getStarted(message);
         };
@@ -34,15 +34,15 @@ module.exports = class extends Events {
         const commandName = message.array[0].toLowerCase();
         const command = this.client.commands.get(commandName) || this.client.commands.get(this.client.aliases.get(commandName));
 
-        if (!command) { return };
-        if (!command.enabled) { return };
-        if (command.ownersOnly && !this.client.constants.owners.includes(message.author.id)) { return };
+        if (!command) { return; };
+        if (!command.enabled) { return; };
+        if (command.ownersOnly && !this.client.constants.owners.includes(message.author.id)) { return; };
 
         let botPermissions = await this.checkBotPermissions(message);
-        if (botPermissions.code != "success") { return };
+        if (botPermissions.code != "success") { return; };
 
         let userPermissions = await this.checkUserPermissions(command, message);
-        if (userPermissions.code != "success") { return };
+        if (userPermissions.code != "success") { return; };
 
         if (command.category == "music") {
             this.client.database.db("guilds").collection("players").updateOne({ guildId: message.guild.id }, { $set: { announcesId: message.channel.id } });

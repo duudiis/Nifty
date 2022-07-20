@@ -33,18 +33,26 @@ module.exports = class extends Commands {
 	async runAsMessage(message) {
 
 		const input = message.array.slice(1).join(" ");
-		if (!input) { return this.client.commands.get("unpause").runAsMessage(message, true) };
+		if (!input) { return await this.client.commands.get("unpause").runAsMessage(message, true); };
 
 		const response = await this.play(input, message);
+		if (response.code == "redirect") { return; };
+
 		return message.channel.send({ embeds: [response.embed] });
 
 	}
 
 	async runAsInteraction(interaction) {
 
-		const input = interaction.options.get("input").value;
+		let input = interaction?.options?.get("input")?.value;
+
+		if (interaction.isMessageContextMenu()) {
+			input = interaction.targetMessage.content;
+		}
 
 		const response = await this.play(input, interaction);
+		if (response.code == "redirect") { return; };
+		
 		return interaction.editReply({ embeds: [response.embed] });
 
 	}
@@ -64,18 +72,40 @@ module.exports = class extends Commands {
 			existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
 		};
 
-		let inputTracks = [];
-		try { inputTracks = await this.client.player.getInputTrack(input, command.member) } catch (error) { return { code: "error", embed: errorEmbed.setDescription(`${error.message ? error.message : error}`) }; };
+		let parsedFlags = await this.client.parseFlags(input).catch(e => { });
+		let flags = parsedFlags?.flags;
 
-		await this.client.player.addToQueue(inputTracks, command.guild.id);
+		if (parsedFlags.string) { input = parsedFlags.string; };
+		if (!flags) { flags = []; };
+
+		if (flags.includes("choose")) {
+
+			if (command.applicationId) {
+				this.client.commands.get("search").runAsInteraction(command);
+			} else {
+				this.client.commands.get("search").runAsMessage(command);
+			};
+
+			return { code: "redirect" };
+		};
+
+		let inputTracks = [];
+
+		try {
+			inputTracks = await this.client.player.getInputTrack(input, command.member, flags.includes("all"));
+		} catch (error) {
+			return { code: "error", embed: errorEmbed.setDescription(`${error.message ? error.message : error}`) };
+		};
+
+		let addToQueue = await this.client.player.addToQueue(inputTracks, command.guild.id, flags.includes("shuffle"), flags.includes("next"), flags.includes("reverse"));
 
 		const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
 		const queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
 
-		if (playerData.stopped == true) {
-			await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: Math.max(0, queueData.length - inputTracks.length) } }, { upsert: true })
+		if (playerData.stopped == true || flags.includes("jump")) {
+			await this.client.database.db("guilds").collection("players").updateOne({ guildId: command.guild.id }, { $set: { queueID: flags.includes("next") && !addToQueue.wasEmpty ? Math.min((queueData.length - 1), (playerData.queueID + 1)) : Math.max(0, queueData.length - inputTracks.length) } }, { upsert: true })
 			this.client.player.updatePlayer(existingConnection, command.guild.id);
-		}
+		};
 
 		let queuedEmbed = new MessageEmbed({ color: command.guild.me.displayHexColor });
 

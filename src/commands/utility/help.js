@@ -25,14 +25,14 @@ module.exports = class extends Commands {
 	async runAsMessage(message) {
 
 		const response = await this.help(message);
-		message.channel.send({ embeds: [response.embed] });
+		return message.channel.send({ embeds: [response.embed] });
 
 	}
 
 	async runAsInteraction(interaction) {
 
 		const response = await this.help(interaction);
-		interaction.editReply({ embeds: [response.embed] })
+		return interaction.editReply({ embeds: [response.embed] })
 
 	}
 

@@ -41,14 +41,25 @@ module.exports = class extends Events {
 
 		if (interaction.isMessageComponent()) {
 
-			let interactionId = interaction.customId;
+			interaction.array = interaction.customId.split("_");
 
-			if (interaction.customId.includes("queue")) { interactionId = "queue" };
-			if (interaction.customId.includes("search")) { interactionId = "search" };
+			let interactionId = interaction.array[0];
 
 			const interactionFile = this.client.interactions.get(interactionId);
 			if (!interactionFile) { return };
 
+			try { await interactionFile.run(interaction) } catch (error) { console.log(error); };
+
+		}
+
+		if (interaction.isMessageContextMenu()) {
+
+			if (interaction.channel.type === "DM") { return interaction.reply({ embeds: [errorEmbed.setDescription("This command can only be run in a server!")] }) };
+
+			const interactionFile = this.client.interactions.get(interaction.commandName);
+			if (!interactionFile) { return };
+
+			await interaction.deferReply();
 			try { await interactionFile.run(interaction) } catch (error) { console.log(error); };
 
 		}

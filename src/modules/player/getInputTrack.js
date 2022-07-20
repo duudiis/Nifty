@@ -1,9 +1,7 @@
 const Modules = require("../../structures/Modules");
 
 const ytdl = require('ytdl-core');
-
-const fetch = require('isomorphic-unfetch');
-const Spotify = require('spotify-url-info')(fetch);
+const scdl = require('soundcloud-downloader').default;
 
 const ytsr = require('ytsr');
 const ytpl = require('ytpl');
@@ -16,17 +14,26 @@ module.exports = class extends Modules {
 
         this.name = "getInputTrack";
         this.subcategory = "player";
+
+        this.regex = {
+            youtube: /(?:https?:)\/\/(?:(?:www|m|music)\.)??(?:youtube(?:-nocookie)?\.com|youtu.be)\/(?:embed\/)?(?:[\w?&=#-]+)/i,
+            spotify: /https?:\/\/open.spotify.com\/(track|artist|playlist|album|show)\/([a-zA-Z0-9]+)/i,
+            deezer: /https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]+\/)?(track|artist|album|playlist|show|radio)\/([0-9]+)/i,
+            deezerShort: /https?:\/\/deezer\.page\.link\/[A-z0-9]+/i,
+            soundcloud: /https?:\/\/(?:(?:www|m)\.)?soundcloud\.com\/([A-z0-9-_]+)\/(sets|[A-z0-9-_]+)(?:\/)?([\w?&=#_-]+)?(?:\/)?(?:[\w\/?&=#_-]+)?/i,
+            soundcloudShort: /https?:\/\/soundcloud\.app\.goo\.gl\/[A-z0-9]+/i
+        }
     }
 
-    async run(input, user) {
+    async run(input, user, allFlag = false) {
 
-        if (input.includes("http://") || input.includes("https://")) {
+        if (input.includes("https://")) {
 
-            input = input.replace("<", "").replace(">", "");
+            let youtubeUrl = this.regex.youtube.exec(input);
+            if (youtubeUrl) {
+                input = youtubeUrl[0];
 
-            if (input.includes("youtube.com") || input.includes("youtu.be")) {
-
-                if (input.includes("?list=")) {
+                if (input.includes("?list=") || allFlag) {
 
                     const tracksInfo = await ytpl(input, { limit: Infinity });
 
@@ -47,12 +54,12 @@ module.exports = class extends Modules {
 
                     }
 
-                    if (tracks.length == 0) { throw "Failed to read playlist videos" };
+                    if (tracks.length == 0) { throw "Failed to read playlist videos"; };
                     return tracks;
 
                 } else {
 
-                    const trackInfo = await ytdl.getInfo(input);
+                    const trackInfo = await ytdl.getBasicInfo(input);
 
                     let track = [{
                         title: trackInfo.videoDetails.title,
@@ -69,24 +76,143 @@ module.exports = class extends Modules {
 
             }
 
-            if (input.includes("spotify.com")) {
+            let spotifyUrl = this.regex.spotify.exec(input);
+            if (spotifyUrl) {
+                input = spotifyUrl[0];
 
-                if (input.includes("episode")) { throw "Podcasts are not supported" };
+                let type = spotifyUrl[1];
+                let id = spotifyUrl[2];
 
-                if (input.includes("album") || input.includes("playlist")) {
+                if (type == "show") { throw "Podcasts are not supported" };
 
-                    const tracksInfo = await Spotify.getTracks(input);
+                if (type == "track") {
+
+                    let track = await this.client.spotify.getTrack(id, user.id);
+                    if (track.code == "error") { throw track?.message || "An error occurred"; };
+
+                    return track.track;
+
+                };
+
+                if (type == "playlist") {
+
+                    let playlist = await this.client.spotify.getPlaylist(id, user.id);
+                    if (playlist.code == "error") { throw playlist?.message || "An error occurred"; };
+
+                    return playlist.tracks;
+
+                };
+
+                if (type == "album") {
+
+                    let album = await this.client.spotify.getAlbum(id, user.id);
+                    if (album.code == "error") { throw album?.message || "An error occurred"; };
+
+                    return album.tracks;
+
+                }
+
+                if (type == "artist") {
+
+                    let artist = await this.client.spotify.getArtist(id, user.id);
+                    if (artist.code == "error") { throw artist?.message || "An error occurred"; };
+
+                    return artist.tracks;
+
+                };
+
+            }
+
+            let deezerShortUrl = this.regex.deezerShort.exec(input);
+            if (deezerShortUrl) { input = await this.client.getUrl(deezerShortUrl[0]); };
+
+            let deezerUrl = this.regex.deezer.exec(input);
+            if (deezerUrl) {
+                input = deezerUrl[0];
+
+                let type = deezerUrl[1];
+                let id = deezerUrl[2];
+
+                if (type == "show" || type == "radio") { throw "Podcasts are not supported"; };
+
+                if (type == "track") {
+
+                    let track = await this.client.deezer.getTrack(id, user.id);
+                    if (track.code == "error") { throw track?.message || "An error occurred"; };
+
+                    return track.track;
+
+                }
+
+                if (type == "playlist") {
+
+                    let playlist = await this.client.deezer.getPlaylist(id, user.id);
+                    if (playlist.code == "error") { throw playlist?.message || "An error occurred"; };
+
+                    return playlist.tracks;
+
+                }
+
+                if (type == "album") {
+
+                    let album = await this.client.deezer.getAlbum(id, user.id);
+                    if (album.code == "error") { throw album?.message || "An error occurred"; };
+
+                    return album.tracks;
+
+                }
+
+                if (type == "artist") {
+
+                    let artist = await this.client.deezer.getArtist(id, user.id);
+                    if (artist.code == "error") { throw artist?.message || "An error occurred"; };
+
+                    return artist.tracks;
+
+                }
+
+            }
+
+            let soundcloudShortUrl = this.regex.soundcloudShort.exec(input);
+            if (soundcloudShortUrl) { input = await this.client.getUrl(soundcloudShortUrl[0]); };
+
+            let soundcloudUrl = this.regex.soundcloud.exec(input);
+            if (soundcloudUrl) {
+
+                let url = soundcloudUrl[0];
+                let type = soundcloudUrl[2] == "sets" ? "set" : "track";
+
+                if (type == "track") {
+
+                    let trackInfo = await scdl.getInfo(url);
+
+                    let track = [{
+                        title: trackInfo.title,
+                        id: trackInfo.id,
+                        type: "soundcloud",
+                        url: trackInfo.permalink_url,
+                        duration: Math.round(trackInfo.duration / 1000),
+                        user: user.id
+                    }];
+
+                    return track;
+
+                }
+
+                if (type == "set") {
+
+                    let set = await scdl.getSetInfo(url);
 
                     let tracks = [];
 
-                    for (const track of tracksInfo) {
+                    for (let track of set.tracks) {
 
                         let trackInfo = {
-                            title: `${track.artists.map(i => i.name).join(", ")} - ${track.name}`,
+                            title: track.title,
                             id: track.id,
-                            type: "spotify",
-                            url: track.external_urls.spotify,
-                            duration: Math.round(track.duration_ms / 1000),
+                            type: "soundcloud",
+                            url: track.permalink_url,
+                            duration: Math.round(track.duration / 1000),
                             user: user.id
                         }
 
@@ -94,23 +220,8 @@ module.exports = class extends Modules {
 
                     }
 
-                    if (tracks.length == 0) { throw "Failed to read playlist tracks" };
+                    if (tracks.length == 0) { throw "Failed to read set tracks"; };
                     return tracks;
-
-                } else {
-
-                    const trackInfo = await Spotify.getData(input);
-
-                    let track = [{
-                        title: `${trackInfo.artists.map(i => i.name).join(", ")} - ${trackInfo.name}`,
-                        id: trackInfo.id,
-                        type: "spotify",
-                        url: trackInfo.external_urls.spotify,
-                        duration: Math.round(trackInfo.duration_ms / 1000),
-                        user: user.id
-                    }]
-
-                    return track;
 
                 }
 
@@ -118,11 +229,13 @@ module.exports = class extends Modules {
 
         }
 
+        if (!input) { throw "No matches found! (710)"; };
+
         const searchResults = await ytsr(input, { pages: 1 });
-        if (!searchResults) { throw "No matches found!" };
+        if (!searchResults) { throw "No matches found! (711)" };
 
         const video = searchResults.items.find(video => video.type == "video" && video.duration);
-        if (!video) { throw "No matches found!" };
+        if (!video) { console.log(searchResults); console.log(searchResults.items.map(v => { return { title: v.title, url: v.url, type: v.type, duration: v.duration } })); throw "No matches found! (712)" };
 
         let durationArray = video.duration.toString().split(':');
 
@@ -138,7 +251,7 @@ module.exports = class extends Modules {
             url: video.url,
             duration: lengthSeconds,
             user: user.id
-        }]
+        }];
 
         return track;
 

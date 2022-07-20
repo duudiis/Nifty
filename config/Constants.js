@@ -1,18 +1,18 @@
 module.exports = {
 
     keywords: {
-        enabled: ["enable", "enabled", "on", "yes", "true"],
-        disabled: ["disable", "disabled", "off", "no", "false"],
+        enabled: ["e", "enable", "enabled", "on", "yes", "true"],
+        disabled: ["d", "disable", "disabled", "off", "no", "false"],
         
-        first: ["first"],
-        back: ["back", "previous"],
-        current: ["current", "this", "now", "np"],
-        next: ["next", "skip"],
-        last: ["last"],
+        first: ["f", "first"],
+        back: ["b", "back", "p", "previous"],
+        current: ["c", "current", "t", "this", "n", "now", "np"],
+        next: ["n", "next", "skip"],
+        last: ["l", "last"],
 
         loop: {
-            queue: ["queue", "all"],
-            track: ["track", "current", "this", "now", "np"]
+            queue: ["q", "queue", "all"],
+            track: ["t", "track", "song", "c", "current", "t", "this", "n", "now", "np", "playing"]
         }
     },
 
@@ -20,11 +20,6 @@ module.exports = {
         error: "#ff0000"
     },
 
-    owners: ["676156762457374742"],
-
-    logs: {
-        guildId: "865316719131754527",
-        channelId: "920084061668667413"
-    }
+    owners: ["676156762457374742"]
 
 };

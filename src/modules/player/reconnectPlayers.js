@@ -28,13 +28,16 @@ module.exports = class extends Modules {
             const voiceChannel = await guild.channels.fetch(playerData.voiceId).catch(e => { });;
             if (!voiceChannel) { this.killPlayer(guild.id); continue; };
 
+            if (!voiceChannel.permissionsFor(this.client.user.id).has("VIEW_CHANNEL")) { this.killPlayer(guild.id); continue; };
             if (!voiceChannel.permissionsFor(this.client.user.id).has("CONNECT")) { this.killPlayer(guild.id); continue; };
             if (!voiceChannel.permissionsFor(this.client.user.id).has("SPEAK")) { this.killPlayer(guild.id); continue; };
+            if (!voiceChannel.permissionsFor(this.client.user.id).has("MOVE_MEMBERS") && voiceChannel.members.size >= voiceChannel.userLimit && voiceChannel.userLimit != 0) { this.killPlayer(guild.id); continue; };
 
             const connection = DiscordVoice.joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
                 adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+                selfDeaf: false
             })
 
             const player = DiscordVoice.createAudioPlayer();
@@ -50,7 +53,7 @@ module.exports = class extends Modules {
 
             connection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(voiceChannel.guild.id); }, 900000);
 
-            if (!player.stopped) { this.client.player.updatePlayer(connection, guild.id); };
+            if (!playerData.stopped) { this.client.player.updatePlayer(connection, guild.id); };
 
         }
 
@@ -59,7 +62,7 @@ module.exports = class extends Modules {
     async killPlayer(guildId) {
 
         this.client.database.db("guilds").collection("players").deleteMany({ guildId: guildId });
-        this.client.database.db("queues").collection(guildId).drop().catch(e => {});
+        this.client.database.db("queues").collection(guildId).drop().catch(e => { });
 
     }
 

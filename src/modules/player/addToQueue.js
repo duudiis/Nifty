@@ -10,7 +10,7 @@ module.exports = class extends Modules {
         this.subcategory = "player";
     }
 
-    async run(tracksArray, guildId) {
+    async run(tracksArray, guildId, shuffleFlag = false, nextFlag = false, reverseFlag = false) {
 
         //      const queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
 
@@ -24,12 +24,32 @@ module.exports = class extends Modules {
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: guildId });
 
-        let playerShuffle = playerData?.shuffle;
-        if (!playerShuffle) { playerShuffle = "off" };
+        if (reverseFlag) { tracksArray = tracksArray.reverse(); };
 
-        if (playerShuffle == "on") { tracksArray = await this.client.shuffleArray(tracksArray); };
+        let playerShuffle = playerData?.shuffle ?? "off";
+        if (playerShuffle == "on" || shuffleFlag) { tracksArray = await this.client.shuffleArray(tracksArray); };
 
-        await this.client.database.db("queues").collection(guildId).insertMany(tracksArray);
+        let wasEmpty = false;
+
+        const queueData = await this.client.database.db("queues").collection(guildId).find({}).toArray();
+        if (queueData.length == 0) { wasEmpty = true; };
+
+        if (nextFlag) {
+            await this.addToNext(queueData, tracksArray, guildId, playerData.queueID);
+        } else {
+            await this.client.database.db("queues").collection(guildId).insertMany(tracksArray);
+        }
+
+        return { code: "success", wasEmpty };
+
+    }
+
+    async addToNext(queueData, tracksArray, guildId, queueID) {
+
+        queueData.splice((queueID + 1), 0, ...tracksArray);
+
+        await this.client.database.db("queues").collection(guildId).drop().catch(e => { });
+        await this.client.database.db("queues").collection(guildId).insertMany(queueData);
 
     }
 

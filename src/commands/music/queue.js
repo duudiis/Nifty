@@ -25,6 +25,9 @@ module.exports = class extends Commands {
 
 	async runAsMessage(message) {
 
+		const input = message.array.slice(1).join(" ");
+		if (input) { return await this.client.commands.get("play").runAsMessage(message); };
+
 		const response = await this.queue(message);
 		return message.channel.send(response.reply);
 
@@ -41,47 +44,39 @@ module.exports = class extends Commands {
 
 		const existingConnection = DiscordVoice.getVoiceConnection(command.guild.id);
 
-		const firstButton = new MessageButton()
-			.setLabel("First")
-			.setStyle("SECONDARY")
-			.setCustomId("queuefirst1")
-
-		const backButton = new MessageButton()
-			.setLabel("Back")
-			.setStyle("SECONDARY")
-			.setCustomId("queueback1")
-
-		const nextButton = new MessageButton()
-			.setLabel("Next")
-			.setStyle("SECONDARY")
-			.setCustomId("queuenext1")
-
-		const lastButton = new MessageButton()
-			.setLabel("Last")
-			.setStyle("SECONDARY")
-			.setCustomId("queuelast1")
-
-		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton);
-
 		const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
 		const queueData = await this.client.database.db("queues").collection(command.guild.id).find({}).toArray();
 
 		if (!queueData || queueData.length == 0) {
 
 			let queueMessage = "```nim\nThe queue is empty ;-;```"
+			const buttonsRow = await this.getButtonsRow(1);
+
 			return { reply: { content: queueMessage, components: [buttonsRow] } }
 
 		}
 
-		let queueMax = Math.ceil(queueData.length / 10);
-		let tracksArray = queueData.slice(0, 10);
+		const trackPage = Math.ceil((playerData.queueID + 1) / 10);
+		const buttonsRow = await this.getButtonsRow(trackPage);
 
-		let padStart = ((parseInt(tracksArray.length - 1) + 1) + ((1 - 1) * 10)).toString().length;
+		let queueMax = Math.ceil(queueData.length / 10);
+
+		let tracksArray = [];
+
+		let lastMinus = 0;
+
+		if (trackPage == 1) { tracksArray = queueData.slice(0, 10) }
+		else if (trackPage == queueMax) { tracksArray = queueData.slice(-10); lastMinus = 10 - (queueData.length % 10) }
+		else { tracksArray = queueData.slice((trackPage - 1) * 10, -(queueData.length - (trackPage * 10))) }
+
+		if (lastMinus == 10) { lastMinus = 0; };
+
+		let padStart = (((parseInt(tracksArray.length - 1) + 1) + ((trackPage - 1) * 10)) - lastMinus).toString().length;
 		let trackList = "";
-		
-		for (const trackId in tracksArray) {
-			
-			let trackNumber = `${(parseInt(trackId) + 1) + ((1 - 1) * 10)}`.padStart(padStart, ' '); let currentTop = ""; let currentBottom = "\n"
+
+		for (let trackId in tracksArray) {
+
+			let trackNumber = `${((parseInt(trackId) + 1) + ((trackPage - 1) * 10)) - lastMinus}`.padStart(padStart, ' '); let currentTop = ""; let currentBottom = "\n";
 			let trackTime = await this.toHHMMSS(tracksArray[trackId].duration);
 
 			if ((trackNumber - 1) == playerData.queueID && existingConnection?.state?.subscription?.player?.state?.status != "idle") { currentTop = "     ⬐ current track\n"; currentBottom = "\n     ⬑ current track\n"; trackTime = await this.toHHMMSS(tracksArray[trackId].duration - existingConnection.state.subscription.player.state.resource.playbackDuration / 1000) + " left" }
@@ -90,9 +85,21 @@ module.exports = class extends Commands {
 
 		}
 
-		if (1 == queueMax) { trackList = trackList + "\n" + "This is the end of the queue!".padStart(padStart + 31, ' '); } else { trackList = trackList + "\n" + `${queueData.length - (1 * 10)} more track(s)`.padStart(padStart + 16 + ((queueData.length - (1 * 10)).toString().length), ' '); };
+		if (trackPage == queueMax) { trackList = trackList + "\n" + "This is the end of the queue!".padStart(padStart + 31, ' '); } else { trackList = trackList + "\n" + `${queueData.length - (trackPage * 10)} more track(s)`.padStart(padStart + 16 + ((queueData.length - (trackPage * 10)).toString().length), ' '); }
 
 		return { code: "success", reply: { content: `\`\`\`nim\n${trackList}\`\`\``, components: [buttonsRow] } };
+
+	}
+
+	async getButtonsRow(queuePage) {
+		
+		const firstButton = new MessageButton({ label: "First", style: "SECONDARY", customId: `queue_first_${queuePage}` })
+		const backButton = new MessageButton({ label: "Back", style: "SECONDARY", customId: `queue_back_${queuePage}` })
+		const nextButton = new MessageButton({ label: "Next", style: "SECONDARY", customId: `queue_next_${queuePage}` })
+		const lastButton = new MessageButton({ label: "Last", style: "SECONDARY", customId: `queue_last_${queuePage}` })
+
+		const buttonsRow = new MessageActionRow().addComponents(firstButton, backButton, nextButton, lastButton);
+		return buttonsRow;
 
 	}
 

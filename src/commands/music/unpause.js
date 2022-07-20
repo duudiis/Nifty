@@ -23,7 +23,7 @@ module.exports = class extends Commands {
         this.enabled = true;
     }
 
-    async runAsMessage(message, fromPlay=false) {
+    async runAsMessage(message, fromPlay = false) {
 
         const response = await this.unpause(message);
 
@@ -57,14 +57,14 @@ module.exports = class extends Commands {
             return { code: "success", embed: unpausedEmbed };
         }
 
-        if(existingConnection.state.subscription.player.state.status == "paused") { 
+        if (existingConnection.state.subscription.player.state.status == "paused") {
             existingConnection.state.subscription.player.unpause();
-            return { code: "success", embed: unpausedEmbed } 
+            return { code: "success", embed: unpausedEmbed };
         }
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: command.guild.id });
 
-        if(playerData.stopped) {
+        if (playerData.stopped) {
             await this.client.player.updatePlayer(existingConnection, command.guild.id);
             return { code: "success", embed: unpausedEmbed };
         }

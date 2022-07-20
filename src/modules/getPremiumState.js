@@ -11,7 +11,8 @@ module.exports = class extends Modules {
 
 	async run(guildId) {
 
-		return this.client.constants.premium.includes(guildId);
+		// this function is unused!
+		return true;
 
 	}
 

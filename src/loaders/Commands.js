@@ -31,7 +31,6 @@ module.exports = class extends Loaders {
             const fileStat = await fs.lstat(path.join(filePath, file));
 
             if (fileStat.isDirectory()) { await this.loadFolder(path.join(directory, file)); }
-    
             else if (file.endsWith(".js")) {
                 const Command = require(path.join(filePath, file));
                 

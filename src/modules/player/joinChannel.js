@@ -17,12 +17,14 @@ module.exports = class extends Modules {
         if (!voiceChannel.permissionsFor(this.client.user.id).has("VIEW_CHANNEL")) { throw "I do not have permission to **view** your voice channel!"; };
         if (!voiceChannel.permissionsFor(this.client.user.id).has("CONNECT")) { throw "I do not have permission to **connect** to your voice channel!"; };
         if (!voiceChannel.permissionsFor(this.client.user.id).has("SPEAK")) { throw "I do not have permission to **speak** in your voice channel!"; };
+        if (!voiceChannel.permissionsFor(this.client.user.id).has("MOVE_MEMBERS") && voiceChannel.members.size >= voiceChannel.userLimit && voiceChannel.userLimit != 0) { throw "I do not have permission to **connect** to your voice channel! (Channel Full)"; };
 
         const connection = DiscordVoice.joinVoiceChannel({
             channelId: voiceChannel.id,
             guildId: voiceChannel.guild.id,
             adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-        })
+            selfDeaf: false
+        });
 
         const player = DiscordVoice.createAudioPlayer();
         connection.subscribe(player);
@@ -32,8 +34,8 @@ module.exports = class extends Modules {
 
         voiceChannel.guild.me.voice.setDeaf().catch(e => { });
 
-        if(voiceChannel.type == "GUILD_STAGE_VOICE") {
-            await voiceChannel.guild.me.voice.setSuppressed(false).catch(e => { voiceChannel.guild.me.voice.setRequestToSpeak(true).catch(e => {}); });
+        if (voiceChannel.type == "GUILD_STAGE_VOICE") {
+            await voiceChannel.guild.me.voice.setSuppressed(false).catch(e => { voiceChannel.guild.me.voice.setRequestToSpeak(true).catch(e => { }); });
         }
 
         connection.playTimer = setTimeout(() => { this.client.player.inactivityDisconnect(voiceChannel.guild.id); }, 900000);

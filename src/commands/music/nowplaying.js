@@ -66,12 +66,12 @@ module.exports = class extends Commands {
         const percentage = Math.floor((played / limit) * 20);
         
         let bar = "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬";
-        bar = bar.split("")
+        bar = bar.split("");
 
         bar[percentage] = "🔵";
-        bar = bar.join("")
+        bar = bar.join("");
 
-        return `${bar} ${await this.toHHMMSS(played)} / ${await this.toHHMMSS(limit)}`
+        return `${bar} ${await this.toHHMMSS(played)} / ${await this.toHHMMSS(limit)}`;
 
     }
 

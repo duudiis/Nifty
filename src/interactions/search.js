@@ -18,7 +18,7 @@ module.exports = class extends Interactions {
 
 		const errorEmbed = new MessageEmbed({ color: this.client.constants.colors.error });
 
-		if (interaction.user.id != interaction.customId.slice(6)) { return interaction.reply({ embeds: [errorEmbed.setDescription("This command doesn't belong to you!")], ephemeral: true }) }
+		if (interaction.user.id != interaction.array[1]) { return interaction.reply({ embeds: [errorEmbed.setDescription("This command doesn't belong to you!")], ephemeral: true }) }
 
 		const voiceChannel = interaction.member.voice.channel;
 		if (!voiceChannel) { return interaction.reply({ embeds: [errorEmbed.setDescription("You have to be connected to a voice channel before you can use this command!")], ephemeral: true }) };
@@ -33,11 +33,13 @@ module.exports = class extends Interactions {
 
 		await interaction.deferUpdate();
 
+		let flags = interaction.array[2].split(",");
+
 		const inputTracks = [];
 
 		for (const value of interaction.values) {
 
-			let trackInfo = await ytdl.getInfo(value);
+			let trackInfo = await ytdl.getBasicInfo(value);
 
 			let track = {
 				title: trackInfo.videoDetails.title,
@@ -52,13 +54,13 @@ module.exports = class extends Interactions {
 
 		}
 
-		await this.client.player.addToQueue(inputTracks, interaction.guild.id);
+		let addToQueue = await this.client.player.addToQueue(inputTracks, interaction.guild.id, flags.includes("shuffle"), flags.includes("next"), flags.includes("reverse"));
 
 		const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
 		const queueData = await this.client.database.db("queues").collection(interaction.guild.id).find({}).toArray();
 
-		if (playerData.stopped == true) {
-			await this.client.database.db("guilds").collection("players").updateOne({ guildId: interaction.guild.id }, { $set: { queueID: Math.max(0, queueData.length - inputTracks.length) } }, { upsert: true })
+		if (playerData.stopped == true || flags.includes("jump")) {
+			await this.client.database.db("guilds").collection("players").updateOne({ guildId: interaction.guild.id }, { $set: { queueID: flags.includes("next") && !addToQueue.wasEmpty ? Math.min((queueData.length - 1), (playerData.queueID + 1)) : Math.max(0, queueData.length - inputTracks.length) } }, { upsert: true })
 			this.client.player.updatePlayer(existingConnection, interaction.guild.id);
 		};
 

@@ -41,11 +41,12 @@ module.exports = class extends Modules {
 
         } else {
 
-            resultTrack = queueData.find(track => track.title.toLowerCase().includes(query.toLowerCase()));
+            resultTrack = await queueData.find(track => track.title.toLowerCase().includes(query.toLowerCase()));
             if (!resultTrack) { throw `A track could not be found for "${originalQuery}"!` };
 
-            resultId = queueData.map(track => track.url).indexOf(resultTrack.url);
-            if (!resultId) { throw `A track could not be found for "${originalQuery}"!` };
+            resultId = await queueData.map(track => track._id.toString()).indexOf(resultTrack._id.toString());
+            if (!resultId && resultId !== 0) { throw `A track could not be found for "${originalQuery}"!` };
+
         }
 
         if (!resultTrack) { throw `A track could not be found for "${originalQuery}"!` };

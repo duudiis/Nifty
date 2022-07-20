@@ -35,16 +35,9 @@ module.exports = class extends Commands {
         if (!mode) {
 
             const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: message.guild.id });
+            let playerAutoplay = playerData?.autoplay || "off";
 
-            let playerAutoplay = playerData?.autoplay;
-            if (!playerAutoplay) { playerAutoplay = "off" };
-
-            let nextAutoplay = {
-                "on": "off",
-                "off": "on"
-            }
-
-            mode = nextAutoplay[playerAutoplay];
+            mode = playerAutoplay == "off" ? "on" : "off";
 
         };
 
@@ -56,16 +49,9 @@ module.exports = class extends Commands {
     async runAsInteraction(interaction) {
 
         const playerData = await this.client.database.db("guilds").collection("players").findOne({ guildId: interaction.guild.id });
+        let playerAutoplay = playerData?.autoplay || "off";
 
-        let playerAutoplay = playerData?.autoplay;
-        if (!playerAutoplay) { playerAutoplay = "off" };
-
-        let nextAutoplay = {
-            "on": "off",
-            "off": "on"
-        }
-
-        let mode = nextAutoplay[playerAutoplay];
+        let mode = playerAutoplay == "off" ? "on" : "off";
 
         const response = await this.autoplay(mode, interaction);
         return interaction.editReply({ embeds: [response.embed] });
