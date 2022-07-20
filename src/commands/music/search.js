@@ -35,7 +35,14 @@ module.exports = class extends Commands {
     async runAsMessage(message) {
 
         const input = message.array.slice(1).join(" ");
-        if (!input && message.array[0].toLowerCase() == "s") { return await this.client.commands.get("skip").runAsMessage(message); };
+
+        if (!input) {
+            if (message.array[0].toLowerCase() == "s") {
+                this.client.commands.get("skip").runAsMessage(message);
+            }
+
+            return;
+        };
 
         const response = await this.search(input, message);
         return message.channel.send(response.reply);
@@ -73,10 +80,10 @@ module.exports = class extends Commands {
         if (!flags || flags.length == 0) { flags = ["none"]; };
 
         const searchResults = await ytsr(input, { pages: 1 });
-        if (!searchResults) { throw "No matches found! (810)" };
+        if (!searchResults) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found! (810)")] } }; };
 
         const videos = searchResults.items.filter(video => video.type == "video");
-        if (!videos) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found! (811)")] } } };
+        if (!videos) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found! (811)")] } }; };
 
         const SmOptions = [];
 

@@ -90,6 +90,8 @@ module.exports = class extends Commands {
         if (this.client.constants.keywords.back.includes(position.toLowerCase())) { position = `${playerData.queueID + 1}` };
         if (this.client.constants.keywords.last.includes(position.toLowerCase())) { position = `${queueData.length}` };
 
+        if (position > queueData.length) { position = `${queueData.length}`; };
+
         if (parseInt(position) != position) { return { code: "error", embed: errorEmbed.setDescription(`The new position "${originalPosition}" is not valid!`) }; }
         if (parseInt(position) > queueData.length || parseInt(position) < 1) { return { code: "error", embed: errorEmbed.setDescription(`The new position "${originalPosition}" is not valid!`) }; }
 

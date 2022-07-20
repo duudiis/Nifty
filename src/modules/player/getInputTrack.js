@@ -235,7 +235,7 @@ module.exports = class extends Modules {
         if (!searchResults) { throw "No matches found! (711)" };
 
         const video = searchResults.items.find(video => video.type == "video" && video.duration);
-        if (!video) { console.log(searchResults.items.map(v => { return { title: v.title, url: v.url, type: v.type, duration: v.duration } })); throw "No matches found! (712)" };
+        if (!video) { console.log(searchResults); console.log(searchResults.items.map(v => { return { title: v.title, url: v.url, type: v.type, duration: v.duration } })); throw "No matches found! (712)" };
 
         let durationArray = video.duration.toString().split(':');
 
