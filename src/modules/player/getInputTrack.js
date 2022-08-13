@@ -16,7 +16,7 @@ module.exports = class extends Modules {
         this.subcategory = "player";
 
         this.regex = {
-            youtube: /(?:https?:)\/\/(?:(?:www|m|music)\.)??(?:youtube(?:-nocookie)?\.com|youtu.be)\/(?:embed\/)?(?:[\w?&=#-]+)/i,
+            youtube: /(?:https?:)\/\/(?:(?:www|m|music)\.)??(?:youtube(?:-nocookie)?\.com|youtu.be)\/(?:embed\/|shorts\/)?(?:[\w?&=#%-]+)/i,
             spotify: /https?:\/\/open.spotify.com\/(track|artist|playlist|album|show)\/([a-zA-Z0-9]+)/i,
             deezer: /https?:\/\/(?:www\.)?deezer\.com\/(?:[a-z]+\/)?(track|artist|album|playlist|show|radio)\/([0-9]+)/i,
             deezerShort: /https?:\/\/deezer\.page\.link\/[A-z0-9]+/i,
@@ -231,7 +231,7 @@ module.exports = class extends Modules {
 
         if (!input) { throw "No matches found! (710)"; };
 
-        const searchResults = await ytsr(input, { pages: 1 });
+        const searchResults = await ytsr(input);
         if (!searchResults) { throw "No matches found! (711)" };
 
         const video = searchResults.items.find(video => video.type == "video" && video.duration);
