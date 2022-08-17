@@ -25,7 +25,7 @@ module.exports = class extends Clients {
         if (response.status != 200) { return { code: "error", message: response?.data?.error?.message ?? "An error occurred." }; };
 
         let track = await response.json();
-        if (!track?.title) { return { code: "error", message: "No matches found! (731)" }; };
+        if (!track?.title) { return { code: "error", message: "No matches found!" }; };
 
         let trackInfo = [{
             title: `${track.artist.name} - ${track.title}`,
@@ -61,7 +61,7 @@ module.exports = class extends Clients {
             if (response.status != 200) { break; };
 
             let json = await response.json();
-            if (!json.data) { return { code: "error", message: "No matches found! (732)" }; };
+            if (!json.data) { return { code: "error", message: "No matches found!" }; };
 
             tracksTotal = json.total;
 
@@ -110,7 +110,7 @@ module.exports = class extends Clients {
             if (response.status != 200) { break; };
 
             let json = await response.json();
-            if (!json.data) { return { code: "error", message: "No matches found! (733)" }; };
+            if (!json.data) { return { code: "error", message: "No matches found!" }; };
 
             tracksTotal = json.total;
 

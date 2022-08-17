@@ -229,13 +229,13 @@ module.exports = class extends Modules {
 
         }
 
-        if (!input) { throw "No matches found! (710)"; };
+        if (!input) { throw "No matches found!"; };
 
         const searchResults = await ytsr(input);
-        if (!searchResults) { throw "No matches found! (711)" };
+        if (!searchResults) { throw "No matches found!" };
 
         const video = searchResults.items.find(video => video.type == "video" && video.duration);
-        if (!video) { console.log(searchResults); console.log(searchResults.items.map(v => { return { title: v.title, url: v.url, type: v.type, duration: v.duration } })); throw "No matches found! (712)" };
+        if (!video) { throw "No matches found!" };
 
         let durationArray = video.duration.toString().split(':');
 

@@ -80,10 +80,10 @@ module.exports = class extends Commands {
         if (!flags || flags.length == 0) { flags = ["none"]; };
 
         const searchResults = await ytsr(input);
-        if (!searchResults) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found! (810)")] } }; };
+        if (!searchResults) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found!")] } }; };
 
         const videos = searchResults.items.filter(video => video.type == "video");
-        if (!videos || videos.length == 0) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found! (811)")] } }; };
+        if (!videos || videos.length == 0) { return { code: "error", reply: { embeds: [errorEmbed.setDescription("No matches found!")] } }; };
 
         const SmOptions = [];
 
