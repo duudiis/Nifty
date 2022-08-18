@@ -42,7 +42,7 @@ module.exports = class extends Clients {
 
     }
 
-    async getTrack(id, userId="") {
+    async getTrack(id, userId = "") {
         if (!this.token || Date.now() >= this.expiresAt) { await this.getToken(); };
 
         let response = await fetch(`${this.baseUrl}/tracks/${id}`, {
@@ -71,7 +71,7 @@ module.exports = class extends Clients {
 
     }
 
-    async getPlaylist(id, userId="") {
+    async getPlaylist(id, userId = "") {
         if (!this.token || Date.now() >= this.expiresAt) { await this.getToken(); };
         let fields = "total%2Citems(track(name%2C%20id%2C%20artists(name)%2Cexternal_urls(spotify)%2Cduration_ms))";
 
@@ -95,10 +95,14 @@ module.exports = class extends Clients {
             if (response.status != 200) { break; };
 
             let json = await response.json();
+
             tracksTotal = json.total;
+            if (offset > tracksTotal) { break; };
 
             for (let track of json.items) {
-                if (track.track.is_local) { continue; };
+                if (track?.track?.is_local) { continue; };
+
+                if (!track?.track) { console.log(track); continue; };
 
                 let trackInfo = {
                     title: `${track.track.artists.map(a => a.name).join(", ")} - ${track.track.name}`,
@@ -122,7 +126,7 @@ module.exports = class extends Clients {
 
     }
 
-    async getAlbum(id, userId="") {
+    async getAlbum(id, userId = "") {
         if (!this.token || Date.now() >= this.expiresAt) { await this.getToken(); };
 
         let tracks = [];
@@ -171,7 +175,7 @@ module.exports = class extends Clients {
 
     }
 
-    async getArtist(id, userId="") {
+    async getArtist(id, userId = "") {
         if (!this.token || Date.now() >= this.expiresAt) { await this.getToken(); };
 
         let tracks = [];

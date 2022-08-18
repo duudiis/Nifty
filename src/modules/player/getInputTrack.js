@@ -231,7 +231,7 @@ module.exports = class extends Modules {
 
         if (!input) { throw "No matches found!"; };
 
-        const searchResults = await ytsr(input);
+        const searchResults = await ytsr(input, { pages: 1 });
         if (!searchResults) { throw "No matches found!" };
 
         const video = searchResults.items.find(video => video.type == "video" && video.duration);

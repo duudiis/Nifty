@@ -64,6 +64,7 @@ module.exports = class extends Clients {
             if (!json.data) { return { code: "error", message: "No matches found!" }; };
 
             tracksTotal = json.total;
+            if (index > tracksTotal) { break; };
 
             for (let track of json.data) {
 
