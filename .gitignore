@@ -1,4 +1,5 @@
-node_modules
-package-lock.json
+.gradle
+.idea
+build
+out
 .env
-dev.env
