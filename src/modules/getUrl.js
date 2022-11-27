@@ -20,7 +20,7 @@ module.exports = class extends Modules {
         if (response.status == 200) {
             return response.url;
         } else {
-            throw "No matches found! (700)";
+            throw "No matches found!";
         };
 
 	}
