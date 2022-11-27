@@ -148,7 +148,9 @@ public class MoveCommand extends BaseCommand {
 
         int currentPosition = playerManager.getPlayerHandler().getPosition();
 
-        if (currentPosition == newPosition && newPosition < trackPosition) {
+        if (currentPosition == 0) {
+            return newPosition;
+        } else if (currentPosition == newPosition && newPosition < trackPosition) {
             return newPosition + 1;
         } else if ((currentPosition + 1) == newPosition && newPosition > trackPosition) {
             return newPosition - 1;

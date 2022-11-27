@@ -30,10 +30,22 @@ public class TrackScheduler {
         this.queueHandler = playerManager.getQueueHandler();
     }
 
+    /**
+     * Adds the queried track to the queue.
+     *
+     * @param query The query to add to the queue.
+     * @param event The event that triggered the command and that will be used to reply to the user.
+     * @param member The member that triggered the command.
+     * @param flags Optional flags to add the track with.
+     * @see AudioResultHandler
+     */
     public void queue(String query, Object event, Member member, List<String> flags) {
         audioManager.loadItem(query, new AudioResultHandler(playerManager, event, member, flags));
     }
 
+    /**
+     * Skips the current track from the queue.
+     */
     public void skip() {
 
         int queueSize = queueHandler.getQueueSize();
@@ -55,6 +67,9 @@ public class TrackScheduler {
 
     }
 
+    /**
+     * Goes back to the previous track in the queue.
+     */
     public void back() {
 
         int position = playerHandler.getPosition();
@@ -66,14 +81,21 @@ public class TrackScheduler {
             audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
             playerHandler.setPosition(newPosition);
         } else if (loopMode == Loop.QUEUE) {
-            audioPlayer.playTrack(queueHandler.getQueueTrack(0));
-            playerHandler.setPosition(0);
+            int queueSize = queueHandler.getQueueSize();
+
+            audioPlayer.playTrack(queueHandler.getQueueTrack(queueSize - 1));
+            playerHandler.setPosition(queueSize - 1);
         } else {
             audioPlayer.stopTrack();
         }
 
     }
 
+    /**
+     * Jumps to the specified position in the queue.
+     *
+     * @param position The position to jump to.
+     */
     public void jump(int position) {
 
         int queueSize = queueHandler.getQueueSize();
@@ -85,14 +107,26 @@ public class TrackScheduler {
 
     }
 
+    /**
+     * Pauses the player.
+     */
     public void pause() {
         audioPlayer.setPaused(true);
     }
 
+    /**
+     * Unpauses the player.
+     */
     public void unpause() {
         audioPlayer.setPaused(false);
     }
 
+    /**
+     * Moves the specified track to the specified position in the queue.
+     *
+     * @param position The position to move the track to.
+     * @param newPosition The position of the track to move.
+     */
     public void move(int position, int newPosition) {
 
         int currentPosition = playerHandler.getPosition();
@@ -109,6 +143,13 @@ public class TrackScheduler {
 
     }
 
+    /**
+     * Moves the specified range of tracks to the specified position in the queue.
+     *
+     * @param startPosition The start position of the range.
+     * @param endPosition The end position of the range.
+     * @param newPosition The position to move the range to.
+     */
     public void moveRange(int startPosition, int endPosition, int newPosition) {
 
         int amount = (endPosition - startPosition) + 1;
@@ -134,6 +175,11 @@ public class TrackScheduler {
 
     }
 
+    /**
+     * Removes the specified track from the queue.
+     *
+     * @param position The position of the track to remove.
+     */
     public void remove(int position) {
 
         int currentPosition = playerHandler.getPosition();
@@ -160,6 +206,12 @@ public class TrackScheduler {
 
     }
 
+    /**
+     * Removes the specified range of tracks from the queue.
+     *
+     * @param startPosition The start position of the range.
+     * @param endPosition The end position of the range.
+     */
     public void removeRange(int startPosition, int endPosition) {
 
         int amount = (endPosition - startPosition) + 1;
@@ -189,10 +241,16 @@ public class TrackScheduler {
 
     }
 
+    /**
+     * Stops the current track.
+     */
     public void stop() {
         audioPlayer.stopTrack();
     }
 
+    /**
+     * Clears the queue.
+     */
     public void clear() {
         playerHandler.setPosition(0);
         queueHandler.clearQueue();
