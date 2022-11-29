@@ -4,6 +4,10 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.database.music.QueueHandler;
+import me.nifty.core.music.handlers.AudioEventsHandler;
+import me.nifty.core.music.handlers.AudioPlayerSendHandler;
+import me.nifty.core.music.managers.AudioFiltersManager;
+import me.nifty.core.music.managers.AutoplayManager;
 import me.nifty.managers.AudioManager;
 import net.dv8tion.jda.api.entities.Guild;
 
@@ -20,6 +24,7 @@ public class PlayerManager {
     private TrackScheduler trackScheduler;
 
     private AudioFiltersManager audioFiltersManager;
+    private AutoplayManager autoplayManager;
 
     private PlayerHandler playerHandler;
     private QueueHandler queueHandler;
@@ -61,6 +66,10 @@ public class PlayerManager {
         // Creates the audio filters manager and sets it for the player manager
         AudioFiltersManager audioFiltersManager = new AudioFiltersManager(playerManager);
         playerManager.setAudioFiltersManager(audioFiltersManager);
+
+        // Creates the autoplay manager and sets it for the player manager
+        AutoplayManager autoplayManager = new AutoplayManager(playerManager);
+        playerManager.setAutoplayManager(autoplayManager);
 
         // Sets the sending handler for the guild's audio manager
         guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(playerManager.getAudioPlayer()));
@@ -153,6 +162,14 @@ public class PlayerManager {
 
     public void setAudioFiltersManager(AudioFiltersManager audioFiltersManager) {
         this.audioFiltersManager = audioFiltersManager;
+    }
+
+    public AutoplayManager getAutoplayManager() {
+        return this.autoplayManager;
+    }
+
+    public void setAutoplayManager(AutoplayManager autoplayManager) {
+        this.autoplayManager = autoplayManager;
     }
 
 }

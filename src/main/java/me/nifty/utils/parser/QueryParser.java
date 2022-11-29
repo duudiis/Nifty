@@ -98,7 +98,8 @@ public class QueryParser {
 
         // If the query contains a URL, returns it.
         if (matcher.find()) {
-            return new QueryParser(foundFlags, matcher.group(0));
+            String url = matcher.group(0).replace("&list=LL", "");
+            return new QueryParser(foundFlags, url);
         }
 
         // Return the query as a YouTube search query.

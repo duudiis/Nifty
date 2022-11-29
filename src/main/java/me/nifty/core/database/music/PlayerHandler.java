@@ -2,6 +2,7 @@ package me.nifty.core.database.music;
 
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import me.nifty.managers.DatabaseManager;
+import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
 
 import java.sql.*;
@@ -16,6 +17,7 @@ public class PlayerHandler {
     private int position;
 
     private Loop loop = Loop.DISABLED;
+    private Autoplay autoplay = Autoplay.DISABLED;
 
     public PlayerHandler(long guildId) {
         this.guildId = guildId;
@@ -76,10 +78,12 @@ public class PlayerHandler {
 
             ResultSet result = selectStatement.executeQuery();
 
-            if (result.next()) {
+            if (result.next()) { // Text channel id and voice channel id are nullable.
                 this.textChannelId = result.getLong("channel_id");
                 this.voiceChannelId = result.getLong("voice_id");
                 this.position = result.getInt("position");
+
+                this.autoplay = result.getString("autoplay") == null ? Autoplay.DISABLED : Autoplay.valueOf(result.getString("autoplay"));
                 this.loop = result.getString("loop") == null ? Loop.DISABLED : Loop.valueOf(result.getString("loop"));
             }
 
@@ -194,6 +198,38 @@ public class PlayerHandler {
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET voice_id = ? WHERE guild_id = ?");
             updateStatement.setLong(1, voiceChannelId);
+            updateStatement.setLong(2, guildId);
+
+            updateStatement.executeUpdate();
+
+        } catch (SQLException ignored) { }
+
+    }
+
+    /**
+     * Gets the autoplay mode for the player.
+     *
+     * @return The autoplay mode of the player.
+     */
+    public Autoplay getAutoplayMode() {
+        return this.autoplay;
+    }
+
+    /**
+     * Sets the autoplay mode for the player.
+     *
+     * @param autoplayMode The new autoplay mode of the player.
+     */
+    public void setAutoplayMode(Autoplay autoplayMode) {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        this.autoplay = autoplayMode;
+
+        try {
+
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET autoplay = ? WHERE guild_id = ?");
+            updateStatement.setString(1, autoplayMode.name());
             updateStatement.setLong(2, guildId);
 
             updateStatement.executeUpdate();

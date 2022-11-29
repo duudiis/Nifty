@@ -1,4 +1,4 @@
-package me.nifty.core.music;
+package me.nifty.core.music.handlers;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.database.music.QueueHandler;
+import me.nifty.core.music.PlayerManager;
 import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.formatting.TrackTitle;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -90,6 +91,13 @@ public class AudioResultHandler implements AudioLoadResultHandler {
 
     @Override
     public void playlistLoaded(AudioPlaylist playlist) {
+
+        AudioTrack selectedTrack = playlist.getSelectedTrack();
+
+        if (selectedTrack != null && !flags.contains("all")) {
+            trackLoaded(selectedTrack);
+            return;
+        }
 
         if (playlist.isSearchResult()) {
             trackLoaded(playlist.getTracks().get(0));

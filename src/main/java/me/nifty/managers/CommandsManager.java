@@ -23,6 +23,7 @@ public class CommandsManager {
         registerCommand(new PrefixCommand());
 
         // Music Commands
+        registerCommand(new AutoplayCommand());
         registerCommand(new BackCommand());
         registerCommand(new ClearCommand());
         registerCommand(new DisconnectCommand());

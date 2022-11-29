@@ -1,4 +1,4 @@
-package me.nifty.core.music;
+package me.nifty.core.music.handlers;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;

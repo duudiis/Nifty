@@ -1,13 +1,18 @@
-package me.nifty.core.music;
+package me.nifty.core.music.handlers;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.database.music.QueueHandler;
+import me.nifty.core.music.PlayerManager;
+import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
 import me.nifty.utils.formatting.NowPlayingEmbed;
+import me.nifty.utils.formatting.TrackTitle;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
@@ -59,6 +64,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
 
         if (endReason.mayStartNext) {
 
+            Autoplay autoplayMode = playerHandler.getAutoplayMode();
             Loop loopMode = playerHandler.getLoopMode();
 
             if (loopMode == Loop.TRACK) {
@@ -70,19 +76,6 @@ public class AudioEventsHandler extends AudioEventAdapter {
             int position = playerHandler.getPosition();
 
             int newPosition = position + 1;
-
-            if (loopMode == Loop.DISABLED) {
-
-                if (queueSize > newPosition) {
-                    audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
-                    playerHandler.setPosition(newPosition);
-                } else {
-                    audioPlayer.stopTrack();
-                }
-
-                return;
-
-            }
 
             if (loopMode == Loop.QUEUE) {
 
@@ -96,7 +89,38 @@ public class AudioEventsHandler extends AudioEventAdapter {
 
             }
 
+            if (autoplayMode == Autoplay.ENABLED) {
+                playerManager.getAutoplayManager().autoplay();
+                return;
+            }
+
+            if (loopMode == Loop.DISABLED) {
+
+                if (queueSize > newPosition) {
+                    audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
+                    playerHandler.setPosition(newPosition);
+                }
+
+            }
+
         }
+
+    }
+
+    @Override
+    public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
+
+        TextChannel textChannel = playerManager.getGuild().getTextChannelById(playerHandler.getTextChannelId());
+        if (textChannel == null) { return; }
+
+        EmbedBuilder trackErrorEmbed = new EmbedBuilder()
+                .setTitle("An error occurred while playing")
+                .setDescription("[" + TrackTitle.format(track, 63) + "](" + track.getInfo().uri + ") " +
+                        "[<@!" + track.getUserData() + ">]\n" + exception.getMessage());
+
+        try {
+            textChannel.sendMessageEmbeds(trackErrorEmbed.build()).complete().delete().queueAfter(2, java.util.concurrent.TimeUnit.MINUTES);
+        } catch (Exception ignored) { }
 
     }
 

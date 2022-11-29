@@ -35,10 +35,7 @@ public class RemoveCommand extends BaseCommand {
         }
 
         String query = String.join(" ", args);
-
-        MessageEmbed removeEmbed = removeCommand(event.getGuild(), query);
-
-        event.getChannel().sendMessageEmbeds(removeEmbed).queue();
+        removeCommand(event, event.getGuild(), query);
 
     }
 
@@ -46,23 +43,34 @@ public class RemoveCommand extends BaseCommand {
     public void executeAsSlashCommand(SlashCommandInteractionEvent event) {
 
         String query = Objects.requireNonNull(event.getOption("input")).getAsString();
-
-        MessageEmbed removeReply = removeCommand(event.getGuild(), query);
-
-        event.replyEmbeds(removeReply).queue();
+        removeCommand(event, event.getGuild(), query);
 
     }
 
-    // TODO: Add a way to send the embed before the tracks are removed.
+    /**
+     * Replies to the event with an embed. This is due to the embed needing
+     * to be sent before the tracks are actually removed.
+     *
+     * @param event The event that triggered the command
+     * @param embed The embed to send
+     */
+    private void replyEvent(Object event, MessageEmbed embed, boolean ephemeral) {
+
+        if (event instanceof MessageReceivedEvent) {
+            ((MessageReceivedEvent) event).getChannel().sendMessageEmbeds(embed).queue();
+        } else if (event instanceof SlashCommandInteractionEvent) {
+            ((SlashCommandInteractionEvent) event).replyEmbeds(embed).setEphemeral(ephemeral).queue();
+        }
+
+    }
 
     /**
      * Removes a track or multiple tracks from the queue.
      *
      * @param guild The guild to remove the track from.
      * @param query The query to remove the track with.
-     * @return The message embed to return.
      */
-    private MessageEmbed removeCommand(Guild guild, String query) {
+    private void removeCommand(Object event, Guild guild, String query) {
 
         PlayerManager playerManager = PlayerManager.get(guild);
 
@@ -77,8 +85,9 @@ public class RemoveCommand extends BaseCommand {
                             "[<@!" + removedTrack.getUserData() + ">]")
                     .setColor(guild.getSelfMember().getColor());
 
+            replyEvent(event, removedEmbed.build(), false);
             playerManager.getTrackScheduler().remove(trackPosition);
-            return removedEmbed.build();
+            return;
 
         }
 
@@ -97,12 +106,13 @@ public class RemoveCommand extends BaseCommand {
                     .setDescription("Removed **" + amount + "** track" + (amount == 1 ? "" : "s"))
                     .setColor(guild.getSelfMember().getColor());
 
+            replyEvent(event, removedManyEmbed.build(), false);
             playerManager.getTrackScheduler().removeRange(startPosition, endPosition);
-            return removedManyEmbed.build();
+            return;
 
         }
 
-        return ErrorEmbed.get("A track could not be found for \"" + query + "\"");
+        replyEvent(event, ErrorEmbed.get("A track could not be found for \"" + query + "\""), true);
 
     }
 

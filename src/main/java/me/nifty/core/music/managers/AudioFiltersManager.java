@@ -1,9 +1,10 @@
-package me.nifty.core.music;
+package me.nifty.core.music.managers;
 
 import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.equalizer.Equalizer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import me.nifty.core.database.music.PlayerHandler;
+import me.nifty.core.music.PlayerManager;
 
 import java.util.Arrays;
 
