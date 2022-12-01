@@ -5,7 +5,7 @@ USE Nifty;
 CREATE TABLE Guilds (
     guild_id VARCHAR(32) NOT NULL UNIQUE,
     prefix VARCHAR(16),
-    inactivity_disconnect VARCHAR(32),
+    inactivity_disconnect BOOLEAN,
     announcements VARCHAR(32),
     PRIMARY KEY (guild_id)
 );
@@ -23,6 +23,7 @@ CREATE TABLE Players (
     channel_id VARCHAR(32),
     voice_id VARCHAR(32),
     position INT NOT NULL,
+    playing BOOLEAN NOT NULL,
     looping VARCHAR(32),
     shuffle VARCHAR(32),
     autoplay VARCHAR(32),

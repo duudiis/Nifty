@@ -5,6 +5,7 @@ import me.nifty.utils.VoiceUtils;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -24,8 +25,11 @@ public class VoiceConnection {
             return "You have to be connected to a voice channel before you can use this command!";
         }
 
+        // Gets the JDA audio manager to check if the bot is connected to a voice channel
+        AudioManager JDAAudioManager = memberVoiceState.getGuild().getAudioManager();
+
         // Check if the bot is connected to a voice channel
-        if (selfVoiceState != null && selfVoiceState.inAudioChannel()) {
+        if (selfVoiceState != null && JDAAudioManager.isConnected()) {
 
             // Check if the bot and the member are connected to the same voice channel
             if (!Objects.equals(selfVoiceState.getChannel(), memberVoiceState.getChannel())) {

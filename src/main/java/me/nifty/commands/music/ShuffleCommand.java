@@ -3,9 +3,7 @@ package me.nifty.commands.music;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
-import me.nifty.utils.enums.Autoplay;
-import me.nifty.utils.enums.Loop;
-import me.nifty.utils.formatting.ErrorEmbed;
+import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.parser.BoolParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,10 +13,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.List;
 
-public class AutoplayCommand extends BaseCommand {
+public class ShuffleCommand extends BaseCommand {
 
-    public AutoplayCommand() {
-        super("autoplay", List.of("ap", "auto"), "music");
+    public ShuffleCommand() {
+        super("shuffle", List.of("shuffles", "shu", "sh", "random", "randomize", "randomizer"), "shuffle");
 
         this.requiresVoice = true;
 
@@ -31,7 +29,7 @@ public class AutoplayCommand extends BaseCommand {
 
         String query = String.join(" ", args);
 
-        Pair<Boolean, MessageEmbed> result = autoplayCommand(event.getGuild(), query);
+        Pair<Boolean, MessageEmbed> result = shuffleCommand(event.getGuild(), query);
 
         MessageEmbed embed = result.getSecond();
 
@@ -42,7 +40,7 @@ public class AutoplayCommand extends BaseCommand {
     @Override
     public void executeAsSlashCommand(SlashCommandInteractionEvent event) {
 
-        Pair<Boolean, MessageEmbed> result = autoplayCommand(event.getGuild(), "");
+        Pair<Boolean, MessageEmbed> result = shuffleCommand(event.getGuild(), "");
 
         Boolean success = result.getFirst();
         MessageEmbed embed = result.getSecond();
@@ -55,27 +53,27 @@ public class AutoplayCommand extends BaseCommand {
 
     }
 
-    private Pair<Boolean, MessageEmbed> autoplayCommand(Guild guild, String input) {
+    private Pair<Boolean, MessageEmbed> shuffleCommand(Guild guild, String input) {
 
         PlayerManager playerManager = PlayerManager.get(guild);
 
-        Loop currentLoopMode = playerManager.getPlayerHandler().getLoopMode();
+        Shuffle currentShuffle = playerManager.getPlayerHandler().getShuffleMode();
 
-        if (currentLoopMode != Loop.DISABLED) {
-            return new Pair<>(false, ErrorEmbed.get("AutoPlay and Loop cannot both be enabled at the same time!"));
+        boolean newShuffleBool = BoolParser.parse(input, currentShuffle == Shuffle.ENABLED);
+        Shuffle newShuffleMode = newShuffleBool ? Shuffle.ENABLED : Shuffle.DISABLED;
+
+        playerManager.getPlayerHandler().setShuffleMode(newShuffleMode);
+
+        if (newShuffleMode == Shuffle.ENABLED) {
+            int currentPosition = playerManager.getPlayerHandler().getPosition();
+            playerManager.getQueueHandler().shuffleAfter(currentPosition + 1);
         }
 
-        Autoplay currentAutoPlay = playerManager.getPlayerHandler().getAutoplayMode();
-
-        boolean newAutoplayMode = BoolParser.parse(input, currentAutoPlay == Autoplay.ENABLED);
-
-        playerManager.getPlayerHandler().setAutoplayMode(newAutoplayMode ? Autoplay.ENABLED : Autoplay.DISABLED);
-
-        EmbedBuilder autoplayEmbed = new EmbedBuilder()
-                .setDescription("AutoPlay is now " + (newAutoplayMode ? "**enabled**" : "**disabled**"))
+        EmbedBuilder shuffleEmbed = new EmbedBuilder()
+                .setDescription("Shuffle mode has been **" + newShuffleMode.toString().toLowerCase() + "**")
                 .setColor(guild.getSelfMember().getColor());
 
-        return new Pair<>(true, autoplayEmbed.build());
+        return new Pair<>(true, shuffleEmbed.build());
 
     }
 

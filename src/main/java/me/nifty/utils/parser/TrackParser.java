@@ -68,16 +68,21 @@ public class TrackParser {
         for (Map.Entry<String, List<String>> entry : keywords.entrySet()) {
             if (entry.getValue().contains(query.toLowerCase())) {
                 switch (entry.getKey()) {
-                    case "first":
+                    case "first" -> {
                         return 0;
-                    case "back":
+                    }
+                    case "back" -> {
                         return Math.max(playerManager.getPlayerHandler().getPosition() - 1, 0);
-                    case "current":
+                    }
+                    case "current" -> {
                         return playerManager.getPlayerHandler().getPosition();
-                    case "next":
+                    }
+                    case "next" -> {
                         return playerManager.getPlayerHandler().getPosition() + 1;
-                    case "last":
+                    }
+                    case "last" -> {
                         return playerManager.getQueueHandler().getQueueSize() - 1;
+                    }
                 }
             }
         }

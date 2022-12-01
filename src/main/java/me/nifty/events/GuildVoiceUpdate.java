@@ -1,11 +1,15 @@
 package me.nifty.events;
 
 import me.nifty.core.music.PlayerManager;
+import me.nifty.utils.InactivityUtils;
 import me.nifty.utils.VoiceUtils;
+import me.nifty.utils.enums.InactivityType;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 public class GuildVoiceUpdate extends ListenerAdapter {
 
@@ -45,6 +49,17 @@ public class GuildVoiceUpdate extends ListenerAdapter {
                 event.getEntity().deafen(true).queue();
             }
 
+            // Gets the number of members (not bots) in the voice channel
+            int membersInChannel = event.getChannelJoined().getMembers().stream().filter(member -> !member.getUser().isBot()).toList().size();
+
+            // If there are no members in the voice channel, starts an inactivity timer
+            if (membersInChannel == 0) {
+                InactivityUtils.startTimer(InactivityType.ALONE, event.getGuild());
+            } else {
+                // If there are members in the voice channel, cancels the inactivity timer
+                InactivityUtils.stopTimer(InactivityType.ALONE, event.getGuild());
+            }
+
         }
 
         // If the bot left a voice channel, clears the player
@@ -59,6 +74,43 @@ public class GuildVoiceUpdate extends ListenerAdapter {
      * @param event The event
      */
     private void memberVoiceUpdate(GuildVoiceUpdateEvent event) {
+
+        AudioManager JDAAudioManager = event.getGuild().getAudioManager();
+        if (!JDAAudioManager.isConnected() || JDAAudioManager.getConnectedChannel() == null) { return; }
+
+        VoiceChannel voiceChannel = JDAAudioManager.getConnectedChannel().asVoiceChannel();
+
+        // If the member joined / moved to a voice channel and the bot is in the same voice channel
+        if (event.getChannelJoined() != null && event.getChannelJoined().getIdLong() == voiceChannel.getIdLong()) {
+
+            // Gets the number of members (not bots) in the voice channel
+            int membersInChannel = event.getChannelJoined().getMembers().stream().filter(member -> !member.getUser().isBot()).toList().size();
+
+            // If there are no members in the voice channel, starts an inactivity timer
+            if (membersInChannel == 0) {
+                InactivityUtils.startTimer(InactivityType.ALONE, event.getGuild());
+            } else {
+                // If there are members in the voice channel, cancels the inactivity timer
+                InactivityUtils.stopTimer(InactivityType.ALONE, event.getGuild());
+            }
+
+        }
+
+        // If the member left a voice channel and the bot was in the same voice channel
+        if (event.getChannelLeft() != null && event.getChannelLeft().getIdLong() == voiceChannel.getIdLong()) {
+
+            // Gets the number of members (not bots) in the voice channel
+            int membersInChannel = event.getChannelLeft().getMembers().stream().filter(member -> !member.getUser().isBot()).toList().size();
+
+            // If there are no members in the voice channel, starts an inactivity timer
+            if (membersInChannel == 0) {
+                InactivityUtils.startTimer(InactivityType.ALONE, event.getGuild());
+            } else {
+                // If there are members in the voice channel, cancels the inactivity timer
+                InactivityUtils.stopTimer(InactivityType.ALONE, event.getGuild());
+            }
+
+        }
 
     }
 

@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.database.music.QueueHandler;
 import me.nifty.core.music.PlayerManager;
+import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.formatting.TrackTitle;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -16,6 +17,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 
+import java.util.Collections;
 import java.util.List;
 
 public class AudioResultHandler implements AudioLoadResultHandler {
@@ -108,6 +110,12 @@ public class AudioResultHandler implements AudioLoadResultHandler {
 
         for (AudioTrack track : audioTracks) {
             track.setUserData(member.getUser().getIdLong());
+        }
+
+        Shuffle shuffleMode = playerHandler.getShuffleMode();
+
+        if (shuffleMode == Shuffle.ENABLED || flags.contains("shuffle")) {
+            Collections.shuffle(audioTracks);
         }
 
         EmbedBuilder playlistEmbed = new EmbedBuilder()

@@ -3,7 +3,9 @@ package me.nifty.commands.music;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
+import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
+import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.parser.LoopParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -66,6 +68,12 @@ public class LoopCommand extends BaseCommand {
     private Pair<Boolean, MessageEmbed> loopCommand(Guild guild, String input) {
 
         PlayerManager playerManager = PlayerManager.get(guild);
+
+        Autoplay currentAutoPlay = playerManager.getPlayerHandler().getAutoplayMode();
+
+        if (currentAutoPlay != Autoplay.DISABLED) {
+            return new Pair<>(false, ErrorEmbed.get("AutoPlay and Loop cannot both be enabled at the same time!"));
+        }
 
         Loop newLoop = LoopParser.parse(input, playerManager);
 

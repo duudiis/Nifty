@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class QueueHandler {
@@ -312,6 +313,50 @@ public class QueueHandler {
         for (int i = 0; i < amount; i++) {
             removeTrack(position);
         }
+
+    }
+
+    /**
+     * Shuffles the tracks in the queue after the given position.
+     *
+     * @param startPosition The starting position of the tracks to shuffle.
+     */
+    public void shuffleAfter(int startPosition) {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        try {
+
+            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM Queues WHERE guild_id = ? AND track_id >= ? ORDER BY track_id ASC");
+            selectStatement.setLong(1, this.guildId);
+            selectStatement.setInt(2, startPosition);
+
+            ResultSet selectResult = selectStatement.executeQuery();
+
+            List<AudioTrack> audioTracks = new ArrayList<>();
+
+            while (selectResult.next()) {
+                AudioTrack audioTrack = TrackUtils.decodeTrack(selectResult.getString("encoded_track"));
+                if (audioTrack == null) { continue; }
+
+                audioTrack.setUserData(selectResult.getLong("member_id"));
+
+                audioTracks.add(audioTrack);
+            }
+
+            if (audioTracks.size() == 0) { return; }
+
+            Collections.shuffle(audioTracks);
+
+            int position = startPosition;
+
+            for (AudioTrack audioTrack : audioTracks) {
+                removeTrack(position);
+                addTrack(audioTrack, position);
+                position++;
+            }
+
+        } catch (Exception ignored) { }
 
     }
 

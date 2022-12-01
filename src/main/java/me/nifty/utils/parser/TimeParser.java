@@ -20,7 +20,7 @@ public class TimeParser {
     public static long parse(String time) {
 
         // Sanitizes the time string.
-        String query = specialCharacterPattern.matcher(time).replaceAll("").replaceAll("\s+", "");
+        String query = specialCharacterPattern.matcher(time).replaceAll("").replaceAll(" +", "");
 
         Matcher rawIntegerMatcher = rawIntegerPattern.matcher(query);
 

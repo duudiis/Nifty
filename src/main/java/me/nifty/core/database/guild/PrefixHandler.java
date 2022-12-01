@@ -16,11 +16,11 @@ public class PrefixHandler {
 
     public static String getPrefix(long guildId) {
 
-        Connection connection = DatabaseManager.getConnection();
-
         if (prefixes.containsKey(guildId)) {
             return prefixes.get(guildId);
         }
+
+        Connection connection = DatabaseManager.getConnection();
 
         try {
 

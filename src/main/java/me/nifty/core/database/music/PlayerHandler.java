@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import me.nifty.managers.DatabaseManager;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
+import me.nifty.utils.enums.Shuffle;
 
 import java.sql.*;
 
@@ -18,6 +19,7 @@ public class PlayerHandler {
 
     private Loop loop = Loop.DISABLED;
     private Autoplay autoplay = Autoplay.DISABLED;
+    private Shuffle shuffle = Shuffle.DISABLED;
 
     public PlayerHandler(long guildId) {
         this.guildId = guildId;
@@ -40,10 +42,11 @@ public class PlayerHandler {
 
         try {
 
-            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Players (guild_id, position) VALUES (?, ?) ON DUPLICATE KEY UPDATE guild_id = ?");
+            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Players (guild_id, position, playing) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE guild_id = ?");
             insertStatement.setLong(1, this.guildId);
             insertStatement.setInt(2, 0);
-            insertStatement.setLong(3, this.guildId);
+            insertStatement.setBoolean(3, false);
+            insertStatement.setLong(4, this.guildId);
 
             int insertResult = insertStatement.executeUpdate();
 
@@ -134,6 +137,27 @@ public class PlayerHandler {
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET position = ? WHERE guild_id = ?");
             updateStatement.setInt(1, position);
+            updateStatement.setLong(2, guildId);
+
+            updateStatement.executeUpdate();
+
+        } catch (SQLException ignored) { }
+
+    }
+
+    /**
+     * Sets if the player is currently playing a track or not.
+     *
+     * @param playing Whether the player is currently playing or not.
+     */
+    public void setPlaying(boolean playing) {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        try {
+
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET playing = ? WHERE guild_id = ?");
+            updateStatement.setBoolean(1, playing);
             updateStatement.setLong(2, guildId);
 
             updateStatement.executeUpdate();
@@ -262,6 +286,28 @@ public class PlayerHandler {
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET looping = ? WHERE guild_id = ?");
             updateStatement.setString(1, loopMode.name());
+            updateStatement.setLong(2, guildId);
+
+            updateStatement.executeUpdate();
+
+        } catch (SQLException ignored) { }
+
+    }
+
+    public Shuffle getShuffleMode() {
+        return this.shuffle;
+    }
+
+    public void setShuffleMode(Shuffle shuffleMode) {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        this.shuffle = shuffleMode;
+
+        try {
+
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET shuffle = ? WHERE guild_id = ?");
+            updateStatement.setString(1, shuffleMode.name());
             updateStatement.setLong(2, guildId);
 
             updateStatement.executeUpdate();

@@ -22,6 +22,7 @@ public class PlayerManager {
     private Guild guild;
     private AudioPlayer audioPlayer;
     private TrackScheduler trackScheduler;
+    private AudioEventsHandler audioEventsHandler;
 
     private AudioFiltersManager audioFiltersManager;
     private AutoplayManager autoplayManager;
@@ -61,6 +62,7 @@ public class PlayerManager {
 
         // Creates and sets the event listener for the audio player
         AudioEventsHandler audioEventsHandler = new AudioEventsHandler(playerManager);
+        playerManager.setAudioEventsHandler(audioEventsHandler);
         playerManager.getAudioPlayer().addListener(audioEventsHandler);
 
         // Creates the audio filters manager and sets it for the player manager
@@ -95,21 +97,33 @@ public class PlayerManager {
         PlayerManager playerManager = get(guild);
         if (playerManager == null) { return; }
 
-        // Clears the queue
-        playerManager.getQueueHandler().clearQueue();
+        // Gets the queue handler from the player manager
+        QueueHandler queueHandler = playerManager.getQueueHandler();
 
-        // Deletes the player handler
-        playerManager.getPlayerHandler().delete();
+        if (queueHandler != null) {
+            // Clears the queue
+            playerManager.getQueueHandler().clearQueue();
+        }
+
+        // Gets the player handler from the player manager
+        PlayerHandler playerHandler = playerManager.getPlayerHandler();
+
+        if (playerHandler != null) {
+            // Deletes the player handler
+            playerManager.getPlayerHandler().delete();
+        }
 
         // Gets the audio player from the player manager
         AudioPlayer audioPlayer = playerManager.getAudioPlayer();
 
-        // Stops the audio player
-        audioPlayer.setPaused(false);
-        audioPlayer.stopTrack();
+        if (audioPlayer != null) {
+            // Stops the audio player
+            audioPlayer.setPaused(false);
+            audioPlayer.stopTrack();
 
-        // Destroys the audio player
-        audioPlayer.destroy();
+            // Destroys the audio player
+            audioPlayer.destroy();
+        }
 
         // Removes the player manager from the map
         guildPlayerManagers.remove(guild.getIdLong());
@@ -154,6 +168,14 @@ public class PlayerManager {
 
     public void setQueueHandler(QueueHandler queueHandler) {
         this.queueHandler = queueHandler;
+    }
+
+    public AudioEventsHandler getAudioEventsHandler() {
+        return this.audioEventsHandler;
+    }
+
+    public void setAudioEventsHandler(AudioEventsHandler audioEventsHandler) {
+        this.audioEventsHandler = audioEventsHandler;
     }
 
     public AudioFiltersManager getAudioFiltersManager() {

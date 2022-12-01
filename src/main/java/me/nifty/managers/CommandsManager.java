@@ -1,5 +1,7 @@
 package me.nifty.managers;
 
+import me.nifty.commands.configuration.AnnounceCommand;
+import me.nifty.commands.configuration.InactivityCommand;
 import me.nifty.commands.configuration.PrefixCommand;
 import me.nifty.commands.music.*;
 import me.nifty.commands.utility.PingCommand;
@@ -20,6 +22,8 @@ public class CommandsManager {
     public static void load() {
 
         // Configuration Commands
+        registerCommand(new AnnounceCommand());
+        registerCommand(new InactivityCommand());
         registerCommand(new PrefixCommand());
 
         // Music Commands
@@ -39,6 +43,7 @@ public class CommandsManager {
         registerCommand(new RemoveCommand());
         registerCommand(new RewindCommand());
         registerCommand(new SeekCommand());
+        registerCommand(new ShuffleCommand());
         registerCommand(new SkipCommand());
         registerCommand(new StopCommand());
         registerCommand(new UnpauseCommand());

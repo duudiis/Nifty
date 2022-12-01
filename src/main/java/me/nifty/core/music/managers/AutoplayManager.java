@@ -11,6 +11,7 @@ import me.nifty.utils.formatting.ErrorEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -75,6 +76,8 @@ public class AutoplayManager {
         while (seedTrack == null && searchPage >= searchPageLimit) {
 
             List<AudioTrack> latestTracks = playerManager.getQueueHandler().getQueuePage(searchPage);
+
+            Collections.shuffle(latestTracks);
 
             for (AudioTrack track : latestTracks) {
 
