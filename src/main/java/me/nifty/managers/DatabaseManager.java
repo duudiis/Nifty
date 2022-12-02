@@ -17,13 +17,13 @@ public class DatabaseManager {
     private static final String url = Config.getSQLiteUrl();
 
     /**
-     * Connects to the MySQL Server
+     * Connects to the SQLite Server
      */
     public static void connect() {
 
         // Checks if the credentials are missing
         if (url == null) {
-            throw new RuntimeException("[Nifty] SQL URL missing on the environment variables!");
+            throw new RuntimeException("[Nifty] SQLite URL missing on the environment variables!");
         }
 
         // Attempts to connect to the SQLite Server
