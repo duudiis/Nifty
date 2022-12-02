@@ -1,7 +1,3 @@
-DROP DATABASE IF EXISTS Nifty;
-CREATE DATABASE IF NOT EXISTS Nifty;
-USE Nifty;
-
 CREATE TABLE Guilds (
     guild_id VARCHAR(32) NOT NULL UNIQUE,
     prefix VARCHAR(16),
@@ -31,11 +27,10 @@ CREATE TABLE Players (
 );
 
 CREATE TABLE Queues (
-    id INT NOT NULL AUTO_INCREMENT UNIQUE,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     guild_id VARCHAR(32) NOT NULL,
     track_id INT NOT NULL,
     track_name VARCHAR(256) NOT NULL,
     member_id VARCHAR(32) NOT NULL,
-    encoded_track VARCHAR(1024) NOT NULL,
-    PRIMARY KEY (id)
+    encoded_track VARCHAR(1024) NOT NULL
 );

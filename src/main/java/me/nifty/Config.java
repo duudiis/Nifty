@@ -23,27 +23,11 @@ public class Config {
     }
 
     /**
-     * Gets the MySQL url
-     * @return The MySQL url
+     * Gets the SQLite url
+     * @return The SQLite url
      */
-    public static String getMySQLUrl() {
-        return config.get("MYSQL_URL");
-    }
-
-    /**
-     * Gets the MySQL username
-     * @return The MySQL username
-     */
-    public static String getMySQLUsername() {
-        return config.get("MYSQL_USERNAME");
-    }
-
-    /**
-     * Gets the MySQL password
-     * @return The MySQL password
-     */
-    public static String getMySQLPassword() {
-        return config.get("MYSQL_PASSWORD");
+    public static String getSQLiteUrl() {
+        return config.get("SQLITE_URL");
     }
 
     /**

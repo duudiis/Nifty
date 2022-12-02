@@ -51,7 +51,7 @@ public class PrefixHandler {
 
         try {
 
-            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, prefix) VALUES (?, ?) ON DUPLICATE KEY UPDATE prefix = ?");
+            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, prefix) VALUES (?, ?) ON CONFLICT DO UPDATE SET prefix = ?");
             updateStatement.setLong(1, guildId);
             updateStatement.setString(2, newPrefix);
             updateStatement.setString(3, newPrefix);

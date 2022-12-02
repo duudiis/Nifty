@@ -42,7 +42,7 @@ public class PlayerHandler {
 
         try {
 
-            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Players (guild_id, position, playing) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE guild_id = ?");
+            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Players (guild_id, position, playing) VALUES (?, ?, ?) ON CONFLICT DO UPDATE SET guild_id = ?");
             insertStatement.setLong(1, this.guildId);
             insertStatement.setInt(2, 0);
             insertStatement.setBoolean(3, false);
