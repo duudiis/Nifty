@@ -13,7 +13,6 @@ public class PlayerHandler {
     private final long guildId;
 
     private long textChannelId;
-    private long voiceChannelId;
 
     private int position;
 
@@ -54,55 +53,11 @@ public class PlayerHandler {
             insertStatement.setLong(4, this.guildId);
 
             int insertResult = insertStatement.executeUpdate();
-
-            if (insertResult == 1) {
-                return true;
-            }
-
-            if (insertResult == 2) {
-                reload();
-                return true;
-            }
-
-            return false;
+            return insertResult == 1;
 
         } catch (Exception ignored) { }
 
         return false;
-
-    }
-
-    /**
-     * Reloads the player from the database into the cache.
-     */
-    public void reload() {
-
-        Connection connection = DatabaseManager.getConnection();
-
-        try {
-
-            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM Players WHERE guild_id = ?");
-            selectStatement.setLong(1, this.guildId);
-
-            ResultSet result = selectStatement.executeQuery();
-
-            if (result.next()) {
-                this.textChannelId = result.getLong("channel_id");
-                this.voiceChannelId = result.getLong("voice_id");
-                this.position = result.getInt("position");
-
-                this.autoplay = result.getString("autoplay") == null ? Autoplay.DISABLED : Autoplay.valueOf(result.getString("autoplay"));
-                this.loop = result.getString("loop") == null ? Loop.DISABLED : Loop.valueOf(result.getString("loop"));
-                this.shuffle = result.getString("shuffle") == null ? Shuffle.DISABLED : Shuffle.valueOf(result.getString("shuffle"));
-
-                this.speed = result.getFloat("speed") == 0.0f ? 1.0f : result.getFloat("speed");
-                this.pitch = result.getFloat("pitch") == 0.0f ? 1.0f : result.getFloat("pitch");
-                this.bassBoost = result.getFloat("bass_boost");
-                this.rotation = result.getBoolean("rotation");
-            }
-
-        } catch (Exception ignored) { }
-
 
     }
 
@@ -210,15 +165,6 @@ public class PlayerHandler {
     }
 
     /**
-     * Gets the voice channel id of the player.
-     *
-     * @return The voice channel id of the player.
-     */
-    public long getVoiceChannelId() {
-        return this.voiceChannelId;
-    }
-
-    /**
      * Sets the voice channel id of the player.
      *
      * @param voiceChannelId The new voice channel id of the player.
@@ -226,8 +172,6 @@ public class PlayerHandler {
     public void setVoiceChannelId(long voiceChannelId) {
 
         Connection connection = DatabaseManager.getConnection();
-
-        this.voiceChannelId = voiceChannelId;
 
         try {
 
