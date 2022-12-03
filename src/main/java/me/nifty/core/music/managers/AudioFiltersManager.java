@@ -1,16 +1,16 @@
 package me.nifty.core.music.managers;
 
+import com.github.natanbc.lavadsp.rotation.RotationPcmAudioFilter;
 import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.equalizer.Equalizer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.music.PlayerManager;
 
-import java.util.Arrays;
+import java.util.List;
 
 public class AudioFiltersManager {
 
-    private final PlayerManager playerManager;
     private final AudioPlayer audioPlayer;
     private final PlayerHandler playerHandler;
 
@@ -32,17 +32,17 @@ public class AudioFiltersManager {
             -0.1f
     };
 
-    private float speed = 1;
-    private float pitch = 1;
-    private float bassBoost = 0;
-
     public AudioFiltersManager(PlayerManager playerManager) {
-        this.playerManager = playerManager;
         this.audioPlayer = playerManager.getAudioPlayer();
         this.playerHandler = playerManager.getPlayerHandler();
     }
 
     public void updateFilterFactory() {
+
+        float speed = getSpeed();
+        float pitch = getPitch();
+        float bassBoost = getBassBoost();
+        boolean rotationIsEnabled = getRotation();
 
         audioPlayer.setFilterFactory((track, format, output) -> {
 
@@ -53,40 +53,56 @@ public class AudioFiltersManager {
 
             Equalizer equalizer = new Equalizer(format.channelCount, timescale);
 
-            for (int i = 0; i < BASS_BOOST.length; i++)
-            {
+            for (int i = 0; i < BASS_BOOST.length; i++) {
                 equalizer.setGain(i, BASS_BOOST[i] * bassBoost);
             }
 
-            return Arrays.asList(equalizer, timescale);
+            if (rotationIsEnabled) {
+                RotationPcmAudioFilter rotation = new RotationPcmAudioFilter(equalizer, format.sampleRate);
+                rotation.setRotationSpeed(0.1);
+
+                return List.of(rotation, equalizer, timescale);
+            }
+
+            return List.of(equalizer, timescale);
+
         });
 
     }
 
     public float getSpeed() {
-        return speed;
+        return playerHandler.getSpeed();
     }
 
     public void setSpeed(float speed) {
-        this.speed = speed;
+        playerHandler.setSpeed(speed);
         updateFilterFactory();
     }
 
     public float getPitch() {
-        return pitch;
+        return playerHandler.getPitch();
     }
 
     public void setPitch(float pitch) {
-        this.pitch = pitch;
+        playerHandler.setPitch(pitch);
         updateFilterFactory();
     }
 
     public float getBassBoost() {
-        return bassBoost;
+        return playerHandler.getBassBoost();
     }
 
     public void setBassBoost(float bassBoost) {
-        this.bassBoost = bassBoost;
+        playerHandler.setBassBoost(bassBoost);
+        updateFilterFactory();
+    }
+
+    public boolean getRotation() {
+        return playerHandler.getRotation();
+    }
+
+    public void setRotation(boolean rotation) {
+        playerHandler.setRotation(rotation);
         updateFilterFactory();
     }
 

@@ -31,6 +31,10 @@ public class JumpCommand extends BaseCommand {
     @Override
     public void executeAsMessage(MessageReceivedEvent event, String[] args) {
 
+        if (args.length == 0) {
+            return;
+        }
+
         String query = String.join(" ", args);
 
         Pair<Boolean, MessageEmbed> result = jumpCommand(event.getGuild(), query);

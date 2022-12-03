@@ -3,3 +3,6 @@
 build
 out
 .env
+gradlew
+gradlew.bat
+database.db

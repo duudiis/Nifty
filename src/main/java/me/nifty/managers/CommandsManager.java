@@ -29,24 +29,30 @@ public class CommandsManager {
         // Music Commands
         registerCommand(new AutoplayCommand());
         registerCommand(new BackCommand());
+        registerCommand(new BassBoostCommand());
         registerCommand(new ClearCommand());
         registerCommand(new DisconnectCommand());
         registerCommand(new FastForwardCommand());
         registerCommand(new JoinCommand());
         registerCommand(new JumpCommand());
         registerCommand(new LoopCommand());
+        registerCommand(new NightcoreCommand());
         registerCommand(new MoveCommand());
         registerCommand(new NowPlayingCommand());
         registerCommand(new PauseCommand());
+        registerCommand(new PitchCommand());
         registerCommand(new PlayCommand());
         registerCommand(new QueueCommand());
         registerCommand(new RemoveCommand());
         registerCommand(new RewindCommand());
+        registerCommand(new RotationCommand());
         registerCommand(new SeekCommand());
         registerCommand(new ShuffleCommand());
         registerCommand(new SkipCommand());
+        registerCommand(new SpeedCommand());
         registerCommand(new StopCommand());
         registerCommand(new UnpauseCommand());
+        registerCommand(new VaporwaveCommand());
 
         // Utility Commands
         registerCommand(new PingCommand());
