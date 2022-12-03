@@ -1,6 +1,7 @@
 package me.nifty.utils;
 
 import me.nifty.core.music.PlayerManager;
+import me.nifty.utils.enums.InactivityType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -56,6 +57,10 @@ public class VoiceUtils {
         AudioManager JDAAudioManager = guild.getAudioManager();
         JDAAudioManager.closeAudioConnection();
 
+        InactivityUtils.stopTimer(InactivityType.PAUSED, guild);
+        InactivityUtils.stopTimer(InactivityType.STOPPED, guild);
+        InactivityUtils.stopTimer(InactivityType.ALONE, guild);
+
         PlayerManager.destroy(guild);
 
     }
@@ -68,6 +73,7 @@ public class VoiceUtils {
     public static void inactivityDisconnect(Guild guild) {
 
         PlayerManager playerManager = PlayerManager.get(guild);
+        if (playerManager == null) { return; }
 
         TextChannel textChannel = guild.getTextChannelById(playerManager.getPlayerHandler().getTextChannelId());
 

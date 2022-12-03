@@ -21,6 +21,11 @@ public class PlayerHandler {
     private Autoplay autoplay = Autoplay.DISABLED;
     private Shuffle shuffle = Shuffle.DISABLED;
 
+    private float speed = 1.0f;
+    private float pitch = 1.0f;
+    private float bassBoost = 0.0f;
+    private boolean rotation = false;
+
     public PlayerHandler(long guildId) {
         this.guildId = guildId;
 
@@ -81,13 +86,19 @@ public class PlayerHandler {
 
             ResultSet result = selectStatement.executeQuery();
 
-            if (result.next()) { // Text channel id and voice channel id are nullable.
+            if (result.next()) {
                 this.textChannelId = result.getLong("channel_id");
                 this.voiceChannelId = result.getLong("voice_id");
                 this.position = result.getInt("position");
 
                 this.autoplay = result.getString("autoplay") == null ? Autoplay.DISABLED : Autoplay.valueOf(result.getString("autoplay"));
                 this.loop = result.getString("loop") == null ? Loop.DISABLED : Loop.valueOf(result.getString("loop"));
+                this.shuffle = result.getString("shuffle") == null ? Shuffle.DISABLED : Shuffle.valueOf(result.getString("shuffle"));
+
+                this.speed = result.getFloat("speed") == 0.0f ? 1.0f : result.getFloat("speed");
+                this.pitch = result.getFloat("pitch") == 0.0f ? 1.0f : result.getFloat("pitch");
+                this.bassBoost = result.getFloat("bass_boost");
+                this.rotation = result.getBoolean("rotation");
             }
 
         } catch (Exception ignored) { }
@@ -294,10 +305,20 @@ public class PlayerHandler {
 
     }
 
+    /**
+     * Gets the shuffle mode of the player.
+     *
+     * @return The shuffle mode.
+     */
     public Shuffle getShuffleMode() {
         return this.shuffle;
     }
 
+    /**
+     * Sets the shuffle mode of the player.
+     *
+     * @param shuffleMode The shuffle mode to set.
+     */
     public void setShuffleMode(Shuffle shuffleMode) {
 
         Connection connection = DatabaseManager.getConnection();
@@ -308,6 +329,134 @@ public class PlayerHandler {
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET shuffle = ? WHERE guild_id = ?");
             updateStatement.setString(1, shuffleMode.name());
+            updateStatement.setLong(2, guildId);
+
+            updateStatement.executeUpdate();
+
+        } catch (SQLException ignored) { }
+
+    }
+
+    /**
+     * Gets the speed of the player.
+     *
+     * @return The speed of the player.
+     */
+    public float getSpeed() {
+        return this.speed;
+    }
+
+    /**
+     * Sets the speed of the player.
+     *
+     * @param speed The new speed of the player.
+     */
+    public void setSpeed(float speed) {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        this.speed = speed;
+
+        try {
+
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET speed = ? WHERE guild_id = ?");
+            updateStatement.setFloat(1, speed);
+            updateStatement.setLong(2, guildId);
+
+            updateStatement.executeUpdate();
+
+        } catch (SQLException ignored) { }
+
+    }
+
+    /**
+     * Gets the pitch of the player.
+     *
+     * @return The pitch of the player.
+     */
+    public float getPitch() {
+        return this.pitch;
+    }
+
+    /**
+     * Sets the pitch of the player.
+     *
+     * @param pitch The new pitch of the player.
+     */
+    public void setPitch(float pitch) {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        this.pitch = pitch;
+
+        try {
+
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET pitch = ? WHERE guild_id = ?");
+            updateStatement.setFloat(1, pitch);
+            updateStatement.setLong(2, guildId);
+
+            updateStatement.executeUpdate();
+
+        } catch (SQLException ignored) {}
+
+    }
+
+    /**
+     * Gets the bass boost of the player.
+     *
+     * @return The bass boost of the player.
+     */
+    public float getBassBoost() {
+        return this.bassBoost;
+    }
+
+    /**
+     * Sets the bass boost of the player.
+     *
+     * @param bassBoost The new bass boost of the player.
+     */
+    public void setBassBoost(float bassBoost) {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        this.bassBoost = bassBoost;
+
+        try {
+
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET bass_boost = ? WHERE guild_id = ?");
+            updateStatement.setFloat(1, bassBoost);
+            updateStatement.setLong(2, guildId);
+
+            updateStatement.executeUpdate();
+
+        } catch (SQLException ignored) { }
+
+    }
+
+    /**
+     * Gets the rotation of the player.
+     *
+     * @return The rotation of the player.
+     */
+    public boolean getRotation() {
+        return this.rotation;
+    }
+
+    /**
+     * Sets the rotation of the player.
+     *
+     * @param rotation The new rotation of the player.
+     */
+    public void setRotation(boolean rotation) {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        this.rotation = rotation;
+
+        try {
+
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET rotation = ? WHERE guild_id = ?");
+            updateStatement.setBoolean(1, rotation);
             updateStatement.setLong(2, guildId);
 
             updateStatement.executeUpdate();
