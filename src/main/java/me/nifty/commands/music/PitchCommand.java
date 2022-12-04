@@ -42,7 +42,7 @@ public class PitchCommand extends BaseCommand {
     @Override
     public void executeAsSlashCommand(SlashCommandInteractionEvent event) {
 
-        String query = event.getOption("input") == null ? "" : Objects.requireNonNull(event.getOption("input")).getAsString();
+        String query = event.getOption("value") == null ? "" : Objects.requireNonNull(event.getOption("value")).getAsString();
 
         Pair<Boolean, MessageEmbed> result = pitchCommand(event.getGuild(), query);
 
@@ -86,6 +86,8 @@ public class PitchCommand extends BaseCommand {
         if (newPitch == null) {
             return new Pair<>(false, ErrorEmbed.get("Invalid float format! Try `0.9` or `1.3`"));
         }
+
+        if (newPitch == -1f) { newPitch = 1f; }
 
         if (newPitch < 0.05f) { newPitch = 0.05f; }
         if (newPitch > 5.0f) { newPitch = 5.0f; }

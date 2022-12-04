@@ -43,7 +43,7 @@ public class SpeedCommand extends BaseCommand {
     @Override
     public void executeAsSlashCommand(SlashCommandInteractionEvent event) {
 
-        String query = event.getOption("input") == null ? "" : Objects.requireNonNull(event.getOption("input")).getAsString();
+        String query = event.getOption("value") == null ? "" : Objects.requireNonNull(event.getOption("value")).getAsString();
 
         Pair<Boolean, MessageEmbed> result = speedCommand(event.getGuild(), query);
 
@@ -87,6 +87,8 @@ public class SpeedCommand extends BaseCommand {
         if (newSpeed == null) {
             return new Pair<>(false, ErrorEmbed.get("Invalid float format! Try `0.9` or `1.3`"));
         }
+
+        if (newSpeed == -1f) { newSpeed = 1f; }
 
         if (newSpeed < 0.05f) { newSpeed = 0.05f; }
         if (newSpeed > 5.0f) { newSpeed = 5.0f; }

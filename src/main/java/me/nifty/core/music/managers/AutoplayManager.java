@@ -135,7 +135,7 @@ public class AutoplayManager {
 
                 List<AudioTrack> autoplayTracks = removeQueueDuplicates(playlist.getTracks());
 
-                AudioTrack autoplayTrack = autoplayTracks.get((int) (Math.random() * autoplayTracks.size()));
+                AudioTrack autoplayTrack = autoplayTracks.get(1);
                 autoplayTrack.setUserData(playerManager.getGuild().getSelfMember().getUser().getIdLong());
 
                 futureAutoplayTrack.complete(autoplayTrack);

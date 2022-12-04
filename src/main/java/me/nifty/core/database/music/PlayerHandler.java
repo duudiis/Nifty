@@ -46,11 +46,20 @@ public class PlayerHandler {
 
         try {
 
-            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Players (guild_id, position, playing) VALUES (?, ?, ?) ON CONFLICT DO UPDATE SET guild_id = ?");
+            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM Players WHERE guild_id = ?");
+            selectStatement.setLong(1, guildId);
+
+            ResultSet selectResult = selectStatement.executeQuery();
+
+            if (selectResult.next()) {
+                reload();
+                return true;
+            }
+
+            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Players (guild_id, position, playing) VALUES (?, ?, ?)");
             insertStatement.setLong(1, this.guildId);
             insertStatement.setInt(2, 0);
             insertStatement.setBoolean(3, false);
-            insertStatement.setLong(4, this.guildId);
 
             int insertResult = insertStatement.executeUpdate();
             return insertResult == 1;
@@ -58,6 +67,38 @@ public class PlayerHandler {
         } catch (Exception ignored) { }
 
         return false;
+
+    }
+
+    /**
+     * Reloads the player from the database into the cache.
+     */
+    public void reload() {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        try {
+
+            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM Players WHERE guild_id = ?");
+            selectStatement.setLong(1, this.guildId);
+
+            ResultSet result = selectStatement.executeQuery();
+
+            if (result.next()) {
+                this.textChannelId = result.getLong("channel_id");
+                this.position = result.getInt("position");
+
+                this.autoplay = result.getString("autoplay") == null ? Autoplay.DISABLED : Autoplay.valueOf(result.getString("autoplay"));
+                this.loop = result.getString("looping") == null ? Loop.DISABLED : Loop.valueOf(result.getString("looping"));
+                this.shuffle = result.getString("shuffle") == null ? Shuffle.DISABLED : Shuffle.valueOf(result.getString("shuffle"));
+
+                this.speed = result.getFloat("speed") == 0 ? 1.0f : result.getFloat("speed");
+                this.pitch = result.getFloat("pitch") == 0 ? 1.0f : result.getFloat("pitch");
+                this.bassBoost = result.getFloat("bass_boost") == 0 ? 0.0f : result.getFloat("bass_boost");
+                this.rotation = result.getBoolean("rotation");
+            }
+
+        } catch (Exception ignored) { }
 
     }
 

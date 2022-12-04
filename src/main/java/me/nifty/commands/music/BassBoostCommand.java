@@ -42,7 +42,7 @@ public class BassBoostCommand extends BaseCommand {
     @Override
     public void executeAsSlashCommand(SlashCommandInteractionEvent event) {
 
-        String query = event.getOption("input") == null ? "" : Objects.requireNonNull(event.getOption("input")).getAsString();
+        String query = event.getOption("value") == null ? "" : Objects.requireNonNull(event.getOption("value")).getAsString();
 
         Pair<Boolean, MessageEmbed> result = bassBoostCommand(event.getGuild(), query);
 
@@ -86,6 +86,8 @@ public class BassBoostCommand extends BaseCommand {
         if (newBassBoost == null) {
             return new Pair<>(false, ErrorEmbed.get("Invalid float format! Try `0.9` or `1.3`"));
         }
+
+        if (newBassBoost == -1f) { newBassBoost = 0.0f; }
 
         if (newBassBoost < 0.0f) { newBassBoost = 0.0f; }
         if (newBassBoost > 5.0f) { newBassBoost = 5.0f; }

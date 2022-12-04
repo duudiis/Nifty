@@ -40,6 +40,20 @@ public class VoiceConnection {
                 // Checks if the bot is not alone in a voice channel
                 if (connectedMembers.findAny().isPresent()) {
                     return "Someone else is already listening to music in different channel!";
+                } else {
+                    // Gets the voice channel to connect
+                    VoiceChannel voiceChannel = Objects.requireNonNull(memberVoiceState.getChannel()).asVoiceChannel();
+
+                    // Validates the permissions of the bot over the voice channel
+                    String voicePermissionsError = VoicePermissions.validate(voiceChannel);
+
+                    // If the bot is missing some permission, returns the error message
+                    if (voicePermissionsError != null) {
+                        return voicePermissionsError;
+                    }
+
+                    // Moves the bot to the member voice channel
+                    JDAAudioManager.openAudioConnection(voiceChannel);
                 }
 
             }

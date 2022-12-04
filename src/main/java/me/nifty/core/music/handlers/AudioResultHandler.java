@@ -10,12 +10,14 @@ import me.nifty.core.database.music.QueueHandler;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.ErrorEmbed;
+import me.nifty.utils.formatting.SearchResultSelectMenu;
 import me.nifty.utils.formatting.TrackTitle;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 
 import java.util.Collections;
 import java.util.List;
@@ -62,6 +64,16 @@ public class AudioResultHandler implements AudioLoadResultHandler {
 
     }
 
+    public void replyEvent(MessageEmbed embed, SelectMenu selectMenu) {
+
+        if (textChannel != null) {
+            textChannel.sendMessageEmbeds(embed).setActionRow(selectMenu).queue();
+        } else if (interactionHook != null) {
+            interactionHook.sendMessageEmbeds(embed).setActionRow(selectMenu).queue();
+        }
+
+    }
+
     @Override
     public void trackLoaded(AudioTrack track) {
 
@@ -102,8 +114,23 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         }
 
         if (playlist.isSearchResult()) {
-            trackLoaded(playlist.getTracks().get(0));
+
+            if (flags.contains("choose")) {
+
+                EmbedBuilder searchEmbed = new EmbedBuilder()
+                        .setDescription("Select the tracks you want to add to the queue.")
+                        .setColor(member.getGuild().getSelfMember().getColor());
+
+                SelectMenu searchMenu = SearchResultSelectMenu.get(playlist.getTracks(), member.getIdLong(), flags);
+
+                replyEvent(searchEmbed.build(), searchMenu);
+
+            } else {
+                trackLoaded(playlist.getTracks().get(0));
+            }
+
             return;
+
         }
 
         List<AudioTrack> audioTracks = playlist.getTracks();
