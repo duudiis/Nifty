@@ -33,7 +33,8 @@ public class ReconnectUtils {
                 VoiceChannel voiceChannel = guild.getVoiceChannelById(voiceId);
                 if (voiceChannel == null) { continue; }
 
-                VoiceUtils.join(voiceChannel);
+                String joinResult = VoiceUtils.join(voiceChannel);
+                if (joinResult != null) { continue; }
 
                 PlayerManager playerManager = PlayerManager.get(guild);
                 if (playerManager == null) { continue; }

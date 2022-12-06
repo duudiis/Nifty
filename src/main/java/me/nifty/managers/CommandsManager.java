@@ -3,7 +3,6 @@ package me.nifty.managers;
 import me.nifty.commands.configuration.AnnounceCommand;
 import me.nifty.commands.configuration.InactivityCommand;
 import me.nifty.commands.configuration.PrefixCommand;
-import me.nifty.commands.dashboard.ControlPanelCommand;
 import me.nifty.commands.music.*;
 import me.nifty.commands.utility.HelpCommand;
 import me.nifty.commands.utility.PingCommand;
@@ -22,8 +21,6 @@ public class CommandsManager {
      * Loads all commands into the commands map.
      */
     public static void load() {
-
-        registerCommand(new ControlPanelCommand());
 
         // Configuration Commands
         registerCommand(new AnnounceCommand());
