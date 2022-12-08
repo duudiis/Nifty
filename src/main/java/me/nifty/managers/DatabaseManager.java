@@ -25,6 +25,7 @@ public class DatabaseManager {
         System.out.println("[Nifty] Attempting to connect to SQLite Server...");
 
         try {
+            Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection(url);
             System.out.println("[Nifty] Successfully connected to SQLite Server!");
             createTables(connection);
