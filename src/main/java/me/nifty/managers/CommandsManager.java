@@ -47,6 +47,7 @@ public class CommandsManager {
         registerCommand(new RemoveCommand());
         registerCommand(new RewindCommand());
         registerCommand(new RotationCommand());
+        registerCommand(new SearchCommand());
         registerCommand(new SeekCommand());
         registerCommand(new ShuffleCommand());
         registerCommand(new SkipCommand());

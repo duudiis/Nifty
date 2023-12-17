@@ -13,6 +13,7 @@ public class EventsManager {
 
         // Adds the events
         jdaBuilder.addEventListeners(
+            new AutoCompleteInteraction(),
             new ButtonInteraction(),
             new GuildVoiceUpdate(),
             new MessageReceived(),

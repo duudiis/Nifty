@@ -19,6 +19,7 @@ import me.nifty.utils.formatting.TrackTitle;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 
 public class AudioEventsHandler extends AudioEventAdapter {
 
@@ -84,7 +85,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
         InactivityUtils.stopTimer(InactivityType.STOPPED, playerManager.getGuild());
 
         // Gets the announces text channel for the player
-        TextChannel textChannel = playerManager.getGuild().getTextChannelById(playerHandler.getTextChannelId());
+        GuildMessageChannel textChannel = (GuildMessageChannel) playerManager.getGuild().getGuildChannelById(playerHandler.getTextChannelId());
 
         // If there is a text channel
         if (textChannel != null) {

@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 
@@ -29,7 +30,7 @@ public class AudioResultHandler implements AudioLoadResultHandler {
     private final PlayerHandler playerHandler;
     private final QueueHandler queueHandler;
 
-    private final TextChannel textChannel;
+    private final GuildMessageChannel textChannel;
     private final InteractionHook interactionHook;
 
     private final Member member;
@@ -42,12 +43,15 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         this.playerHandler = playerManager.getPlayerHandler();
         this.queueHandler = playerManager.getQueueHandler();
 
-        if (event instanceof TextChannel) {
-            this.textChannel = (TextChannel) event;
+        if (event instanceof GuildMessageChannel) {
+            this.textChannel = (GuildMessageChannel) event;
             this.interactionHook = null;
-        } else {
+        } else if (event instanceof InteractionHook) {
             this.textChannel = null;
             this.interactionHook = (InteractionHook) event;
+        } else {
+            this.textChannel = null;
+            this.interactionHook = null;
         }
 
         this.member = member;
@@ -99,6 +103,11 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         if (playingTrack == null || flags.contains("jump")) {
             audioPlayer.playTrack(track);
             playerHandler.setPosition(queuePosition);
+
+            if (flags.contains("seek")) {
+                long timeMs = Long.parseLong(flags.get(flags.indexOf("seek") + 1));
+                audioPlayer.getPlayingTrack().setPosition(timeMs);
+            }
         }
 
     }

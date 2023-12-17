@@ -1,5 +1,6 @@
 package me.nifty.commands.music;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
@@ -32,9 +33,24 @@ public class SeekCommand extends BaseCommand {
 
         PlayerManager playerManager = PlayerManager.get(event.getGuild());
 
-        if (playerManager == null || playerManager.getAudioPlayer().getPlayingTrack() == null) {
+        if (playerManager == null) {
             event.getChannel().sendMessageEmbeds(ErrorEmbed.get("You must be playing a track to use this command!")).queue();
             return;
+        }
+
+        if (playerManager.getAudioPlayer().getPlayingTrack() == null) {
+
+            int currentPosition = playerManager.getPlayerHandler().getPosition();
+
+            AudioTrack lastTrack = playerManager.getQueueHandler().getQueueTrack(currentPosition);
+
+            if (lastTrack == null) {
+                event.getChannel().sendMessageEmbeds(ErrorEmbed.get("You must be playing a track to use this command!")).queue();
+                return;
+            }
+
+            playerManager.getTrackScheduler().jump(currentPosition);
+
         }
 
         String query = String.join(" ", args);

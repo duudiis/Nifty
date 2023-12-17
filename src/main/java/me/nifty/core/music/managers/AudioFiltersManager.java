@@ -39,6 +39,11 @@ public class AudioFiltersManager {
 
     public void updateFilterFactory() {
 
+        if (!areFiltersEnabled()) {
+            audioPlayer.setFilterFactory(null);
+            return;
+        }
+
         float speed = getSpeed();
         float pitch = getPitch();
         float bassBoost = getBassBoost();
@@ -68,6 +73,10 @@ public class AudioFiltersManager {
 
         });
 
+    }
+
+    public boolean areFiltersEnabled() {
+        return getSpeed() != 1.0f || getPitch() != 1.0f || getBassBoost() != 0.0f || getRotation();
     }
 
     public float getSpeed() {

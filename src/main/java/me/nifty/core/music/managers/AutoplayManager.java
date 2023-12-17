@@ -120,7 +120,7 @@ public class AutoplayManager {
         String seedTrackId = seedTrack.getInfo().identifier;
 
         String radioId = "RD" + seedTrackId;
-        String radioUrl = "https://www.youtube.com/watch?v=" + seedTrackId + "&list=" + radioId;
+        String radioUrl = "https://music.youtube.com/watch?v=" + seedTrackId + "&list=" + radioId;
 
         CompletableFuture<AudioTrack> futureAutoplayTrack = new CompletableFuture<>();
 

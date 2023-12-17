@@ -43,7 +43,7 @@ public class LoopCommand extends BaseCommand {
     @Override
     public void executeAsSlashCommand(SlashCommandInteractionEvent event) {
 
-        String query = event.getOption("input") == null ? "" : Objects.requireNonNull(event.getOption("input")).getAsString();
+        String query = Objects.requireNonNull(event.getOption("input")).getAsString();
 
         Pair<Boolean, MessageEmbed> result = loopCommand(event.getGuild(), query);
 
