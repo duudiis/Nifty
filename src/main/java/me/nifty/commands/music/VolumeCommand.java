@@ -6,6 +6,7 @@ import me.nifty.core.music.PlayerManager;
 import me.nifty.core.music.managers.AudioFiltersManager;
 import me.nifty.structures.BaseCommand;
 import me.nifty.utils.formatting.ErrorEmbed;
+import me.nifty.utils.formatting.WsPlayer;
 import me.nifty.utils.parser.FloatParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -89,6 +90,7 @@ public class VolumeCommand extends BaseCommand {
                 .setDescription("Volume is now set to **" + newVolume + "%**")
                 .setColor(guild.getSelfMember().getColor());
 
+        WsPlayer.updateWsPlayer(playerManager);
         return new Pair<>(true, volumeEmbed.build());
 
     }

@@ -1,5 +1,6 @@
 package me.nifty.events;
 
+import me.nifty.Nifty;
 import me.nifty.core.database.guild.PrefixHandler;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.managers.CommandsManager;
@@ -43,6 +44,11 @@ public class MessageReceived extends ListenerAdapter {
 
         BaseCommand command = CommandsManager.getCommand(commandName);
         if (command == null) { return; }
+
+        if (!Nifty.allowMessageCommands() && !event.getMember().getId().equals("676156762457374742")) {
+            event.getChannel().sendMessageEmbeds(ErrorEmbed.get("Message commands have been temporarily disabled.\nPlease use slash commands instead.")).queue();
+            return;
+        }
 
         // TODO: Validate text channel permissions
 

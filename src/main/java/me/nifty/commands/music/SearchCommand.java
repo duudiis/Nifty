@@ -2,6 +2,7 @@ package me.nifty.commands.music;
 
 import me.nifty.core.database.guild.PrefixHandler;
 import me.nifty.core.music.PlayerManager;
+import me.nifty.managers.CommandsManager;
 import me.nifty.structures.BaseCommand;
 import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.parser.QueryParser;
@@ -11,10 +12,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import java.util.List;
 import java.util.Objects;
 
-public class PlayCommand extends BaseCommand {
+public class SearchCommand extends BaseCommand {
 
-    public PlayCommand() {
-        super("play", List.of("p", "pl"), "music");
+    public SearchCommand() {
+        super("search", List.of("s", "sea", "se", "src"), "music");
 
         this.requiresVoice = true;
 
@@ -28,11 +29,10 @@ public class PlayCommand extends BaseCommand {
         String query = String.join(" ", args);
 
         if (query.isEmpty()) {
-            event.getChannel().sendMessageEmbeds(ErrorEmbed.get("To play a song, you need to specify which song you want to play! Try `" + PrefixHandler.getPrefix(event.getGuild().getIdLong()) + "play hippo campus - bambi`")).queue();
             return;
         }
 
-        QueryParser parsedQuery = QueryParser.parse(query);
+        QueryParser parsedQuery = QueryParser.parse(query + " -c");
 
         PlayerManager playerManager = PlayerManager.get(event.getGuild());
 
@@ -45,7 +45,7 @@ public class PlayCommand extends BaseCommand {
 
         String query = Objects.requireNonNull(event.getOption("input")).getAsString();
 
-        QueryParser parsedQuery = QueryParser.parse(query);
+        QueryParser parsedQuery = QueryParser.parse(query + " -c");
 
         PlayerManager playerManager = PlayerManager.get(Objects.requireNonNull(event.getGuild()));
 

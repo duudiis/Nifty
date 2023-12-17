@@ -4,6 +4,7 @@ import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
 import me.nifty.utils.enums.Shuffle;
+import me.nifty.utils.formatting.WsPlayer;
 import me.nifty.utils.parser.BoolParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -73,6 +74,7 @@ public class ShuffleCommand extends BaseCommand {
                 .setDescription("Shuffle mode has been **" + newShuffleMode.toString().toLowerCase() + "**")
                 .setColor(guild.getSelfMember().getColor());
 
+        WsPlayer.updateWsPlayer(playerManager);
         return new Pair<>(true, shuffleEmbed.build());
 
     }

@@ -2,7 +2,9 @@ package me.nifty.structures;
 
 import me.nifty.utils.formatting.ErrorEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
@@ -60,6 +62,12 @@ public class BaseCommand {
         } else {
             event.replyEmbeds(errorEmbed).setEphemeral(true).queue();
         }
+
+    }
+
+    public void executeAsVoice(String commandArgs, Guild guild, User user) {
+
+
 
     }
 

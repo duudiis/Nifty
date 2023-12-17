@@ -5,6 +5,7 @@ import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
 import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.formatting.TrackTime;
+import me.nifty.utils.formatting.WsPlayer;
 import me.nifty.utils.parser.TimeParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,6 +16,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class FastForwardCommand extends BaseCommand {
 
@@ -90,6 +93,13 @@ public class FastForwardCommand extends BaseCommand {
         EmbedBuilder fastForwardedEmbed = new EmbedBuilder()
                 .setDescription("Fast forwarded " + TrackTime.formatNatural(fastForwardTime))
                 .setColor(guild.getSelfMember().getColor());
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                WsPlayer.updateWsPlayer(playerManager);
+            }
+        }, 500);
 
         return new Pair<>(true, fastForwardedEmbed.build());
 

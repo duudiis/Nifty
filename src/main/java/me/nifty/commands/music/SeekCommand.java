@@ -1,10 +1,12 @@
 package me.nifty.commands.music;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
 import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.formatting.TrackTime;
+import me.nifty.utils.formatting.WsPlayer;
 import me.nifty.utils.parser.TimeParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,6 +17,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class SeekCommand extends BaseCommand {
 
@@ -32,9 +36,24 @@ public class SeekCommand extends BaseCommand {
 
         PlayerManager playerManager = PlayerManager.get(event.getGuild());
 
-        if (playerManager == null || playerManager.getAudioPlayer().getPlayingTrack() == null) {
+        if (playerManager == null) {
             event.getChannel().sendMessageEmbeds(ErrorEmbed.get("You must be playing a track to use this command!")).queue();
             return;
+        }
+
+        if (playerManager.getAudioPlayer().getPlayingTrack() == null) {
+
+            int currentPosition = playerManager.getPlayerHandler().getPosition();
+
+            AudioTrack lastTrack = playerManager.getQueueHandler().getQueueTrack(currentPosition);
+
+            if (lastTrack == null) {
+                event.getChannel().sendMessageEmbeds(ErrorEmbed.get("You must be playing a track to use this command!")).queue();
+                return;
+            }
+
+            playerManager.getTrackScheduler().jump(currentPosition);
+
         }
 
         String query = String.join(" ", args);
@@ -100,6 +119,13 @@ public class SeekCommand extends BaseCommand {
         EmbedBuilder seekEmbed = new EmbedBuilder()
                 .setDescription("Seeked to " + TrackTime.formatNatural(seekTime))
                 .setColor(guild.getSelfMember().getColor());
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                WsPlayer.updateWsPlayer(playerManager);
+            }
+        }, 500);
 
         return new Pair<>(true, seekEmbed.build());
 

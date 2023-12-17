@@ -23,11 +23,43 @@ public class Config {
     }
 
     /**
-     * Gets the SQLite url
-     * @return The SQLite url
+     * Gets the MySQL host
+     * @return The MySQL url
      */
-    public static String getSQLiteUrl() {
-        return config.get("SQLITE_URL");
+    public static String getMySQLHost() {
+        return config.get("MYSQL_HOST");
+    }
+
+    /**
+     * Gets the MySQL port
+     * @return The MySQL port
+     */
+    public static String getMySQLPort() {
+        return config.get("MYSQL_PORT");
+    }
+
+    /**
+     * Gets the MySQL user
+     * @return The MySQL user
+     */
+    public static String getMySQLUser() {
+        return config.get("MYSQL_USER");
+    }
+
+    /**
+     * Gets the MySQL password
+     * @return The MySQL password
+     */
+    public static String getMySQLPassword() {
+        return config.get("MYSQL_PASSWORD");
+    }
+
+    /**
+     * Gets the MySQL database
+     * @return The MySQL database
+     */
+    public static String getMySQLDatabase() {
+        return config.get("MYSQL_DATABASE");
     }
 
     /**

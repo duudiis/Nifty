@@ -87,6 +87,10 @@ public class PlayerManager {
         return guildPlayerManagers.get(guild.getIdLong());
     }
 
+    public static PlayerManager get(long guildId) {
+        return guildPlayerManagers.get(guildId);
+    }
+
     /**
      * Destroys the Player Manager for the specified guild.
      * @param guild The guild to destroy the player manager

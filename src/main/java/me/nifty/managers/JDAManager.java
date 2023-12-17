@@ -1,7 +1,9 @@
 package me.nifty.managers;
 
 import me.nifty.Config;
+import me.nifty.managers.interactions.AutoCompleteManager;
 import me.nifty.managers.interactions.ButtonsManager;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -9,6 +11,8 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class JDAManager {
+
+    static JDA jda;
 
     /**
      * Creates the JDA instance
@@ -35,11 +39,17 @@ public class JDAManager {
         // Loads the audio player manager
         AudioManager.load();
 
+        // Loads the auto completes
+        AutoCompleteManager.load();
+
         // Loads the buttons
         ButtonsManager.load();
 
         // Builds the JDA instance
-        jdaBuilder.build();
+        jda = jdaBuilder.build();
+
+        // Connect to the WebSocket
+        WebSocketManager.connect();
 
     }
 
@@ -81,6 +91,14 @@ public class JDAManager {
                 GatewayIntent.GUILD_EMOJIS_AND_STICKERS
         );
 
+    }
+
+    /**
+     * Gets the JDA instance
+     * @return The JDA instance
+     */
+    public static JDA getJDA() {
+        return jda;
     }
 
 }

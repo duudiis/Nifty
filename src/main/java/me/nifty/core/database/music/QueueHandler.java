@@ -1,9 +1,14 @@
 package me.nifty.core.database.music;
 
+import com.github.topisenpai.lavasrc.deezer.DeezerAudioTrack;
+import com.github.topisenpai.lavasrc.mirror.MirroringAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.managers.DatabaseManager;
+import me.nifty.managers.JDAManager;
 import me.nifty.utils.TrackUtils;
 import me.nifty.utils.formatting.TrackTitle;
+import me.nifty.utils.formatting.WsQueue;
+import net.dv8tion.jda.api.entities.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,6 +17,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static me.nifty.managers.JDAManager.getJDA;
 
 public class QueueHandler {
 
@@ -27,7 +34,7 @@ public class QueueHandler {
      * @param audioTrack The track to add.
      * @param position The position to add the track to.
      */
-    public void addTrack(AudioTrack audioTrack, int position) {
+    public void addTrack(AudioTrack audioTrack, int position, boolean ignoreWs) {
 
         Connection connection = DatabaseManager.getConnection();
 
@@ -36,12 +43,33 @@ public class QueueHandler {
             String trackTitle = TrackTitle.format(audioTrack, 255);
 
             // Inserts the track into the database
-            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Queues (guild_id, track_id, track_name, member_id, encoded_track) VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Queues (guild_id, track_id, track_name, track_url, artwork_url, duration, member_avatar_url, member_name, member_discrim, member_id, encoded_track) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
             insertStatement.setLong(1, this.guildId);
             insertStatement.setInt(2, position);
             insertStatement.setString(3, trackTitle);
-            insertStatement.setLong(4, (long) audioTrack.getUserData());
-            insertStatement.setString(5, TrackUtils.encodeTrack(audioTrack));
+            insertStatement.setString(4, audioTrack.getInfo().uri);
+
+            if (audioTrack.getSourceManager().getSourceName().equals("youtube")) {
+                insertStatement.setString(5, "https://i.ytimg.com/vi/" + audioTrack.getInfo().identifier + "/mqdefault.jpg");
+            } else if (audioTrack instanceof MirroringAudioTrack) {
+                insertStatement.setString(5, ((MirroringAudioTrack) audioTrack).getArtworkURL());
+            } else if (audioTrack instanceof DeezerAudioTrack) {
+                insertStatement.setString(5, ((DeezerAudioTrack) audioTrack).getArtworkURL());
+            } else {
+                insertStatement.setString(5, null);
+            }
+
+            insertStatement.setLong(6, audioTrack.getDuration());
+
+            User user = JDAManager.getJDA().getUserById(audioTrack.getUserData().toString());
+            if (user == null) { return; }
+
+            insertStatement.setString(7, user.getEffectiveAvatarUrl());
+            insertStatement.setString(8, user.getName());
+            insertStatement.setString(9, user.getDiscriminator());
+
+            insertStatement.setLong(10, (long) audioTrack.getUserData());
+            insertStatement.setString(11, TrackUtils.encodeTrack(audioTrack));
 
             int insertResult = insertStatement.executeUpdate();
             if (insertResult == 0) { return; }
@@ -61,6 +89,10 @@ public class QueueHandler {
 
         } catch (Exception ignored) { }
 
+        if (!ignoreWs) {
+            WsQueue.updateWsQueue(this.guildId);
+        }
+
     }
 
     /**
@@ -72,9 +104,11 @@ public class QueueHandler {
     public void addTracks(List<AudioTrack> audioTracks, int position) {
 
         for (AudioTrack audioTrack : audioTracks) {
-            addTrack(audioTrack, position);
+            addTrack(audioTrack, position, true);
             position++;
         }
+
+        WsQueue.updateWsQueue(this.guildId);
 
     }
 
@@ -221,7 +255,7 @@ public class QueueHandler {
      * @param position The position of the track to move.
      * @param newPosition The new position of the track.
      */
-    public void moveTrack(int position, int newPosition) {
+    public void moveTrack(int position, int newPosition, boolean ignoreWs) {
 
         if (position == newPosition) { return; }
 
@@ -241,10 +275,14 @@ public class QueueHandler {
 
             audioTrack.setUserData(selectResult.getLong("member_id"));
 
-            removeTrack(position);
-            addTrack(audioTrack, newPosition);
+            removeTrack(position, true);
+            addTrack(audioTrack, newPosition, true);
 
         } catch (Exception ignored) { }
+
+        if (!ignoreWs) {
+            WsQueue.updateWsQueue(this.guildId);
+        }
 
     }
 
@@ -263,7 +301,7 @@ public class QueueHandler {
 
         for (int i = 0; i < amount; i++) {
 
-            moveTrack(position, newPosition);
+            moveTrack(position, newPosition, true);
 
             if (position > newPosition) {
                 position++;
@@ -272,6 +310,8 @@ public class QueueHandler {
 
         }
 
+        WsQueue.updateWsQueue(this.guildId);
+
     }
 
     /**
@@ -279,26 +319,30 @@ public class QueueHandler {
      *
      * @param position The position of the track to remove.
      */
-    public void removeTrack(int position) {
+    public void removeTrack(int position, boolean ignoreWs) {
 
-            Connection connection = DatabaseManager.getConnection();
+        Connection connection = DatabaseManager.getConnection();
 
-            try {
+        try {
 
-                PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM Queues WHERE guild_id = ? AND track_id = ?");
-                deleteStatement.setLong(1, this.guildId);
-                deleteStatement.setInt(2, position);
+            PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM Queues WHERE guild_id = ? AND track_id = ?");
+            deleteStatement.setLong(1, this.guildId);
+            deleteStatement.setInt(2, position);
 
-                int deleteResult = deleteStatement.executeUpdate();
-                if (deleteResult == 0) { return; }
+            int deleteResult = deleteStatement.executeUpdate();
+            if (deleteResult == 0) { return; }
 
-                PreparedStatement updateStatement = connection.prepareStatement("UPDATE Queues SET track_id = track_id - 1 WHERE guild_id = ? AND track_id > ?");
-                updateStatement.setLong(1, this.guildId);
-                updateStatement.setInt(2, position);
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Queues SET track_id = track_id - 1 WHERE guild_id = ? AND track_id > ?");
+            updateStatement.setLong(1, this.guildId);
+            updateStatement.setInt(2, position);
 
-                updateStatement.executeUpdate();
+            updateStatement.executeUpdate();
 
-            } catch (Exception ignored) { }
+        } catch (Exception ignored) { }
+
+        if (!ignoreWs) {
+            WsQueue.updateWsQueue(this.guildId);
+        }
 
     }
 
@@ -311,8 +355,10 @@ public class QueueHandler {
     public void removeTracks(int position, int amount) {
 
         for (int i = 0; i < amount; i++) {
-            removeTrack(position);
+            removeTrack(position, true);
         }
+
+        WsQueue.updateWsQueue(this.guildId);
 
     }
 
@@ -351,12 +397,14 @@ public class QueueHandler {
             int position = startPosition;
 
             for (AudioTrack audioTrack : audioTracks) {
-                removeTrack(position);
-                addTrack(audioTrack, position);
+                removeTrack(position, true);
+                addTrack(audioTrack, position, true);
                 position++;
             }
 
         } catch (Exception ignored) { }
+
+        WsQueue.updateWsQueue(this.guildId);
 
     }
 
@@ -375,6 +423,8 @@ public class QueueHandler {
             deleteStatement.executeUpdate();
 
         } catch (Exception ignored) { }
+
+        WsQueue.updateWsQueue(this.guildId);
 
     }
 

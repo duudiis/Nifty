@@ -9,28 +9,33 @@ public class DatabaseManager {
 
     private static Connection connection;
 
-    private static final String url = Config.getSQLiteUrl();
+    private static final String host = Config.getMySQLHost();
+    private static final String port = Config.getMySQLPort();
+    private static final String database = Config.getMySQLDatabase();
+    private static final String username = Config.getMySQLUser();
+    private static final String password = Config.getMySQLPassword();
+
 
     /**
-     * Connects to the SQLite Server
+     * Connects to the MySQL Server
      */
     public static void connect() {
 
         // Checks if the credentials are missing
-        if (url == null) {
-            throw new RuntimeException("[Nifty] SQLite URL missing on the environment variables!");
+        if (host == null || port == null || username == null || password == null) {
+            throw new RuntimeException("[Nifty] MySQL credentials missing on the environment variables!");
         }
 
-        // Attempts to connect to the SQLite Server
-        System.out.println("[Nifty] Attempting to connect to SQLite Server...");
+        // Attempts to connect to the MySQL Server
+        System.out.println("[Nifty] Attempting to connect to MySQL Server...");
 
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection(url);
-            System.out.println("[Nifty] Successfully connected to SQLite Server!");
+            //connection = DriverManager.getConnection(("jdbc:mysql://" + host + ":" + port + "/" + database), username, password);
+            connection = DriverManager.getConnection("jdbc:sqlite:database.db");
             createTables(connection);
+            //System.out.println("[Nifty] Successfully connected to MySQL Server!");
         } catch (Exception e) {
-            throw new RuntimeException("[Nifty] Failed to connect to SQLite Server with Error:\n", e);
+            throw new RuntimeException("[Nifty] Failed to connect to MySQL Server with Error:\n", e);
         }
 
     }

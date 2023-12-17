@@ -50,8 +50,10 @@ public class PrefixHandler {
         Connection connection = DatabaseManager.getConnection();
 
         try {
+            // MySQL: INSERT INTO Guilds (guild_id, prefix) VALUES (?, ?) ON DUPLICATE KEY UPDATE prefix = ?
+            // SQLite: INSERT INTO Guilds (guild_id, prefix) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET prefix = ?
 
-            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, prefix) VALUES (?, ?) ON CONFLICT DO UPDATE SET prefix = ?");
+            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, prefix) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET prefix = ?");
             updateStatement.setLong(1, guildId);
             updateStatement.setString(2, newPrefix);
             updateStatement.setString(3, newPrefix);

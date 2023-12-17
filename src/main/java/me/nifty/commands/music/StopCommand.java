@@ -3,6 +3,8 @@ package me.nifty.commands.music;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -43,6 +45,12 @@ public class StopCommand extends BaseCommand {
 
         event.replyEmbeds(stopEmbed.build()).queue();
 
+    }
+
+    @Override
+    public void executeAsVoice(String args, Guild guild, User user) {
+        PlayerManager playerManager = PlayerManager.get(guild);
+        playerManager.getTrackScheduler().stop();
     }
 
 }

@@ -4,6 +4,9 @@ import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
 import me.nifty.utils.formatting.QueueButtons;
 import me.nifty.utils.formatting.QueueMessage;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
@@ -68,6 +71,17 @@ public class QueueCommand extends BaseCommand {
         List<Button> buttonsRow = QueueButtons.get(page);
 
         event.getHook().sendMessage(queueMessage).addActionRow(buttonsRow).queue();
+
+    }
+
+    @Override
+    public void executeAsVoice(String arguments, Guild guild, User user) {
+
+        PlayerManager playerManager = PlayerManager.get(guild);
+
+        Member member = guild.getMember(user);
+        System.out.println("Queueing from voice: " + arguments);
+        playerManager.getTrackScheduler().queue("ytsearch:" + arguments, null, member, List.of());
 
     }
 

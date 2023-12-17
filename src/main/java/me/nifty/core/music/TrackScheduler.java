@@ -8,6 +8,7 @@ import me.nifty.core.music.handlers.AudioResultHandler;
 import me.nifty.managers.AudioManager;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
+import me.nifty.utils.formatting.WsPlayer;
 import net.dv8tion.jda.api.entities.Member;
 
 import java.util.List;
@@ -50,8 +51,6 @@ public class TrackScheduler {
      */
     public void skip() {
 
-        audioPlayer.stopTrack();
-
         int queueSize = queueHandler.getQueueSize();
 
         int position = playerHandler.getPosition();
@@ -69,6 +68,8 @@ public class TrackScheduler {
             playerHandler.setPosition(0);
         } else if (autoplayMode == Autoplay.ENABLED) {
             playerManager.getAutoplayManager().autoplay();
+        } else {
+            audioPlayer.stopTrack();
         }
 
     }
@@ -77,8 +78,6 @@ public class TrackScheduler {
      * Goes back to the previous track in the queue.
      */
     public void back() {
-
-        audioPlayer.stopTrack();
 
         int position = playerHandler.getPosition();
         Loop loopMode = playerHandler.getLoopMode();
@@ -93,6 +92,8 @@ public class TrackScheduler {
 
             audioPlayer.playTrack(queueHandler.getQueueTrack(queueSize - 1));
             playerHandler.setPosition(queueSize - 1);
+        } else {
+            audioPlayer.stopTrack();
         }
 
     }
@@ -145,7 +146,7 @@ public class TrackScheduler {
             playerHandler.setPosition(currentPosition + 1);
         }
 
-        queueHandler.moveTrack(position, newPosition);
+        queueHandler.moveTrack(position, newPosition, false);
 
     }
 
@@ -193,13 +194,10 @@ public class TrackScheduler {
         int queueSize = queueHandler.getQueueSize();
 
         // Removes the track from the queue.
-        queueHandler.removeTrack(position);
+        queueHandler.removeTrack(position, false);
 
         // If the track that was removed was the current track, skip to the next track.
         if (position == currentPosition) {
-
-            // Stops the current track.
-            audioPlayer.stopTrack();
 
             // Gets the player settings.
             Autoplay autoplayMode = playerHandler.getAutoplayMode();
@@ -221,6 +219,11 @@ public class TrackScheduler {
 
                 // If autoplay is enabled and there is no next track, play the autoplay track.
                 playerManager.getAutoplayManager().autoplay();
+
+            } else {
+
+                // Stops the current track.
+                audioPlayer.stopTrack();
 
             }
 
@@ -252,9 +255,6 @@ public class TrackScheduler {
         // If the range that was removed contains the current track, skip to the next track.
         if (startPosition <= currentPosition && endPosition >= currentPosition) {
 
-            // Stops the current track.
-            audioPlayer.stopTrack();
-
             // Gets the player settings.
             Autoplay autoplayMode = playerHandler.getAutoplayMode();
             Loop loopMode = playerHandler.getLoopMode();
@@ -281,6 +281,9 @@ public class TrackScheduler {
                 // If there is no next track, update the current position to the last one.
                 int newQueueSize = queueHandler.getQueueSize();
                 playerHandler.setPosition(newQueueSize - 1);
+
+                // Stops the current track.
+                audioPlayer.stopTrack();
 
             }
 

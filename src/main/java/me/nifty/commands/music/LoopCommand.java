@@ -6,6 +6,7 @@ import me.nifty.structures.BaseCommand;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
 import me.nifty.utils.formatting.ErrorEmbed;
+import me.nifty.utils.formatting.WsPlayer;
 import me.nifty.utils.parser.LoopParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -43,7 +44,7 @@ public class LoopCommand extends BaseCommand {
     @Override
     public void executeAsSlashCommand(SlashCommandInteractionEvent event) {
 
-        String query = event.getOption("input") == null ? "" : Objects.requireNonNull(event.getOption("input")).getAsString();
+        String query = Objects.requireNonNull(event.getOption("input")).getAsString();
 
         Pair<Boolean, MessageEmbed> result = loopCommand(event.getGuild(), query);
 
@@ -91,6 +92,7 @@ public class LoopCommand extends BaseCommand {
 
         playerManager.getPlayerHandler().setLoopMode(newLoop);
 
+        WsPlayer.updateWsPlayer(playerManager);
         return new Pair<>(true, embedBuilder.build());
 
     }

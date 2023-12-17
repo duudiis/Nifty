@@ -16,9 +16,15 @@ import me.nifty.utils.enums.Loop;
 import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.NowPlayingEmbed;
 import me.nifty.utils.formatting.TrackTitle;
+import me.nifty.utils.formatting.WsPlayer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AudioEventsHandler extends AudioEventAdapter {
 
@@ -55,6 +61,8 @@ public class AudioEventsHandler extends AudioEventAdapter {
             nowPlayingMessage.editMessageEmbeds(NowPlayingEmbed.get(audioPlayer.getPlayingTrack(), playerManager)).queue(null, ignored -> {});
         }
 
+        WsPlayer.updateWsPlayer(playerManager);
+
     }
 
     @Override
@@ -72,6 +80,8 @@ public class AudioEventsHandler extends AudioEventAdapter {
             nowPlayingMessage.editMessageEmbeds(NowPlayingEmbed.get(audioPlayer.getPlayingTrack(), playerManager)).queue(null, ignored -> {});
         }
 
+        WsPlayer.updateWsPlayer(playerManager);
+
     }
 
     @Override
@@ -84,7 +94,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
         InactivityUtils.stopTimer(InactivityType.STOPPED, playerManager.getGuild());
 
         // Gets the announces text channel for the player
-        TextChannel textChannel = playerManager.getGuild().getTextChannelById(playerHandler.getTextChannelId());
+        GuildMessageChannel textChannel = (GuildMessageChannel) playerManager.getGuild().getGuildChannelById(playerHandler.getTextChannelId());
 
         // If there is a text channel
         if (textChannel != null) {
@@ -100,6 +110,8 @@ public class AudioEventsHandler extends AudioEventAdapter {
             }
 
         }
+
+        WsPlayer.updateWsPlayer(playerManager);
 
     }
 
@@ -117,6 +129,15 @@ public class AudioEventsHandler extends AudioEventAdapter {
             // Deletes the now playing message
             nowPlayingMessage.delete().queue(null, ignored -> {});
         }
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (player.getPlayingTrack() == null) {
+                    WsPlayer.updateWsPlayer(playerManager);
+                }
+            }
+        }, 1000);
 
         // If the end reason is not because the track was stopped
         if (endReason.mayStartNext) {
@@ -166,8 +187,12 @@ public class AudioEventsHandler extends AudioEventAdapter {
                 // Gets the next track from the autoplay and plays it
                 playerManager.getAutoplayManager().autoplay();
 
+            } else {
+                WsPlayer.updateWsPlayer(playerManager);
             }
 
+        } else {
+            WsPlayer.updateWsPlayer(playerManager);
         }
 
     }

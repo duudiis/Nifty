@@ -62,7 +62,10 @@ public class GuildHandler {
 
         try {
 
-            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, announcements) VALUES (?, ?) ON CONFLICT DO UPDATE SET announcements = ?");
+            // MySQL: INSERT INTO Guilds (guild_id, announcements) VALUES (?, ?) ON DUPLICATE KEY UPDATE announcements = ?
+            // SQLite: INSERT INTO Guilds (guild_id, announcements) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET announcements = ?
+
+            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, announcements) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET announcements = ?");
             updateStatement.setLong(1, guildId);
             updateStatement.setBoolean(2, enabled);
             updateStatement.setBoolean(3, enabled);
@@ -126,7 +129,10 @@ public class GuildHandler {
 
         try {
 
-            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, inactivity_disconnect) VALUES (?, ?) ON CONFLICT DO UPDATE SET inactivity_disconnect = ?");
+            // MySQL: INSERT INTO Guilds (guild_id, inactivity_disconnect) VALUES (?, ?) ON DUPLICATE KEY UPDATE inactivity_disconnect = ?
+            // SQLite: INSERT INTO Guilds (guild_id, inactivity_disconnect) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET inactivity_disconnect = ?
+
+            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, inactivity_disconnect) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET inactivity_disconnect = ?");
             updateStatement.setLong(1, guildId);
             updateStatement.setBoolean(2, enabled);
             updateStatement.setBoolean(3, enabled);

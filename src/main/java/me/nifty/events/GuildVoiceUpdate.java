@@ -4,6 +4,7 @@ import me.nifty.core.music.PlayerManager;
 import me.nifty.utils.InactivityUtils;
 import me.nifty.utils.VoiceUtils;
 import me.nifty.utils.enums.InactivityType;
+import me.nifty.utils.formatting.WsGuild;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
@@ -46,7 +47,7 @@ public class GuildVoiceUpdate extends ListenerAdapter {
 
             // Server deafens the bot, if it has the permission
             if (event.getEntity().hasPermission(event.getChannelJoined(), Permission.VOICE_DEAF_OTHERS)) {
-                event.getEntity().deafen(true).queue();
+                //event.getEntity().deafen(true).queue();
             }
 
             // Gets the number of members (not bots) in the voice channel
@@ -74,6 +75,12 @@ public class GuildVoiceUpdate extends ListenerAdapter {
      * @param event The event
      */
     private void memberVoiceUpdate(GuildVoiceUpdateEvent event) {
+
+        if (event.getChannelJoined() != null) {
+            WsGuild.setGuildForUserId(event.getEntity().getIdLong(), event.getGuild().getIdLong());
+        } else if (event.getChannelLeft() != null) {
+            WsGuild.setGuildForUserId(event.getEntity().getIdLong(), null);
+        };
 
         AudioManager JDAAudioManager = event.getGuild().getAudioManager();
         if (!JDAAudioManager.isConnected() || JDAAudioManager.getConnectedChannel() == null) { return; }

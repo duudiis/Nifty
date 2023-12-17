@@ -41,7 +41,7 @@ public class AutoplayManager {
             return;
         }
 
-        playerManager.getQueueHandler().addTrack(autoplayTrack, queueSize);
+        playerManager.getQueueHandler().addTrack(autoplayTrack, queueSize, false);
 
         playerManager.getAudioPlayer().playTrack(autoplayTrack);
         playerManager.getPlayerHandler().setPosition(queueSize);
@@ -120,7 +120,7 @@ public class AutoplayManager {
         String seedTrackId = seedTrack.getInfo().identifier;
 
         String radioId = "RD" + seedTrackId;
-        String radioUrl = "https://www.youtube.com/watch?v=" + seedTrackId + "&list=" + radioId;
+        String radioUrl = "https://music.youtube.com/watch?v=" + seedTrackId + "&list=" + radioId;
 
         CompletableFuture<AudioTrack> futureAutoplayTrack = new CompletableFuture<>();
 

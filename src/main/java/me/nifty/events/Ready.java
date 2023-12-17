@@ -1,6 +1,7 @@
 package me.nifty.events;
 
 import me.nifty.utils.ReconnectUtils;
+import me.nifty.utils.SlashUtils;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
