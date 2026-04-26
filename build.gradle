@@ -10,7 +10,7 @@ jar {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
     manifest {
-        attributes 'Main-Class': 'me.nifty.Main'  // your main class
+        attributes 'Main-Class': 'me.nifty.Nifty'
     }
     from {
         configurations.runtimeClasspath.collect {
