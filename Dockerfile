@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./gradlew jar --no-daemon
+RUN chmod +x gradlew && ./gradlew jar --no-daemon
 
 FROM eclipse-temurin:25-jdk-alpine
 
