@@ -4,7 +4,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class Config {
 
-    private static final Dotenv config = Dotenv.load();
+    private static final Dotenv config = Dotenv.configure().ignoreIfMissing().load();
 
     /**
      * Gets the discord token
