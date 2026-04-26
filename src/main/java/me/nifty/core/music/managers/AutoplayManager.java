@@ -8,11 +8,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.managers.AudioManager;
 import me.nifty.utils.formatting.ErrorEmbed;
+import me.nifty.utils.formatting.TrackTitle;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class AutoplayManager {
@@ -81,7 +80,7 @@ public class AutoplayManager {
 
             for (AudioTrack track : latestTracks) {
 
-                if (!track.getSourceManager().getSourceName().equals("youtube")) {
+                if (!track.getSourceManager().getSourceName().equals("youtube") && !track.getSourceManager().getSourceName().equals("spotify")) {
                     continue;
                 }
 
@@ -119,12 +118,22 @@ public class AutoplayManager {
 
         String seedTrackId = seedTrack.getInfo().identifier;
 
-        String radioId = "RD" + seedTrackId;
-        String radioUrl = "https://music.youtube.com/watch?v=" + seedTrackId + "&list=" + radioId;
+        String recommendationsUrl;
+
+        switch (seedTrack.getSourceManager().getSourceName()) {
+            case "youtube":
+                recommendationsUrl = "https://music.youtube.com/watch?v=" + seedTrackId + "&list=RD" + seedTrackId;
+                break;
+            case "spotify":
+                recommendationsUrl = "sprec:" + seedTrackId;
+                break;
+            default:
+                return null;
+        }
 
         CompletableFuture<AudioTrack> futureAutoplayTrack = new CompletableFuture<>();
 
-        audioManager.loadItem(radioUrl, new AudioLoadResultHandler() {
+        audioManager.loadItem(recommendationsUrl, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 futureAutoplayTrack.complete(null);
@@ -135,7 +144,7 @@ public class AutoplayManager {
 
                 List<AudioTrack> autoplayTracks = removeQueueDuplicates(playlist.getTracks());
 
-                AudioTrack autoplayTrack = autoplayTracks.get(1);
+                AudioTrack autoplayTrack = autoplayTracks.get(new Random().nextInt(10));
                 autoplayTrack.setUserData(playerManager.getGuild().getSelfMember().getUser().getIdLong());
 
                 futureAutoplayTrack.complete(autoplayTrack);
@@ -168,10 +177,10 @@ public class AutoplayManager {
     /**
      * Removes tracks from the autoplay list that are already in the queue.
      *
-     * @param tracks The list of tracks to remove duplicates from.
+     * @param autoplayTracks The list of tracks to remove duplicates from.
      * @return The list of tracks with duplicates removed.
      */
-    private List<AudioTrack> removeQueueDuplicates(List<AudioTrack> tracks) {
+    private List<AudioTrack> removeQueueDuplicates(List<AudioTrack> autoplayTracks) {
 
         int queueSize = playerManager.getQueueHandler().getQueueSize();
 
@@ -180,11 +189,11 @@ public class AutoplayManager {
 
         while (searchPage >= searchPageLimit) {
 
-            List<AudioTrack> latestTracks = playerManager.getQueueHandler().getQueuePage(searchPage);
+            List<AudioTrack> queueTracks = playerManager.getQueueHandler().getQueuePage(searchPage);
 
-            for (AudioTrack track : latestTracks) {
+            for (AudioTrack queueTrack : queueTracks) {
 
-                tracks.removeIf(t -> t.getInfo().identifier.equals(track.getInfo().identifier));
+                autoplayTracks.removeIf(autoplayTrack -> autoplayTrack.getInfo().identifier.equals(queueTrack.getInfo().identifier));
 
             }
 
@@ -192,8 +201,26 @@ public class AutoplayManager {
 
         }
 
-        return tracks;
+        return autoplayTracks;
 
+    }
+
+    /**
+     * Checks if two titles are similar enough to be considered duplicates.
+     *
+     * @param title1 The first title to compare.
+     * @param title2 The second title to compare.
+     * @return Whether the titles are similar enough to be considered duplicates.
+     */
+    private boolean similarityCheck(String title1, String title2) {
+        String[] title1Parts = title1.toLowerCase().split("[\\s-]+");
+        String[] title2Parts = title2.toLowerCase().split("[\\s-]+");
+
+        long similarTitleParts = Arrays.stream(title1Parts)
+                .filter(part1 -> Arrays.asList(title2Parts).contains(part1))
+                .count();
+        System.out.println(similarTitleParts + "/" + title1Parts.length + " | " + title1 + " | " + title2);
+        return similarTitleParts > (title1Parts.length / 2);
     }
 
 }

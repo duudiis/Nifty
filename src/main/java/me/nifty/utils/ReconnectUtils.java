@@ -1,6 +1,8 @@
 package me.nifty.utils;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import me.nifty.core.database.music.PlayerHandler;
+import me.nifty.core.database.music.QueueHandler;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.managers.DatabaseManager;
 import net.dv8tion.jda.api.JDA;
@@ -28,16 +30,21 @@ public class ReconnectUtils {
                 String voiceId = result.getString("voice_id");
 
                 Guild guild = jda.getGuildById(guildId);
-                if (guild == null) { continue; }
+
+                if (guild == null) {
+                    new PlayerHandler(Long.getLong(guildId)).delete();
+                    new QueueHandler(Long.getLong(guildId)).clearQueue();
+                    continue;
+                }
 
                 VoiceChannel voiceChannel = guild.getVoiceChannelById(voiceId);
-                if (voiceChannel == null) { continue; }
+                if (voiceChannel == null) { VoiceUtils.disconnect(guild); continue; }
 
                 String joinResult = VoiceUtils.join(voiceChannel);
-                if (joinResult != null) { continue; }
+                if (joinResult != null) { VoiceUtils.disconnect(guild); continue; }
 
                 PlayerManager playerManager = PlayerManager.get(guild);
-                if (playerManager == null) { continue; }
+                if (playerManager == null) { VoiceUtils.disconnect(guild); continue; }
 
                 playerManager.getAudioFiltersManager().updateFilterFactory();
 

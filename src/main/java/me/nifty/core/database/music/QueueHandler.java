@@ -179,7 +179,7 @@ public class QueueHandler {
                 audioTracks.add(audioTrack);
             }
 
-            if (audioTracks.size() > 0) {
+            if (!audioTracks.isEmpty()) {
                 return audioTracks;
             }
 

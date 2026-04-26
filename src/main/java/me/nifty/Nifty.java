@@ -13,7 +13,7 @@ public class Nifty {
 
         System.out.println("[Nifty] Booting up...");
 
-        // Connects to the MySQL Server
+        // Connects to the Database
         DatabaseManager.connect();
 
         // Creates the JDA Instance

@@ -6,23 +6,41 @@ plugins {
 group 'me.nifty'
 version '1.0.0'
 
-repositories {
-    jcenter()
-    mavenCentral()
-    maven {
-        url 'https://jitpack.io'
+jar {
+    manifest {
+        attributes 'Main-Class': 'me.nifty.Main'  // your main class
     }
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.lavalink.dev/releases' }
+    maven { url 'https://maven.lavalink.dev/snapshots' }
 }
 
 dependencies {
     implementation('io.github.cdimascio:dotenv-java:2.3.1')
-    implementation('mysql:mysql-connector-java:8.0.32')
-    implementation("org.xerial:sqlite-jdbc:3.40.0.0")
-    implementation("net.dv8tion:JDA:5.0.0-beta.18")
-    implementation("com.github.walkyst:lavaplayer-fork:1.4.3")
-    implementation("com.github.natanbc:lavadsp:0.7.7")
+    implementation("org.xerial:sqlite-jdbc:3.51.0.0")
+
+    implementation("net.dv8tion:JDA:6.4.1")
+
+    implementation("moe.kyokobot.libdave:adapter-jda:ce725965e")
+    implementation("moe.kyokobot.libdave:impl-jni:ce725965e")
+    runtimeOnly("moe.kyokobot.libdave:natives-win-x86-64:ce725965e")      // your Windows machine
+    runtimeOnly("moe.kyokobot.libdave:natives-linux-x86-64:ce725965e")    // Docker server
+
+    implementation("dev.arbjerg:lavaplayer:2.2.6")
+    implementation("dev.lavalink.youtube:common:1.16.0")
+    implementation("dev.arbjerg:lavadsp:0.7.8")
     implementation("com.github.TopiSenpai.LavaSrc:lavasrc:3.1.6")
+
     implementation("org.jsoup:jsoup:1.15.3")
-    implementation("org.java-websocket:Java-WebSocket:1.5.3")
-    implementation("org.json:json:20220924")
+    implementation("org.json:json:20250107")
 }

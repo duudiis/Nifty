@@ -3,7 +3,10 @@ package me.nifty.managers;
 import me.nifty.Config;
 import me.nifty.managers.interactions.AutoCompleteManager;
 import me.nifty.managers.interactions.ButtonsManager;
+import moe.kyokobot.libdave.NativeDaveFactory;
+import moe.kyokobot.libdave.jda.LDJDADaveSessionFactory;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.audio.AudioModuleConfig;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -19,7 +22,9 @@ public class JDAManager {
         System.out.println("[Nifty] Creating JDA instance...");
 
         // Creates the JDA instance
-        JDABuilder jdaBuilder = JDABuilder.createDefault(Config.getDiscordToken());
+        JDABuilder jdaBuilder = JDABuilder.createDefault(Config.getDiscordToken())
+                .setAudioModuleConfig(new AudioModuleConfig()
+                        .withDaveSessionFactory(new LDJDADaveSessionFactory(new NativeDaveFactory())));
 
         // Sets the activity
         jdaBuilder.setActivity(Activity.listening("/play"));
@@ -79,10 +84,8 @@ public class JDAManager {
                 GatewayIntent.GUILD_PRESENCES,
                 GatewayIntent.GUILD_MESSAGE_TYPING,
                 GatewayIntent.DIRECT_MESSAGE_TYPING,
-                GatewayIntent.GUILD_BANS,
                 GatewayIntent.GUILD_INVITES,
-                GatewayIntent.GUILD_WEBHOOKS,
-                GatewayIntent.GUILD_EMOJIS_AND_STICKERS
+                GatewayIntent.GUILD_WEBHOOKS
         );
 
     }

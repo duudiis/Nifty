@@ -5,7 +5,8 @@ import me.nifty.structures.BaseButton;
 import me.nifty.utils.formatting.QueueButtons;
 import me.nifty.utils.formatting.QueueMessage;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +31,7 @@ public class QueueButton extends BaseButton {
         if (playerManager == null || playerManager.getQueueHandler().getQueueSize() == 0) {
             List<Button> buttonsRow = QueueButtons.get(0);
 
-            event.getHook().editOriginal("```nim\nThe queue is empty ;-;```").setActionRow(buttonsRow).queue();
+            event.getHook().editOriginal("```nim\nThe queue is empty ;-;```").setComponents(ActionRow.of(buttonsRow)).queue();
             return;
         }
 
@@ -55,7 +56,7 @@ public class QueueButton extends BaseButton {
         String queueMessage = QueueMessage.get(playerManager, page);
         List<Button> buttonsRow = QueueButtons.get(page);
 
-        event.getHook().editOriginal(queueMessage).setActionRow(buttonsRow).queue();
+        event.getHook().editOriginal(queueMessage).setComponents(ActionRow.of(buttonsRow)).queue();
 
     }
 

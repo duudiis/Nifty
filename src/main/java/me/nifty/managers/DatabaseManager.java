@@ -22,15 +22,15 @@ public class DatabaseManager {
         }
 
         // Attempts to connect to the SQLite Server
-        System.out.println("[Nifty] Attempting to connect to SQLite Server...");
+        System.out.println("[Nifty] Attempting to connect to SQLite...");
 
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection(url);
-            System.out.println("[Nifty] Successfully connected to SQLite Server!");
+            System.out.println("[Nifty] Successfully connected to SQLite!");
             createTables(connection);
         } catch (Exception e) {
-            throw new RuntimeException("[Nifty] Failed to connect to SQLite Server with Error:\n", e);
+            throw new RuntimeException("[Nifty] Failed to connect to SQLite with Error:\n", e);
         }
 
     }

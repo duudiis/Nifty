@@ -176,6 +176,12 @@ public class AudioEventsHandler extends AudioEventAdapter {
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
 
+        // If there is a now playing message
+        if (nowPlayingMessage != null) {
+            // Deletes the now playing message
+            nowPlayingMessage.delete().queue(null, ignored -> {});
+        }
+
         TextChannel textChannel = playerManager.getGuild().getTextChannelById(playerHandler.getTextChannelId());
         if (textChannel == null) { return; }
 

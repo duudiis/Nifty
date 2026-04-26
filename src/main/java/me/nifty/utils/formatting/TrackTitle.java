@@ -60,7 +60,7 @@ public class TrackTitle {
         trackTitle = trackTitle.trim().replaceAll("^-|-$", "");
 
         // If the title is longer than the specified length
-        if (trackTitle.length() > maxLength) {
+        if (maxLength > 0 && trackTitle.length() > maxLength) {
 
             // Shortens the title to the specified length and adds 3 dots to the end
             return trackTitle.substring(0, maxLength).trim() + "\u2026";

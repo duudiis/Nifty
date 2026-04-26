@@ -6,9 +6,8 @@ import me.nifty.utils.formatting.QueueButtons;
 import me.nifty.utils.formatting.QueueMessage;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 
 import java.util.Collection;
 import java.util.List;
@@ -33,7 +32,7 @@ public class QueueCommand extends BaseCommand {
         if (playerManager == null || playerManager.getQueueHandler().getQueueSize() == 0) {
             List<Button> buttonsRow = QueueButtons.get(0);
 
-            event.getChannel().sendMessage("```nim\nThe queue is empty ;-;```").addActionRow(buttonsRow).queue();
+            event.getChannel().sendMessage("```nim\nThe queue is empty ;-;```").addComponents(ActionRow.of(buttonsRow)).queue();
             return;
         }
 
@@ -44,7 +43,7 @@ public class QueueCommand extends BaseCommand {
         String queueMessage = QueueMessage.get(playerManager, page);
         List<Button> buttonsRow = QueueButtons.get(page);
 
-        event.getChannel().sendMessage(queueMessage).addActionRow(buttonsRow).queue();
+        event.getChannel().sendMessage(queueMessage).addComponents(ActionRow.of(buttonsRow)).queue();
 
     }
 
@@ -56,7 +55,7 @@ public class QueueCommand extends BaseCommand {
         if (playerManager == null || playerManager.getQueueHandler().getQueueSize() == 0) {
             List<Button> buttonsRow = QueueButtons.get(0);
 
-            event.getHook().sendMessage("```nim\nThe queue is empty ;-;```").addActionRow(buttonsRow).queue();
+            event.getHook().sendMessage("```nim\nThe queue is empty ;-;```").addComponents(ActionRow.of(buttonsRow)).queue();
             return;
         }
 
@@ -67,7 +66,7 @@ public class QueueCommand extends BaseCommand {
         String queueMessage = QueueMessage.get(playerManager, page);
         List<Button> buttonsRow = QueueButtons.get(page);
 
-        event.getHook().sendMessage(queueMessage).addActionRow(buttonsRow).queue();
+        event.getHook().sendMessage(queueMessage).addComponents(ActionRow.of(buttonsRow)).queue();
 
     }
 

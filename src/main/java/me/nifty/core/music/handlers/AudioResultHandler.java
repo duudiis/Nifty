@@ -18,7 +18,8 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.components.selections.SelectMenu;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 
 import java.util.Collections;
 import java.util.List;
@@ -71,9 +72,9 @@ public class AudioResultHandler implements AudioLoadResultHandler {
     public void replyEvent(MessageEmbed embed, SelectMenu selectMenu) {
 
         if (textChannel != null) {
-            textChannel.sendMessageEmbeds(embed).setActionRow(selectMenu).queue();
+            textChannel.sendMessageEmbeds(embed).setComponents(ActionRow.of(selectMenu)).queue();
         } else if (interactionHook != null) {
-            interactionHook.sendMessageEmbeds(embed).setActionRow(selectMenu).queue();
+            interactionHook.sendMessageEmbeds(embed).setComponents(ActionRow.of(selectMenu)).queue();
         }
 
     }
