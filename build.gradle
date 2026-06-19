@@ -35,8 +35,9 @@ dependencies {
 
     implementation("moe.kyokobot.libdave:adapter-jda:ce725965e")
     implementation("moe.kyokobot.libdave:impl-jni:ce725965e")
-    runtimeOnly("moe.kyokobot.libdave:natives-win-x86-64:ce725965e")      // your Windows machine
-    runtimeOnly("moe.kyokobot.libdave:natives-linux-x86-64:ce725965e")    // Docker server
+    runtimeOnly("moe.kyokobot.libdave:natives-win-x86-64:ce725965e")        // your Windows machine
+    runtimeOnly("moe.kyokobot.libdave:natives-linux-x86-64:ce725965e")      // glibc Linux (Debian/Ubuntu)
+    runtimeOnly("moe.kyokobot.libdave:natives-linux-musl-x86-64:ce725965e") // musl Linux (Alpine Docker server)
 
     implementation("dev.arbjerg:lavaplayer:2.2.6")
     implementation("dev.lavalink.youtube:common:1.16.0")
