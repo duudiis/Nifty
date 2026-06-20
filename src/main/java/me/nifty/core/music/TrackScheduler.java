@@ -8,6 +8,7 @@ import me.nifty.core.music.handlers.AudioResultHandler;
 import me.nifty.managers.AudioManager;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
+import me.nifty.utils.formatting.WsQueue;
 import net.dv8tion.jda.api.entities.Member;
 
 import java.util.List;
@@ -147,6 +148,8 @@ public class TrackScheduler {
 
         queueHandler.moveTrack(position, newPosition);
 
+        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
+
     }
 
     /**
@@ -178,6 +181,8 @@ public class TrackScheduler {
         }
 
         queueHandler.moveTracks(startPosition, newPosition, amount);
+
+        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
 
     }
 
@@ -228,6 +233,8 @@ public class TrackScheduler {
             // If the track that was removed was before the current track, decrease the current position by 1.
             playerHandler.setPosition(currentPosition - 1);
         }
+
+        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
 
     }
 
@@ -288,6 +295,8 @@ public class TrackScheduler {
             // If the range that was removed was before the current track, decrease the current position by the amount of tracks removed.
             playerHandler.setPosition(currentPosition - amount);
         }
+
+        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
 
     }
 

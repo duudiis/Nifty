@@ -54,4 +54,31 @@ public class Config {
         return config.get("DEEZER_MASTER_DECRYPTION_KEY");
     }
 
+    /**
+     * Gets the Dashboard WebSocket URL. When this is null/blank the dashboard
+     * add-on is disabled and the bot runs completely standalone.
+     * @return The dashboard WebSocket URL, or null if not configured
+     */
+    public static String getDashboardWsUrl() {
+        return config.get("DASHBOARD_WS_URL");
+    }
+
+    /**
+     * Gets the token used to identify this bot to the dashboard.
+     * @return The dashboard token
+     */
+    public static String getDashboardToken() {
+        return config.get("DASHBOARD_TOKEN");
+    }
+
+    /**
+     * Gets a human-friendly identifier for this bot instance, shown in the
+     * dashboard's bot selector (e.g. "Nifty", "Nifty 2"). Falls back to "Nifty".
+     * @return The dashboard bot name
+     */
+    public static String getDashboardBotName() {
+        String name = config.get("DASHBOARD_BOT_NAME");
+        return (name == null || name.isBlank()) ? "Nifty" : name;
+    }
+
 }

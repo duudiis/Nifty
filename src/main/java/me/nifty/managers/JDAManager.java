@@ -5,6 +5,7 @@ import me.nifty.managers.interactions.AutoCompleteManager;
 import me.nifty.managers.interactions.ButtonsManager;
 import moe.kyokobot.libdave.NativeDaveFactory;
 import moe.kyokobot.libdave.jda.LDJDADaveSessionFactory;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.audio.AudioModuleConfig;
 import net.dv8tion.jda.api.entities.Activity;
@@ -13,6 +14,16 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class JDAManager {
+
+    private static JDA jda;
+
+    /**
+     * Gets the built JDA instance.
+     * @return The JDA instance, or null if it has not been built yet.
+     */
+    public static JDA getJDA() {
+        return jda;
+    }
 
     /**
      * Creates the JDA instance
@@ -48,7 +59,10 @@ public class JDAManager {
         AutoCompleteManager.load();
 
         // Builds the JDA instance
-        jdaBuilder.build();
+        jda = jdaBuilder.build();
+
+        // Connects the optional dashboard add-on (no-op if DASHBOARD_WS_URL is unset)
+        WebSocketManager.connect();
 
     }
 

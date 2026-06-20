@@ -46,4 +46,7 @@ dependencies {
 
     implementation("org.jsoup:jsoup:1.15.3")
     implementation("org.json:json:20250107")
+
+    // Dashboard add-on: optional WebSocket client. The bot runs fine without it.
+    implementation("org.java-websocket:Java-WebSocket:1.6.0")
 }

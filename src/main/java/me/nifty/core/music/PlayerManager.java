@@ -88,6 +88,15 @@ public class PlayerManager {
     }
 
     /**
+     * Gets the Player Manager for the specified guild id.
+     * @param guildId The id of the guild to get the player manager for
+     * @return The Player Manager for the specified guild, or null if none exists
+     */
+    public static PlayerManager get(long guildId) {
+        return guildPlayerManagers.get(guildId);
+    }
+
+    /**
      * Destroys the Player Manager for the specified guild.
      * @param guild The guild to destroy the player manager
      */

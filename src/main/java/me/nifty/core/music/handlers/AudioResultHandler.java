@@ -12,6 +12,7 @@ import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.formatting.SearchResultSelectMenu;
 import me.nifty.utils.formatting.TrackTitle;
+import me.nifty.utils.formatting.WsQueue;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -111,6 +112,9 @@ public class AudioResultHandler implements AudioLoadResultHandler {
             }
         }
 
+        // Push the updated queue to the dashboard (no-op if disconnected)
+        WsQueue.updateWsQueue(member.getGuild().getIdLong());
+
     }
 
     @Override
@@ -176,6 +180,9 @@ public class AudioResultHandler implements AudioLoadResultHandler {
             audioPlayer.playTrack(audioTracks.get(0));
             playerHandler.setPosition(queuePosition);
         }
+
+        // Push the updated queue to the dashboard (no-op if disconnected)
+        WsQueue.updateWsQueue(member.getGuild().getIdLong());
 
     }
 

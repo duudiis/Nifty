@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.managers.DatabaseManager;
 import me.nifty.utils.TrackUtils;
 import me.nifty.utils.formatting.TrackTitle;
+import me.nifty.utils.formatting.WsQueue;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -190,6 +191,41 @@ public class QueueHandler {
     }
 
     /**
+     * Gets every track in the queue, ordered ascending by position. Each track
+     * has its {@code userData} set to the id of the member that queued it.
+     * The list index matches the track's position (track_id).
+     *
+     * @return The full list of queued tracks (never null, possibly empty).
+     */
+    public List<AudioTrack> getAllTracks() {
+
+        Connection connection = DatabaseManager.getConnection();
+
+        List<AudioTrack> audioTracks = new ArrayList<>();
+
+        try {
+
+            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM Queues WHERE guild_id = ? ORDER BY track_id ASC");
+            selectStatement.setLong(1, this.guildId);
+
+            ResultSet selectResult = selectStatement.executeQuery();
+
+            while (selectResult.next()) {
+                AudioTrack audioTrack = TrackUtils.decodeTrack(selectResult.getString("encoded_track"));
+                if (audioTrack == null) { continue; }
+
+                audioTrack.setUserData(selectResult.getLong("member_id"));
+
+                audioTracks.add(audioTrack);
+            }
+
+        } catch (Exception ignored) { }
+
+        return audioTracks;
+
+    }
+
+    /**
      * Gets the size of the queue.
      *
      * @return The size of the queue.
@@ -358,6 +394,9 @@ public class QueueHandler {
 
         } catch (Exception ignored) { }
 
+        // Push the reshuffled queue to the dashboard once (no-op if disconnected)
+        WsQueue.updateWsQueue(this.guildId);
+
     }
 
     /**
@@ -375,6 +414,9 @@ public class QueueHandler {
             deleteStatement.executeUpdate();
 
         } catch (Exception ignored) { }
+
+        // Push the now-empty queue to the dashboard (no-op if disconnected)
+        WsQueue.updateWsQueue(this.guildId);
 
     }
 
