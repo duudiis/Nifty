@@ -54,9 +54,9 @@ public class Artwork {
             String source = track.getSourceManager() != null ? track.getSourceManager().getSourceName() : "";
 
             if (isUsable(identifier) && ("youtube".equals(source) || "youtubemusic".equals(source))) {
-                // hqdefault (480x360) exists for every video; maxresdefault would
-                // be sharper but 404s on many, leaving a broken image.
-                return "https://i.ytimg.com/vi/" + identifier + "/hqdefault.jpg";
+                // mqdefault (320x180) is the only widescreen size with no letterbox
+                // bars; hq/sd are 4:3 (black bars) and maxres 404s on many videos.
+                return "https://i.ytimg.com/vi/" + identifier + "/mqdefault.jpg";
             }
 
         } catch (Exception ignored) {
