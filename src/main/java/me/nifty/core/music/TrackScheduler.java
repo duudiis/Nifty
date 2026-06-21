@@ -107,9 +107,12 @@ public class TrackScheduler {
 
         int queueSize = queueHandler.getQueueSize();
 
-        if (position < queueSize) {
-            audioPlayer.playTrack(queueHandler.getQueueTrack(position));
+        if (position >= 0 && position < queueSize) {
+            // Set the cursor before playing: playTrack fires onTrackStart, which
+            // pushes the queue to the dashboard — if we set the position after,
+            // that push reports the stale cursor and the dashboard desyncs.
             playerHandler.setPosition(position);
+            audioPlayer.playTrack(queueHandler.getQueueTrack(position));
         }
 
     }
