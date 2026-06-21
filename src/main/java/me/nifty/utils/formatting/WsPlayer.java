@@ -5,6 +5,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.utils.enums.Shuffle;
 import me.nifty.websocket.WebSocketClientEndpoint;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import org.json.JSONObject;
 
 /**
@@ -60,6 +62,25 @@ public class WsPlayer {
             track.put("artwork", Artwork.get(playingTrack)); // null -> dashboard falls back to placeholder
             track.put("songUrl", playingTrack.getInfo().uri);
             track.put("duration", playingTrack.getDuration());
+
+            // Who queued the current track, so the player/now-playing can show them.
+            Guild guild = playerManager.getGuild();
+            long memberId = playingTrack.getUserData() instanceof Long ? (Long) playingTrack.getUserData() : 0L;
+            track.put("added_by_id", String.valueOf(memberId));
+
+            String addedBy = String.valueOf(memberId);
+            String addedByAvatar = null;
+            if (guild != null && memberId != 0) {
+                Member member = guild.getMemberById(memberId);
+                if (member != null) {
+                    addedBy = member.getEffectiveName();
+                    addedByAvatar = member.getEffectiveAvatarUrl() + "?size=128";
+                }
+            }
+            track.put("added_by", addedBy);
+            if (addedByAvatar != null) {
+                track.put("added_by_avatar", addedByAvatar);
+            }
 
             player.put("track", track);
             base.put("data", player);

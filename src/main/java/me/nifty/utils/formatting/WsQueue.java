@@ -63,13 +63,18 @@ public class WsQueue {
                 track.put("added_by_id", String.valueOf(memberId));
 
                 String addedBy = String.valueOf(memberId);
+                String addedByAvatar = null;
                 if (guild != null && memberId != 0) {
                     Member member = guild.getMemberById(memberId);
                     if (member != null) {
                         addedBy = member.getEffectiveName();
+                        addedByAvatar = member.getEffectiveAvatarUrl() + "?size=128";
                     }
                 }
                 track.put("added_by", addedBy);
+                if (addedByAvatar != null) {
+                    track.put("added_by_avatar", addedByAvatar);
+                }
 
                 tracks.put(track);
 
