@@ -54,7 +54,9 @@ public class Artwork {
             String source = track.getSourceManager() != null ? track.getSourceManager().getSourceName() : "";
 
             if (isUsable(identifier) && ("youtube".equals(source) || "youtubemusic".equals(source))) {
-                return "https://i.ytimg.com/vi/" + identifier + "/mqdefault.jpg";
+                // hqdefault (480x360) exists for every video; maxresdefault would
+                // be sharper but 404s on many, leaving a broken image.
+                return "https://i.ytimg.com/vi/" + identifier + "/hqdefault.jpg";
             }
 
         } catch (Exception ignored) {
