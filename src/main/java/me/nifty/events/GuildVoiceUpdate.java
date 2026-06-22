@@ -4,12 +4,18 @@ import me.nifty.core.music.PlayerManager;
 import me.nifty.utils.InactivityUtils;
 import me.nifty.utils.VoiceUtils;
 import me.nifty.utils.enums.InactivityType;
+import me.nifty.utils.formatting.WsSessions;
+import me.nifty.websocket.WebSocketClientEndpoint;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class GuildVoiceUpdate extends ListenerAdapter {
 
@@ -17,15 +23,52 @@ public class GuildVoiceUpdate extends ListenerAdapter {
     public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
 
         Member updatedMember = event.getEntity();
+        boolean isSelf = updatedMember.getIdLong() == event.getGuild().getSelfMember().getIdLong();
 
-        if (updatedMember.getIdLong() == event.getGuild().getSelfMember().getIdLong()) {
+        if (isSelf) {
             selfVoiceUpdate(event);
         }
+
+        // Keep open dashboards' Connect list current: a voice change alters who
+        // can control which session. Push fresh sessions to the affected user(s).
+        pushDashboardSessions(event, updatedMember, isSelf);
 
         if (updatedMember.getUser().isBot()) { return; }
 
         memberVoiceUpdate(event);
 
+    }
+
+    /** Pushes refreshed sessions to the dashboard for whoever's view just changed. */
+    private void pushDashboardSessions(GuildVoiceUpdateEvent event, Member updatedMember, boolean isSelf) {
+
+        if (!WebSocketClientEndpoint.isConnected()) { return; }
+
+        try {
+            if (isSelf) {
+                // The bot moved: everyone in the channels it joined/left is affected.
+                Set<Long> userIds = new HashSet<>();
+                collectMembers(event.getChannelJoined(), userIds);
+                collectMembers(event.getChannelLeft(), userIds);
+                for (long userId : userIds) {
+                    WsSessions.reply(userId);
+                }
+            } else if (!updatedMember.getUser().isBot()) {
+                WsSessions.reply(updatedMember.getIdLong());
+            }
+        } catch (Exception ignored) {
+            // Dashboard sync must never break voice handling.
+        }
+
+    }
+
+    private void collectMembers(AudioChannel channel, Set<Long> userIds) {
+        if (channel == null) { return; }
+        for (Member member : channel.getMembers()) {
+            if (!member.getUser().isBot()) {
+                userIds.add(member.getIdLong());
+            }
+        }
     }
 
     /**
