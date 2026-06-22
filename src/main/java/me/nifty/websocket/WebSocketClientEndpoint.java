@@ -3,13 +3,19 @@ package me.nifty.websocket;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.Config;
 import me.nifty.core.music.PlayerManager;
+import me.nifty.managers.JDAManager;
+import me.nifty.utils.VoiceUtils;
 import me.nifty.utils.enums.Loop;
 import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.WsPlayer;
 import me.nifty.utils.formatting.WsQueue;
 import me.nifty.utils.formatting.WsSessions;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONObject;
@@ -170,6 +176,12 @@ public class WebSocketClientEndpoint {
         long guildId = data.optLong("guildId", 0);
         String action = data.optString("action", "");
 
+        // "summon" has no player yet — it creates one by joining the user's VC.
+        if (action.equals("summon")) {
+            summon(guildId, data.optLong("userId", 0));
+            return;
+        }
+
         PlayerManager playerManager = PlayerManager.get(guildId);
 
         // This guild belongs to another bot instance (or has no player) — ignore.
@@ -250,6 +262,46 @@ public class WebSocketClientEndpoint {
 
         // Reply target is null: the dashboard, not a Discord channel, requested this.
         playerManager.getTrackScheduler().queue(query, null, member, new ArrayList<>());
+
+    }
+
+    /**
+     * Joins the requesting user's voice channel in the given (dashboard-selected)
+     * guild, then pushes fresh state so the dashboard reflects the new session.
+     */
+    private void summon(long guildId, long userId) {
+
+        if (guildId == 0 || userId == 0) { return; }
+
+        try {
+
+            JDA jda = JDAManager.getJDA();
+            if (jda == null) { return; }
+
+            Guild guild = jda.getGuildById(guildId);
+            if (guild == null) { return; }
+
+            Member member = guild.getMemberById(userId);
+            if (member == null) { return; }
+
+            GuildVoiceState voiceState = member.getVoiceState();
+            if (voiceState == null || !voiceState.inAudioChannel()) { return; }
+
+            AudioChannel channel = voiceState.getChannel();
+            if (!(channel instanceof VoiceChannel voiceChannel)) { return; }
+
+            VoiceUtils.join(voiceChannel);
+
+            PlayerManager playerManager = PlayerManager.get(guildId);
+            if (playerManager != null) {
+                WsPlayer.updateWsPlayer(playerManager);
+                WsQueue.updateWsQueue(guildId);
+            }
+            WsSessions.reply(userId);
+
+        } catch (Exception ignored) {
+            // Summoning must never break the bot.
+        }
 
     }
 
