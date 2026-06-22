@@ -184,7 +184,20 @@ public class WebSocketClientEndpoint {
 
         PlayerManager playerManager = PlayerManager.get(guildId);
 
-        // This guild belongs to another bot instance (or has no player) — ignore.
+        // Queuing while not connected: join the requester's voice channel first
+        // (exactly like the play command does), then enqueue.
+        if (action.equals("play")) {
+            long userId = data.optLong("userId", 0);
+            if (playerManager == null) {
+                playerManager = connectToUser(guildId, userId);
+            }
+            if (playerManager != null) {
+                enqueue(playerManager, userId, data.optString("query", ""));
+            }
+            return;
+        }
+
+        // Other actions only make sense for a guild this bot is already playing in.
         if (playerManager == null) { return; }
 
         switch (action) {
@@ -241,9 +254,6 @@ public class WebSocketClientEndpoint {
 
             case "clear" -> playerManager.getTrackScheduler().clear();
 
-            // Search-and-enqueue from the dashboard search bar.
-            case "play" -> enqueue(playerManager, data.optLong("userId", 0), data.optString("query", ""));
-
             default -> { /* unknown action — ignore */ }
 
         }
@@ -266,42 +276,59 @@ public class WebSocketClientEndpoint {
     }
 
     /**
+     * Joins the requesting user's voice channel in the given guild and returns
+     * the (now-created) player. No-op if the bot is already connected there, the
+     * user isn't in a voice channel, or anything is missing.
+     *
+     * @return the guild's PlayerManager once connected, or {@code null}.
+     */
+    private PlayerManager connectToUser(long guildId, long userId) {
+
+        if (guildId == 0 || userId == 0) { return null; }
+
+        try {
+
+            // Already connected somewhere in this guild — don't move it.
+            PlayerManager existing = PlayerManager.get(guildId);
+            if (existing != null) { return existing; }
+
+            JDA jda = JDAManager.getJDA();
+            if (jda == null) { return null; }
+
+            Guild guild = jda.getGuildById(guildId);
+            if (guild == null) { return null; }
+
+            Member member = guild.getMemberById(userId);
+            if (member == null) { return null; }
+
+            GuildVoiceState voiceState = member.getVoiceState();
+            if (voiceState == null || !voiceState.inAudioChannel()) { return null; }
+
+            AudioChannel channel = voiceState.getChannel();
+            if (!(channel instanceof VoiceChannel voiceChannel)) { return null; }
+
+            VoiceUtils.join(voiceChannel);
+            return PlayerManager.get(guildId);
+
+        } catch (Exception ignored) {
+            // Connecting must never break the bot.
+            return null;
+        }
+
+    }
+
+    /**
      * Joins the requesting user's voice channel in the given (dashboard-selected)
      * guild, then pushes fresh state so the dashboard reflects the new session.
      */
     private void summon(long guildId, long userId) {
 
-        if (guildId == 0 || userId == 0) { return; }
-
-        try {
-
-            JDA jda = JDAManager.getJDA();
-            if (jda == null) { return; }
-
-            Guild guild = jda.getGuildById(guildId);
-            if (guild == null) { return; }
-
-            Member member = guild.getMemberById(userId);
-            if (member == null) { return; }
-
-            GuildVoiceState voiceState = member.getVoiceState();
-            if (voiceState == null || !voiceState.inAudioChannel()) { return; }
-
-            AudioChannel channel = voiceState.getChannel();
-            if (!(channel instanceof VoiceChannel voiceChannel)) { return; }
-
-            VoiceUtils.join(voiceChannel);
-
-            PlayerManager playerManager = PlayerManager.get(guildId);
-            if (playerManager != null) {
-                WsPlayer.updateWsPlayer(playerManager);
-                WsQueue.updateWsQueue(guildId);
-            }
-            WsSessions.reply(userId);
-
-        } catch (Exception ignored) {
-            // Summoning must never break the bot.
+        PlayerManager playerManager = connectToUser(guildId, userId);
+        if (playerManager != null) {
+            WsPlayer.updateWsPlayer(playerManager);
+            WsQueue.updateWsQueue(guildId);
         }
+        WsSessions.reply(userId);
 
     }
 
