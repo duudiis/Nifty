@@ -22,7 +22,6 @@ import org.json.JSONObject;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -193,17 +192,7 @@ public class WebSocketClientEndpoint {
                 playerManager = connectToUser(guildId, userId);
             }
             if (playerManager != null) {
-                // Translate the dashboard's now/next intent into loader flags:
-                //   now  -> insert right after the current track AND jump to it
-                //   next -> insert right after the current track
-                List<String> flags = new ArrayList<>();
-                if (data.optBoolean("now", false)) {
-                    flags.add("next");
-                    flags.add("jump");
-                } else if (data.optBoolean("next", false)) {
-                    flags.add("next");
-                }
-                enqueue(playerManager, userId, data.optString("query", ""), flags);
+                enqueue(playerManager, userId, data.optString("query", ""));
             }
             return;
         }
@@ -263,27 +252,6 @@ public class WebSocketClientEndpoint {
 
             case "remove" -> playerManager.getTrackScheduler().remove(data.optInt("trackId", 0));
 
-            // Drag-to-reorder: move a track from one index to another (final indices).
-            case "move" -> playerManager.getTrackScheduler().move(data.optInt("from", 0), data.optInt("to", 0));
-
-            // Move a track to the very front of the queue.
-            case "moveToTop" -> playerManager.getTrackScheduler().move(data.optInt("trackId", 0), 0);
-
-            // Move a track to the very end of the queue.
-            case "moveToLast" -> {
-                int last = playerManager.getQueueHandler().getQueueSize() - 1;
-                if (last >= 0) { playerManager.getTrackScheduler().move(data.optInt("trackId", 0), last); }
-            }
-
-            // Move a track to immediately after the currently-playing one.
-            case "playNext" -> {
-                int trackId = data.optInt("trackId", 0);
-                int cur = playerManager.getPlayerHandler().getPosition();
-                if (trackId != cur) {
-                    playerManager.getTrackScheduler().move(trackId, trackId < cur ? cur : cur + 1);
-                }
-            }
-
             case "clear" -> playerManager.getTrackScheduler().clear();
 
             default -> { /* unknown action — ignore */ }
@@ -292,7 +260,7 @@ public class WebSocketClientEndpoint {
 
     }
 
-    private void enqueue(PlayerManager playerManager, long userId, String query, List<String> flags) {
+    private void enqueue(PlayerManager playerManager, long userId, String query) {
 
         if (query == null || query.isBlank() || userId == 0) { return; }
 
@@ -303,7 +271,7 @@ public class WebSocketClientEndpoint {
         if (member == null) { return; }
 
         // Reply target is null: the dashboard, not a Discord channel, requested this.
-        playerManager.getTrackScheduler().queue(query, null, member, flags == null ? new ArrayList<>() : flags);
+        playerManager.getTrackScheduler().queue(query, null, member, new ArrayList<>());
 
     }
 
