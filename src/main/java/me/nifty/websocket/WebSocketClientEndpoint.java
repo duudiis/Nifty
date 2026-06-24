@@ -246,6 +246,15 @@ public class WebSocketClientEndpoint {
             // Queued "Move to last": move the entry to the end of the queue.
             case "moveToLast" -> playerManager.getTrackScheduler().moveToLast(data.optInt("trackId", -1));
 
+            // Drag-reorder: move a queue entry to an explicit index.
+            case "move" -> {
+                int trackId = data.optInt("trackId", -1);
+                int toIndex = data.optInt("toIndex", -1);
+                if (trackId >= 0 && toIndex >= 0) {
+                    playerManager.getTrackScheduler().move(trackId, toIndex);
+                }
+            }
+
             case "loop" -> {
                 Loop current = playerManager.getPlayerHandler().getLoopMode();
                 Loop next = switch (current) {
