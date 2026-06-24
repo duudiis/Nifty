@@ -156,6 +156,59 @@ public class TrackScheduler {
     }
 
     /**
+     * Moves a queued track so it sits right after the current track ("play next").
+     * Works whether the track is currently before or after the cursor — the
+     * removal of an earlier track shifts the cursor down by one, which the target
+     * index accounts for.
+     *
+     * @param position The position of the track to reposition.
+     */
+    public void moveAfterCurrent(int position) {
+
+        int currentPosition = playerHandler.getPosition();
+        if (position == currentPosition) { return; }
+
+        // After removing a track before the cursor, the current track shifts to
+        // currentPosition - 1, so "right after current" becomes currentPosition.
+        int target = position < currentPosition ? currentPosition : currentPosition + 1;
+
+        move(position, target);
+
+    }
+
+    /**
+     * Plays a queued track immediately while keeping the rest of the queue in
+     * order: the track is moved to right after the current one, then jumped to.
+     *
+     * @param position The position of the track to play now.
+     */
+    public void playNow(int position) {
+
+        int currentPosition = playerHandler.getPosition();
+        if (position == currentPosition) { return; }
+
+        int target = position < currentPosition ? currentPosition : currentPosition + 1;
+
+        move(position, target);
+        jump(target);
+
+    }
+
+    /**
+     * Moves a queued track to the very end of the queue.
+     *
+     * @param position The position of the track to move.
+     */
+    public void moveToLast(int position) {
+
+        int last = queueHandler.getQueueSize() - 1;
+        if (last >= 0 && position != last) {
+            move(position, last);
+        }
+
+    }
+
+    /**
      * Moves the specified range of tracks to the specified position in the queue.
      *
      * @param startPosition The start position of the range.

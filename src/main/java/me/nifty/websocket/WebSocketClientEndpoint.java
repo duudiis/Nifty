@@ -22,6 +22,7 @@ import org.json.JSONObject;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -192,7 +193,17 @@ public class WebSocketClientEndpoint {
                 playerManager = connectToUser(guildId, userId);
             }
             if (playerManager != null) {
-                enqueue(playerManager, userId, data.optString("query", ""));
+                // Translate the dashboard's intent into loader flags:
+                //   now  -> insert right after current AND jump to it (play instantly)
+                //   next -> insert right after current
+                List<String> flags = new ArrayList<>();
+                if (data.optBoolean("now", false)) {
+                    flags.add("next");
+                    flags.add("jump");
+                } else if (data.optBoolean("next", false)) {
+                    flags.add("next");
+                }
+                enqueue(playerManager, userId, data.optString("query", ""), flags);
             }
             return;
         }
@@ -207,11 +218,33 @@ public class WebSocketClientEndpoint {
                 WsPlayer.updateWsPlayer(playerManager);
             }
 
-            case "back" -> playerManager.getTrackScheduler().back();
+            case "back" -> {
+                playerManager.getTrackScheduler().back();
+                unpause(playerManager);
+            }
 
-            case "skip" -> playerManager.getTrackScheduler().skip();
+            case "skip" -> {
+                playerManager.getTrackScheduler().skip();
+                unpause(playerManager);
+            }
 
-            case "jump" -> playerManager.getTrackScheduler().jump(data.optInt("trackId", 0));
+            case "jump" -> {
+                playerManager.getTrackScheduler().jump(data.optInt("trackId", 0));
+                unpause(playerManager);
+            }
+
+            // Queued "Play now": move the entry right after the current track and
+            // jump to it (keeps the rest of the queue in order), then unpause.
+            case "playNow" -> {
+                playerManager.getTrackScheduler().playNow(data.optInt("trackId", -1));
+                unpause(playerManager);
+            }
+
+            // Queued "Play next": move the entry right after the current track.
+            case "playNext" -> playerManager.getTrackScheduler().moveAfterCurrent(data.optInt("trackId", -1));
+
+            // Queued "Move to last": move the entry to the end of the queue.
+            case "moveToLast" -> playerManager.getTrackScheduler().moveToLast(data.optInt("trackId", -1));
 
             case "loop" -> {
                 Loop current = playerManager.getPlayerHandler().getLoopMode();
@@ -260,7 +293,7 @@ public class WebSocketClientEndpoint {
 
     }
 
-    private void enqueue(PlayerManager playerManager, long userId, String query) {
+    private void enqueue(PlayerManager playerManager, long userId, String query, List<String> flags) {
 
         if (query == null || query.isBlank() || userId == 0) { return; }
 
@@ -271,8 +304,20 @@ public class WebSocketClientEndpoint {
         if (member == null) { return; }
 
         // Reply target is null: the dashboard, not a Discord channel, requested this.
-        playerManager.getTrackScheduler().queue(query, null, member, new ArrayList<>());
+        playerManager.getTrackScheduler().queue(query, null, member, flags == null ? new ArrayList<>() : flags);
 
+    }
+
+    /**
+     * Resumes playback if the player is paused, then pushes fresh player state.
+     * Used after dashboard-initiated track changes (jump/back/skip/play-now) so a
+     * paused bot starts playing the new track rather than landing on it paused.
+     */
+    private void unpause(PlayerManager playerManager) {
+        if (playerManager.getAudioPlayer().isPaused()) {
+            playerManager.getAudioPlayer().setPaused(false);
+            WsPlayer.updateWsPlayer(playerManager);
+        }
     }
 
     /**

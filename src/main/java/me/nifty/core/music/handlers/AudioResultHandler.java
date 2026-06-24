@@ -106,6 +106,11 @@ public class AudioResultHandler implements AudioLoadResultHandler {
             audioPlayer.playTrack(track);
             playerHandler.setPosition(queuePosition);
 
+            // "Play now" should actually play: resume if the player was paused.
+            if (flags.contains("jump")) {
+                audioPlayer.setPaused(false);
+            }
+
             if (flags.contains("seek")) {
                 long timeMs = Long.parseLong(flags.get(flags.indexOf("seek") + 1));
                 audioPlayer.getPlayingTrack().setPosition(timeMs);
@@ -179,6 +184,11 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         if (playingTrack == null || flags.contains("jump")) {
             audioPlayer.playTrack(audioTracks.get(0));
             playerHandler.setPosition(queuePosition);
+
+            // "Play now" should actually play: resume if the player was paused.
+            if (flags.contains("jump")) {
+                audioPlayer.setPaused(false);
+            }
         }
 
         // Push the updated queue to the dashboard (no-op if disconnected)
