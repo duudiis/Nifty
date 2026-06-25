@@ -55,6 +55,26 @@ public class Config {
     }
 
     /**
+     * Gets the Tidal API token. When this is null/blank the Tidal source is
+     * disabled. See https://github.com/topi314/LavaSrc#tidal for how to obtain one.
+     * @return The Tidal API token, or null if not configured
+     */
+    public static String getTidalToken() {
+        String token = config.get("TIDAL_TOKEN");
+        return (token == null || token.isBlank()) ? null : token;
+    }
+
+    /**
+     * Gets the ISO 3166-1 alpha-2 country code used for region-specific Tidal
+     * content. Falls back to "US".
+     * @return The Tidal country code
+     */
+    public static String getTidalCountryCode() {
+        String code = config.get("TIDAL_COUNTRY_CODE");
+        return (code == null || code.isBlank()) ? "US" : code;
+    }
+
+    /**
      * Gets the Dashboard WebSocket URL. When this is null/blank the dashboard
      * add-on is disabled and the bot runs completely standalone.
      * @return The dashboard WebSocket URL, or null if not configured

@@ -1,8 +1,9 @@
 package me.nifty.managers;
 
-import com.github.topisenpai.lavasrc.applemusic.AppleMusicSourceManager;
-import com.github.topisenpai.lavasrc.deezer.DeezerAudioSourceManager;
-import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
+import com.github.topi314.lavasrc.applemusic.AppleMusicSourceManager;
+import com.github.topi314.lavasrc.deezer.DeezerAudioSourceManager;
+import com.github.topi314.lavasrc.spotify.SpotifySourceManager;
+import com.github.topi314.lavasrc.tidal.TidalSourceManager;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -49,8 +50,10 @@ public class AudioManager {
         audioManager.registerSourceManager(new VimeoAudioSourceManager());
         audioManager.registerSourceManager(new BandcampAudioSourceManager());
 
-        // Registers external source managers.
-        audioManager.registerSourceManager(new AppleMusicSourceManager(null, "", "us", audioManager));
+        // Registers external source managers. LavaSrc 4.x takes a supplier for
+        // the player manager (used to mirror non-playable sources through a
+        // playable one, e.g. YouTube), so these pass `unused -> audioManager`.
+        audioManager.registerSourceManager(new AppleMusicSourceManager(null, "", "us", unused -> audioManager));
 
         // Spotify requires a client id and secret to be set.
         String spotifyClientId = Config.getSpotifyClientId();
@@ -65,6 +68,15 @@ public class AudioManager {
 
         if (deezerMasterDecryptionKey != null) {
             audioManager.registerSourceManager(new DeezerAudioSourceManager(deezerMasterDecryptionKey));
+        }
+
+        // Tidal resolves metadata only, then mirrors playback through a playable
+        // source (YouTube). Requires an API token to be set; null providers means
+        // the resolver falls back to its YouTube-search defaults.
+        String tidalToken = Config.getTidalToken();
+
+        if (tidalToken != null) {
+            audioManager.registerSourceManager(new TidalSourceManager(null, Config.getTidalCountryCode(), unused -> audioManager, tidalToken));
         }
 
         // Registers the HTTP source manager.

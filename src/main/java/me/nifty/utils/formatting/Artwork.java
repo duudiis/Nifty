@@ -1,7 +1,5 @@
 package me.nifty.utils.formatting;
 
-import com.github.topisenpai.lavasrc.deezer.DeezerAudioTrack;
-import com.github.topisenpai.lavasrc.mirror.MirroringAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 /**
@@ -27,23 +25,8 @@ public class Artwork {
 
         try {
 
-            // LavaSrc mirroring sources (Spotify / Apple Music) expose artwork directly.
-            if (track instanceof MirroringAudioTrack mirroringAudioTrack) {
-                String artworkUrl = mirroringAudioTrack.getArtworkURL();
-                if (isUsable(artworkUrl)) {
-                    return artworkUrl;
-                }
-            }
-
-            // Deezer exposes artwork directly as well.
-            if (track instanceof DeezerAudioTrack deezerAudioTrack) {
-                String artworkUrl = deezerAudioTrack.getArtworkURL();
-                if (isUsable(artworkUrl)) {
-                    return artworkUrl;
-                }
-            }
-
-            // Generic LavaPlayer artwork field, when the source manager provides one.
+            // LavaSrc sources (Spotify, Apple Music, Deezer, Tidal, …) populate
+            // the standard LavaPlayer artwork field, so this one check covers them all.
             String infoArtwork = track.getInfo().artworkUrl;
             if (isUsable(infoArtwork)) {
                 return infoArtwork;
