@@ -63,11 +63,13 @@ public class AudioManager {
             audioManager.registerSourceManager(new SpotifySourceManager(null, Config.getSpotifyClientId(), Config.getSpotifyClientSecret(), "US", audioManager));
         }
 
-        // Deezer requires a master decryption key to be set.
+        // Deezer requires both a master decryption key and an arl cookie in
+        // LavaSrc 4.x (the source throws on construction without an arl).
         String deezerMasterDecryptionKey = Config.getDeezerMasterDecryptionKey();
+        String deezerArl = Config.getDeezerArl();
 
-        if (deezerMasterDecryptionKey != null) {
-            audioManager.registerSourceManager(new DeezerAudioSourceManager(deezerMasterDecryptionKey));
+        if (deezerMasterDecryptionKey != null && deezerArl != null) {
+            audioManager.registerSourceManager(new DeezerAudioSourceManager(deezerMasterDecryptionKey, deezerArl));
         }
 
         // Tidal resolves metadata only, then mirrors playback through a playable

@@ -55,6 +55,17 @@ public class Config {
     }
 
     /**
+     * Gets the Deezer arl cookie. LavaSrc 4.x requires this in addition to the
+     * master decryption key for the Deezer source to load. When null/blank the
+     * Deezer source is disabled.
+     * @return The Deezer arl cookie, or null if not configured
+     */
+    public static String getDeezerArl() {
+        String arl = config.get("DEEZER_ARL");
+        return (arl == null || arl.isBlank()) ? null : arl;
+    }
+
+    /**
      * Gets the Tidal API token. When this is null/blank the Tidal source is
      * disabled. See https://github.com/topi314/LavaSrc#tidal for how to obtain one.
      * @return The Tidal API token, or null if not configured
