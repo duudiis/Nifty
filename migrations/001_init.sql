@@ -49,8 +49,21 @@ CREATE INDEX tracks_isrc_idx ON tracks (isrc) WHERE isrc IS NOT NULL;
 
 -- ============================== live playback ==============================
 
+-- One row per queue lifetime in a guild (bot joins voice -> bot leaves/stops).
+-- Groups queue_history and track_plays so past queues can be shown whole.
+CREATE TABLE queue_sessions (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  guild_id         BIGINT NOT NULL REFERENCES guilds(id),
+  voice_channel_id BIGINT,
+  started_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ended_at         TIMESTAMPTZ                -- NULL while active
+);
+
+CREATE INDEX queue_sessions_guild_idx ON queue_sessions (guild_id, started_at DESC);
+
 CREATE TABLE players (
   guild_id         BIGINT PRIMARY KEY REFERENCES guilds(id) ON DELETE CASCADE,
+  session_id       BIGINT REFERENCES queue_sessions(id), -- active session, NULL when idle
   text_channel_id  BIGINT,
   voice_channel_id BIGINT,
   queue_position   INT     NOT NULL DEFAULT 0, -- index of the current track in the queue
@@ -81,39 +94,54 @@ CREATE TABLE queue_tracks (
 -- ============================== analytics (append-only) ==============================
 
 CREATE TABLE queue_history (
-  id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  guild_id  BIGINT NOT NULL REFERENCES guilds(id),
-  user_id   BIGINT NOT NULL REFERENCES users(id),
-  track_id  BIGINT NOT NULL REFERENCES tracks(id),
-  via       TEXT   NOT NULL DEFAULT 'command' CHECK (via IN ('command', 'dashboard', 'autoplay')),
-  queued_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  session_id BIGINT NOT NULL REFERENCES queue_sessions(id),
+  guild_id   BIGINT NOT NULL REFERENCES guilds(id),
+  user_id    BIGINT NOT NULL REFERENCES users(id),
+  track_id   BIGINT NOT NULL REFERENCES tracks(id),
+  via        TEXT   NOT NULL DEFAULT 'command' CHECK (via IN ('command', 'dashboard', 'autoplay')),
+  queued_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX queue_history_user_idx  ON queue_history (user_id,  queued_at DESC);
-CREATE INDEX queue_history_guild_idx ON queue_history (guild_id, queued_at DESC);
+CREATE INDEX queue_history_session_idx ON queue_history (session_id, queued_at);
+CREATE INDEX queue_history_user_idx    ON queue_history (user_id,  queued_at DESC);
+CREATE INDEX queue_history_guild_idx   ON queue_history (guild_id, queued_at DESC);
 
 CREATE TABLE track_plays (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  session_id BIGINT NOT NULL REFERENCES queue_sessions(id),
   guild_id   BIGINT NOT NULL REFERENCES guilds(id),
   track_id   BIGINT NOT NULL REFERENCES tracks(id),
   queued_by  BIGINT REFERENCES users(id),     -- NULL for autoplay
   started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   ended_at   TIMESTAMPTZ,
-  played_ms  BIGINT,
+  played_ms  BIGINT,                          -- actual playback time, pauses excluded
   end_reason TEXT CHECK (end_reason IN ('finished', 'skipped', 'stopped', 'replaced', 'error'))
 );
 
-CREATE INDEX track_plays_guild_idx ON track_plays (guild_id, started_at DESC);
-CREATE INDEX track_plays_track_idx ON track_plays (track_id);
+CREATE INDEX track_plays_session_idx ON track_plays (session_id, started_at);
+CREATE INDEX track_plays_guild_idx   ON track_plays (guild_id, started_at DESC);
+CREATE INDEX track_plays_track_idx   ON track_plays (track_id);
 
-CREATE TABLE play_listeners (
-  play_id     BIGINT NOT NULL REFERENCES track_plays(id) ON DELETE CASCADE,
-  user_id     BIGINT NOT NULL REFERENCES users(id),
-  listened_ms BIGINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (play_id, user_id)
+-- One row per continuous span a user actually heard a play. A user gets a new
+-- segment each time hearing resumes (unpause, undeafen, rejoin, ...); listened
+-- time = sum(ended_at - started_at) over a user's segments.
+CREATE TABLE listening_segments (
+  id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  play_id      BIGINT NOT NULL REFERENCES track_plays(id) ON DELETE CASCADE,
+  user_id      BIGINT NOT NULL REFERENCES users(id),
+  started_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ended_at     TIMESTAMPTZ,                   -- NULL while the span is live
+  start_reason TEXT NOT NULL CHECK (start_reason IN (
+    'track_start', 'unpause', 'bot_unmute', 'user_undeafen',
+    'bot_join', 'bot_move', 'user_join', 'user_move')),
+  end_reason   TEXT CHECK (end_reason IN (
+    'track_finish', 'stop', 'error', 'replace', 'pause',
+    'bot_mute', 'user_deafen', 'bot_leave', 'user_leave', 'bot_move', 'user_move'))
 );
 
-CREATE INDEX play_listeners_user_idx ON play_listeners (user_id, play_id DESC);
+CREATE INDEX listening_segments_user_idx ON listening_segments (user_id, started_at DESC);
+CREATE INDEX listening_segments_play_idx ON listening_segments (play_id);
 
 -- ============================== library ==============================
 
@@ -126,13 +154,6 @@ CREATE TABLE liked_tracks (
   UNIQUE (user_id, position) DEFERRABLE INITIALLY DEFERRED
 );
 
--- Per-user preferences, one row per user, created lazily by the dashboard.
-CREATE TABLE user_settings (
-  user_id         BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  liked_sort_by   TEXT NOT NULL DEFAULT 'custom' CHECK (liked_sort_by IN ('custom', 'added', 'title', 'artist', 'duration')),
-  liked_sort_desc BOOLEAN NOT NULL DEFAULT FALSE
-);
-
 -- Custom playlists: owned and editable, items live in playlist_tracks.
 -- Cloning a saved external playlist creates one of these (resolved at clone time).
 CREATE TABLE playlists (
@@ -142,8 +163,6 @@ CREATE TABLE playlists (
   description TEXT,
   artwork_url TEXT,
   visibility  TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'unlisted', 'public')),
-  sort_by     TEXT NOT NULL DEFAULT 'custom' CHECK (sort_by IN ('custom', 'added', 'title', 'artist', 'duration')),
-  sort_desc   BOOLEAN NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -170,4 +189,16 @@ CREATE TABLE playlist_tracks (
   added_by    BIGINT REFERENCES users(id),
   added_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (playlist_id, position) DEFERRABLE INITIALLY DEFERRED
+);
+
+-- Per-user sort preference for any track collection. Playlists are shareable,
+-- so every user keeps their own view of each one; playlist_id NULL means the
+-- user's liked songs. 'custom' = the collection's canonical position order.
+CREATE TABLE collection_sorting (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  playlist_id UUID REFERENCES playlists(id) ON DELETE CASCADE,
+  sort_by     TEXT NOT NULL DEFAULT 'custom' CHECK (sort_by IN ('custom', 'added', 'title', 'artist', 'duration')),
+  sort_desc   BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE NULLS NOT DISTINCT (user_id, playlist_id)
 );
