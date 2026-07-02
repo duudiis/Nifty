@@ -13,7 +13,7 @@ import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.formatting.SearchResultSelectMenu;
 import me.nifty.utils.formatting.TrackTitle;
-import me.nifty.websocket.payloads.WsQueue;
+import me.nifty.websocket.payloads.WsUpdates;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -127,7 +127,7 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         }
 
         // Push the updated queue to the dashboard (no-op if disconnected)
-        WsQueue.updateWsQueue(member.getGuild().getIdLong());
+        WsUpdates.queue(member.getGuild().getIdLong());
 
     }
 
@@ -206,7 +206,7 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         }
 
         // Push the updated queue to the dashboard (no-op if disconnected)
-        WsQueue.updateWsQueue(member.getGuild().getIdLong());
+        WsUpdates.queue(member.getGuild().getIdLong());
 
     }
 

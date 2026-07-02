@@ -56,6 +56,9 @@ public class PlayerManager {
         // Creates the database player handler
         playerManager.setPlayerHandler(new PlayerHandler(guild.getIdLong()));
 
+        // Restores the persisted volume (100 for a fresh player)
+        playerManager.getAudioPlayer().setVolume(playerManager.getPlayerHandler().getVolume());
+
         // Creates the database queue handler
         playerManager.setQueueHandler(new QueueHandler(guild.getIdLong()));
 

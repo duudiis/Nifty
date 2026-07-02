@@ -7,7 +7,7 @@ import me.nifty.core.database.TrackStore;
 import me.nifty.core.database.UserStore;
 import me.nifty.managers.DatabaseManager;
 import me.nifty.utils.TrackUtils;
-import me.nifty.websocket.payloads.WsQueue;
+import me.nifty.websocket.payloads.WsUpdates;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -228,43 +228,6 @@ public class QueueHandler {
         } catch (Exception ignored) { }
 
         return null;
-
-    }
-
-    /**
-     * Gets every track in the queue, ordered ascending by position. Each track
-     * has its {@code userData} set to the id of the member that queued it.
-     * The list index matches the track's position.
-     *
-     * @return The full list of queued tracks (never null, possibly empty).
-     */
-    public List<AudioTrack> getAllTracks() {
-
-        List<AudioTrack> audioTracks = new ArrayList<>();
-
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(
-                     "SELECT t.encoded, qt.queued_by FROM queue_tracks qt " +
-                     "JOIN tracks t ON t.id = qt.track_id " +
-                     "WHERE qt.bot_id = ? AND qt.guild_id = ? ORDER BY qt.position ASC")) {
-
-            statement.setLong(1, BotIdentity.get());
-            statement.setLong(2, this.guildId);
-
-            ResultSet result = statement.executeQuery();
-
-            while (result.next()) {
-                AudioTrack audioTrack = TrackUtils.decodeTrack(result.getString("encoded"));
-                if (audioTrack == null) { continue; }
-
-                audioTrack.setUserData(result.getLong("queued_by"));
-
-                audioTracks.add(audioTrack);
-            }
-
-        } catch (Exception ignored) { }
-
-        return audioTracks;
 
     }
 
@@ -509,7 +472,7 @@ public class QueueHandler {
         } catch (Exception ignored) { }
 
         // Push the reshuffled queue to the dashboard once (no-op if disconnected)
-        WsQueue.updateWsQueue(this.guildId);
+        WsUpdates.queue(this.guildId);
 
     }
 
@@ -530,7 +493,7 @@ public class QueueHandler {
         } catch (Exception ignored) { }
 
         // Push the now-empty queue to the dashboard (no-op if disconnected)
-        WsQueue.updateWsQueue(this.guildId);
+        WsUpdates.queue(this.guildId);
 
     }
 

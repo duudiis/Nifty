@@ -1,9 +1,6 @@
 package me.nifty.websocket;
 
 import me.nifty.core.database.BotIdentity;
-import me.nifty.core.music.PlayerManager;
-import me.nifty.websocket.payloads.WsPlayer;
-import me.nifty.websocket.payloads.WsQueue;
 import me.nifty.websocket.payloads.WsSessions;
 import org.json.JSONObject;
 
@@ -39,17 +36,9 @@ public class DashboardRouter {
             case "identify_error" -> System.out.println("[Nifty] Dashboard rejected this bot's token.");
 
             // The dashboard asks every connected bot which sessions a user can control.
+            // Player and queue state need no equivalent: the dashboard reads
+            // those directly from the shared database.
             case "sessions_request" -> WsSessions.reply(data.optLong("userId", 0));
-
-            // A user selected a guild: push the current player + queue for it.
-            case "subscribe" -> {
-                long guildId = data.optLong("guildId", 0);
-                PlayerManager playerManager = PlayerManager.get(guildId);
-                if (playerManager != null) {
-                    WsPlayer.updateWsPlayer(playerManager);
-                    WsQueue.updateWsQueue(guildId);
-                }
-            }
 
             case "action" -> DashboardActions.handle(data);
 

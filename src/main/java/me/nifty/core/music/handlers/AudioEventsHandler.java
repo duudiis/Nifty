@@ -17,8 +17,7 @@ import me.nifty.utils.enums.Loop;
 import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.NowPlayingEmbed;
 import me.nifty.utils.formatting.TrackTitle;
-import me.nifty.websocket.payloads.WsPlayer;
-import me.nifty.websocket.payloads.WsQueue;
+import me.nifty.websocket.payloads.WsUpdates;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -68,7 +67,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
         }
 
         // Reflect the resumed state on the dashboard (no-op if disconnected)
-        WsPlayer.updateWsPlayer(playerManager);
+        WsUpdates.player(playerManager);
 
     }
 
@@ -94,7 +93,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
         }
 
         // Reflect the paused state on the dashboard (no-op if disconnected)
-        WsPlayer.updateWsPlayer(playerManager);
+        WsUpdates.player(playerManager);
 
     }
 
@@ -131,8 +130,8 @@ public class AudioEventsHandler extends AudioEventAdapter {
         }
 
         // Push the new now-playing track and the (re-positioned) queue to the dashboard
-        WsPlayer.updateWsPlayer(playerManager);
-        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
+        WsUpdates.player(playerManager);
+        WsUpdates.queue(playerManager.getGuild().getIdLong());
 
     }
 
@@ -208,7 +207,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
 
         // If nothing else is going to play, reflect the now-empty player on the dashboard
         if (audioPlayer.getPlayingTrack() == null) {
-            WsPlayer.updateWsPlayer(playerManager);
+            WsUpdates.player(playerManager);
         }
 
     }

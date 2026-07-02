@@ -8,7 +8,7 @@ import me.nifty.core.music.handlers.AudioResultHandler;
 import me.nifty.managers.AudioManager;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
-import me.nifty.websocket.payloads.WsQueue;
+import me.nifty.websocket.payloads.WsUpdates;
 import net.dv8tion.jda.api.entities.Member;
 
 import java.util.List;
@@ -154,7 +154,7 @@ public class TrackScheduler {
 
         queueHandler.moveTrack(position, newPosition);
 
-        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
+        WsUpdates.queue(playerManager.getGuild().getIdLong());
 
     }
 
@@ -241,7 +241,7 @@ public class TrackScheduler {
 
         queueHandler.moveTracks(startPosition, newPosition, amount);
 
-        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
+        WsUpdates.queue(playerManager.getGuild().getIdLong());
 
     }
 
@@ -293,7 +293,7 @@ public class TrackScheduler {
             playerHandler.setPosition(currentPosition - 1);
         }
 
-        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
+        WsUpdates.queue(playerManager.getGuild().getIdLong());
 
     }
 
@@ -355,7 +355,7 @@ public class TrackScheduler {
             playerHandler.setPosition(currentPosition - amount);
         }
 
-        WsQueue.updateWsQueue(playerManager.getGuild().getIdLong());
+        WsUpdates.queue(playerManager.getGuild().getIdLong());
 
     }
 

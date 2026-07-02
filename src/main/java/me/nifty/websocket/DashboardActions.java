@@ -6,8 +6,7 @@ import me.nifty.managers.JDAManager;
 import me.nifty.utils.VoiceUtils;
 import me.nifty.utils.enums.Loop;
 import me.nifty.utils.enums.Shuffle;
-import me.nifty.websocket.payloads.WsPlayer;
-import me.nifty.websocket.payloads.WsQueue;
+import me.nifty.websocket.payloads.WsUpdates;
 import me.nifty.websocket.payloads.WsSessions;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -70,7 +69,7 @@ public class DashboardActions {
 
             case "togglePause" -> {
                 playerManager.getAudioPlayer().setPaused(!playerManager.getAudioPlayer().isPaused());
-                WsPlayer.updateWsPlayer(playerManager);
+                WsUpdates.player(playerManager);
             }
 
             case "back" -> {
@@ -118,7 +117,7 @@ public class DashboardActions {
                     default -> Loop.DISABLED;
                 };
                 playerManager.getPlayerHandler().setLoopMode(next);
-                WsPlayer.updateWsPlayer(playerManager);
+                WsUpdates.player(playerManager);
             }
 
             case "shuffle" -> {
@@ -127,16 +126,18 @@ public class DashboardActions {
                     playerManager.getPlayerHandler().setShuffleMode(Shuffle.ENABLED);
                     int position = playerManager.getPlayerHandler().getPosition();
                     playerManager.getQueueHandler().shuffleAfter(position + 1);
-                    WsQueue.updateWsQueue(guildId);
+                    WsUpdates.queue(guildId);
                 } else {
                     playerManager.getPlayerHandler().setShuffleMode(Shuffle.DISABLED);
                 }
-                WsPlayer.updateWsPlayer(playerManager);
+                WsUpdates.player(playerManager);
             }
 
             case "volume" -> {
-                playerManager.getAudioPlayer().setVolume(data.optInt("volume", 100));
-                WsPlayer.updateWsPlayer(playerManager);
+                int volume = data.optInt("volume", 100);
+                playerManager.getAudioPlayer().setVolume(volume);
+                playerManager.getPlayerHandler().setVolume(volume);
+                WsUpdates.player(playerManager);
             }
 
             case "seek" -> {
@@ -146,7 +147,7 @@ public class DashboardActions {
                     playingTrack.setPosition(position);
                     // Re-anchor the wall-clock playback position after the seek
                     playerManager.getPlayerHandler().anchorPosition(position);
-                    WsPlayer.updateWsPlayer(playerManager);
+                    WsUpdates.player(playerManager);
                 }
             }
 
@@ -183,7 +184,7 @@ public class DashboardActions {
     private static void unpause(PlayerManager playerManager) {
         if (playerManager.getAudioPlayer().isPaused()) {
             playerManager.getAudioPlayer().setPaused(false);
-            WsPlayer.updateWsPlayer(playerManager);
+            WsUpdates.player(playerManager);
         }
     }
 
@@ -237,8 +238,8 @@ public class DashboardActions {
 
         PlayerManager playerManager = connectToUser(guildId, userId);
         if (playerManager != null) {
-            WsPlayer.updateWsPlayer(playerManager);
-            WsQueue.updateWsQueue(guildId);
+            WsUpdates.player(playerManager);
+            WsUpdates.queue(guildId);
         }
         WsSessions.reply(userId);
 

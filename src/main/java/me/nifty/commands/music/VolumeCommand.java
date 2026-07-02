@@ -84,6 +84,7 @@ public class VolumeCommand extends BaseCommand {
         if (newVolume > 400f) { newVolume = 400f; }
 
         audioPlayer.setVolume(newVolume.intValue());
+        playerManager.getPlayerHandler().setVolume(newVolume.intValue());
 
         EmbedBuilder volumeEmbed = new EmbedBuilder()
                 .setDescription("Volume is now set to **" + newVolume + "%**")

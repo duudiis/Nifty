@@ -34,6 +34,8 @@ public class PlayerHandler {
     private Autoplay autoplay = Autoplay.DISABLED;
     private Shuffle shuffle = Shuffle.DISABLED;
 
+    private int volume = 100;
+
     private float speed = 1.0f;
     private float pitch = 1.0f;
     private float bassBoost = 0.0f;
@@ -102,6 +104,8 @@ public class PlayerHandler {
                 this.autoplay = Autoplay.valueOf(result.getString("autoplay").toUpperCase());
                 this.loop = Loop.valueOf(result.getString("loop_mode").toUpperCase());
                 this.shuffle = Shuffle.valueOf(result.getString("shuffle").toUpperCase());
+
+                this.volume = result.getInt("volume");
 
                 this.speed = result.getFloat("speed") == 0 ? 1.0f : result.getFloat("speed");
                 this.pitch = result.getFloat("pitch") == 0 ? 1.0f : result.getFloat("pitch");
@@ -317,6 +321,28 @@ public class PlayerHandler {
         this.shuffle = shuffleMode;
         update("shuffle = ?", statement -> {
             statement.setString(1, shuffleMode.name().toLowerCase());
+            return 2;
+        });
+    }
+
+    /**
+     * Gets the volume of the player.
+     *
+     * @return The volume of the player (0-200, default 100).
+     */
+    public int getVolume() {
+        return this.volume;
+    }
+
+    /**
+     * Sets the volume of the player.
+     *
+     * @param volume The new volume of the player.
+     */
+    public void setVolume(int volume) {
+        this.volume = volume;
+        update("volume = ?", statement -> {
+            statement.setInt(1, volume);
             return 2;
         });
     }

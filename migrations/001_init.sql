@@ -89,6 +89,7 @@ CREATE TABLE players (
   loop_mode        TEXT NOT NULL DEFAULT 'disabled' CHECK (loop_mode IN ('disabled', 'track', 'queue')),
   shuffle          TEXT NOT NULL DEFAULT 'disabled' CHECK (shuffle   IN ('disabled', 'enabled')),
   autoplay         TEXT NOT NULL DEFAULT 'disabled' CHECK (autoplay  IN ('disabled', 'enabled')),
+  volume           SMALLINT NOT NULL DEFAULT 100,
   speed            REAL NOT NULL DEFAULT 1.0,
   pitch            REAL NOT NULL DEFAULT 1.0,
   bass_boost       REAL NOT NULL DEFAULT 0.0,
