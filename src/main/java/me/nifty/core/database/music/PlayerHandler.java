@@ -188,12 +188,15 @@ public class PlayerHandler {
      *
      * @param playing Whether the player is currently audible.
      * @param positionMs The playback position (ms) at this event.
+     * @param trackLoaded Whether a track is loaded at all (false = stopped),
+     *                    so readers can tell "paused" apart from "idle".
      */
-    public void setPlaying(boolean playing, long positionMs) {
-        update("playing = ?, position_ms = ?, position_at = now()", statement -> {
+    public void setPlaying(boolean playing, long positionMs, boolean trackLoaded) {
+        update("playing = ?, position_ms = ?, position_at = now(), track_loaded = ?", statement -> {
             statement.setBoolean(1, playing);
             statement.setLong(2, positionMs);
-            return 3;
+            statement.setBoolean(3, trackLoaded);
+            return 4;
         });
     }
 

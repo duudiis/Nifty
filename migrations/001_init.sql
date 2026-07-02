@@ -86,6 +86,7 @@ CREATE TABLE players (
   voice_channel_id BIGINT,
   queue_position   INT     NOT NULL DEFAULT 0, -- index of the current track in the queue
   playing          BOOLEAN NOT NULL DEFAULT FALSE,
+  track_loaded     BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE = stopped/idle, distinguishes from paused
   loop_mode        TEXT NOT NULL DEFAULT 'disabled' CHECK (loop_mode IN ('disabled', 'track', 'queue')),
   shuffle          TEXT NOT NULL DEFAULT 'disabled' CHECK (shuffle   IN ('disabled', 'enabled')),
   autoplay         TEXT NOT NULL DEFAULT 'disabled' CHECK (autoplay  IN ('disabled', 'enabled')),

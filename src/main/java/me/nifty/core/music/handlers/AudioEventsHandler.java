@@ -50,7 +50,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
         long positionMs = playingTrack != null ? playingTrack.getPosition() : 0;
 
         // Sets the player to playing and re-anchors the wall-clock position
-        playerHandler.setPlaying(true, positionMs);
+        playerHandler.setPlaying(true, positionMs, playingTrack != null);
 
         // Everyone in the channel hears again
         if (playingTrack != null && PlaybackAnalytics.isBotAudible(playerManager.getGuild())) {
@@ -78,7 +78,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
         long positionMs = playingTrack != null ? playingTrack.getPosition() : 0;
 
         // Sets the player to not playing and anchors the paused position
-        playerHandler.setPlaying(false, positionMs);
+        playerHandler.setPlaying(false, positionMs, playingTrack != null);
 
         // Everyone's listening segment ends while paused
         playerManager.getPlaybackAnalytics().paused();
@@ -101,7 +101,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
 
         // Sets the player to playing and anchors the track's start position
-        playerHandler.setPlaying(!audioPlayer.isPaused(), track.getPosition());
+        playerHandler.setPlaying(!audioPlayer.isPaused(), track.getPosition(), true);
 
         // Opens the play + listening segments for everyone in the channel
         boolean audible = !audioPlayer.isPaused() && PlaybackAnalytics.isBotAudible(playerManager.getGuild());
@@ -139,7 +139,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
 
         // Sets the player to not playing on the database
-        playerHandler.setPlaying(false, 0);
+        playerHandler.setPlaying(false, 0, false);
 
         // Closes the play and everyone's listening segments
         playerManager.getPlaybackAnalytics().playEnded(endReason, track.getPosition());
