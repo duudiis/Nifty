@@ -4,12 +4,16 @@ import com.github.natanbc.lavadsp.rotation.RotationPcmAudioFilter;
 import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.equalizer.Equalizer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.music.PlayerManager;
+import me.nifty.websocket.payloads.WsUpdates;
 
 import java.util.List;
 
 public class AudioFiltersManager {
+
+    private final PlayerManager playerManager;
 
     private final AudioPlayer audioPlayer;
     private final PlayerHandler playerHandler;
@@ -33,6 +37,7 @@ public class AudioFiltersManager {
     };
 
     public AudioFiltersManager(PlayerManager playerManager) {
+        this.playerManager = playerManager;
         this.audioPlayer = playerManager.getAudioPlayer();
         this.playerHandler = playerManager.getPlayerHandler();
     }
@@ -86,6 +91,15 @@ public class AudioFiltersManager {
     public void setSpeed(float speed) {
         playerHandler.setSpeed(speed);
         updateFilterFactory();
+
+        // Playback advances at the new rate from here on: re-anchor the
+        // wall-clock position so database readers derive progress correctly,
+        // and tell the dashboard the player changed.
+        AudioTrack playingTrack = audioPlayer.getPlayingTrack();
+        if (playingTrack != null) {
+            playerHandler.anchorPosition(playingTrack.getPosition());
+        }
+        WsUpdates.player(playerManager);
     }
 
     public float getPitch() {

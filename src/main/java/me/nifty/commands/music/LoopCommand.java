@@ -1,5 +1,6 @@
 package me.nifty.commands.music;
 
+import me.nifty.websocket.payloads.WsUpdates;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
@@ -90,6 +91,7 @@ public class LoopCommand extends BaseCommand {
         embedBuilder.setColor(guild.getSelfMember().getColor());
 
         playerManager.getPlayerHandler().setLoopMode(newLoop);
+        WsUpdates.player(playerManager);
 
         return new Pair<>(true, embedBuilder.build());
 

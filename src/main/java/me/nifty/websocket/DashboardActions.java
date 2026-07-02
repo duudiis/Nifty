@@ -83,29 +83,45 @@ public class DashboardActions {
             }
 
             case "jump" -> {
-                playerManager.getTrackScheduler().jump(data.optInt("trackId", 0));
-                unpause(playerManager);
+                int position = resolvePosition(playerManager, data);
+                if (position >= 0) {
+                    playerManager.getTrackScheduler().jump(position);
+                    unpause(playerManager);
+                }
             }
 
             // Queued "Play now": move the entry right after the current track and
             // jump to it (keeps the rest of the queue in order), then unpause.
             case "playNow" -> {
-                playerManager.getTrackScheduler().playNow(data.optInt("trackId", -1));
-                unpause(playerManager);
+                int position = resolvePosition(playerManager, data);
+                if (position >= 0) {
+                    playerManager.getTrackScheduler().playNow(position);
+                    unpause(playerManager);
+                }
             }
 
             // Queued "Play next": move the entry right after the current track.
-            case "playNext" -> playerManager.getTrackScheduler().moveAfterCurrent(data.optInt("trackId", -1));
+            case "playNext" -> {
+                int position = resolvePosition(playerManager, data);
+                if (position >= 0) {
+                    playerManager.getTrackScheduler().moveAfterCurrent(position);
+                }
+            }
 
             // Queued "Move to last": move the entry to the end of the queue.
-            case "moveToLast" -> playerManager.getTrackScheduler().moveToLast(data.optInt("trackId", -1));
+            case "moveToLast" -> {
+                int position = resolvePosition(playerManager, data);
+                if (position >= 0) {
+                    playerManager.getTrackScheduler().moveToLast(position);
+                }
+            }
 
             // Drag-reorder: move a queue entry to an explicit index.
             case "move" -> {
-                int trackId = data.optInt("trackId", -1);
+                int position = resolvePosition(playerManager, data);
                 int toIndex = data.optInt("toIndex", -1);
-                if (trackId >= 0 && toIndex >= 0) {
-                    playerManager.getTrackScheduler().move(trackId, toIndex);
+                if (position >= 0 && toIndex >= 0) {
+                    playerManager.getTrackScheduler().move(position, toIndex);
                 }
             }
 
@@ -151,13 +167,36 @@ public class DashboardActions {
                 }
             }
 
-            case "remove" -> playerManager.getTrackScheduler().remove(data.optInt("trackId", 0));
+            case "remove" -> {
+                int position = resolvePosition(playerManager, data);
+                if (position >= 0) {
+                    playerManager.getTrackScheduler().remove(position);
+                }
+            }
 
             case "clear" -> playerManager.getTrackScheduler().clear();
 
             default -> { /* unknown action — ignore */ }
 
         }
+
+    }
+
+    /**
+     * Resolves the queue entry an action addresses. Preferred: the stable
+     * entryId (the queue_tracks row id), immune to concurrent queue shifts —
+     * a stale one resolves to -1 and the action safely no-ops instead of
+     * hitting whatever track slid into the old position. Falls back to the
+     * raw trackId (position) for older clients.
+     */
+    private static int resolvePosition(PlayerManager playerManager, JSONObject data) {
+
+        long entryId = data.optLong("entryId", -1);
+        if (entryId != -1) {
+            return playerManager.getQueueHandler().getEntryPosition(entryId);
+        }
+
+        return data.optInt("trackId", -1);
 
     }
 

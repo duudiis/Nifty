@@ -232,6 +232,36 @@ public class QueueHandler {
     }
 
     /**
+     * Resolves a queue entry's current position from its stable row id.
+     * The dashboard addresses entries by id, so a stale position can never
+     * hit the wrong track after concurrent queue changes.
+     *
+     * @param entryId The queue_tracks row id.
+     * @return The entry's current position, or -1 if it no longer exists.
+     */
+    public int getEntryPosition(long entryId) {
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT position FROM queue_tracks WHERE id = ? AND bot_id = ? AND guild_id = ?")) {
+
+            statement.setLong(1, entryId);
+            statement.setLong(2, BotIdentity.get());
+            statement.setLong(3, this.guildId);
+
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) {
+                return result.getInt("position");
+            }
+
+        } catch (Exception ignored) { }
+
+        return -1;
+
+    }
+
+    /**
      * Gets the size of the queue.
      *
      * @return The size of the queue.
