@@ -189,19 +189,40 @@ CREATE TABLE playlists (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- External platform playlists saved to the library as-is: just a pointer,
--- no items stored — the track list is resolved live at queue time, so it is
--- always in sync with the platform by construction.
-CREATE TABLE saved_playlists (
+-- External platform collections (playlists, albums, artists) saved to the
+-- library as-is: just a pointer, no items stored — contents are resolved live
+-- at queue time, so they are always in sync with the platform by construction.
+CREATE TABLE saved_collections (
   id          UUID   PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind        TEXT   NOT NULL CHECK (kind IN ('playlist', 'album', 'artist')),
   source      TEXT   NOT NULL CHECK (source IN ('spotify', 'deezer', 'youtube', 'apple_music')),
   source_url  TEXT   NOT NULL,
+  browse_ref  TEXT,                           -- dashboard entity reference (source:kind:id)
   name        TEXT,                           -- display cache only, not source of truth
+  subtitle    TEXT,                           -- display cache only
   artwork_url TEXT,                           -- display cache only
   saved_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (user_id, source_url)
 );
+
+-- Collection-level enqueues (an album/playlist/artist queued whole), feeding
+-- the dashboard's "recently queued" suggestions. Individual tracks are
+-- already covered by queue_history.
+CREATE TABLE queued_collections (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind        TEXT   NOT NULL CHECK (kind IN ('playlist', 'album', 'artist')),
+  source      TEXT   NOT NULL,
+  source_url  TEXT   NOT NULL,
+  browse_ref  TEXT,                           -- dashboard entity reference (source:kind:id)
+  name        TEXT,
+  subtitle    TEXT,
+  artwork_url TEXT,
+  queued_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX queued_collections_user_idx ON queued_collections (user_id, queued_at DESC);
 
 CREATE TABLE playlist_tracks (
   id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
