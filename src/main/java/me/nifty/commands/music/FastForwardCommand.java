@@ -86,6 +86,7 @@ public class FastForwardCommand extends BaseCommand {
 
         long newPosition = playerManager.getAudioPlayer().getPlayingTrack().getPosition() + fastForwardTime;
         playerManager.getAudioPlayer().getPlayingTrack().setPosition(newPosition);
+        playerManager.getPlayerHandler().anchorPosition(newPosition);
 
         EmbedBuilder fastForwardedEmbed = new EmbedBuilder()
                 .setDescription("Fast forwarded " + TrackTime.formatNatural(fastForwardTime))

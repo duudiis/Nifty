@@ -1,106 +1,71 @@
 package me.nifty.managers;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import me.nifty.Config;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.SQLException;
 
+/**
+ * Connection pool for the shared PostgreSQL server.
+ *
+ * <p>The schema is owned by the SQL migrations in {@code migrations/} and is
+ * never created from code. Callers must close every connection they take —
+ * always use try-with-resources; connections return to the pool on close.</p>
+ */
 public class DatabaseManager {
 
-    private static Connection connection;
-
-    private static final String url = Config.getSQLiteUrl();
+    private static HikariDataSource dataSource;
 
     /**
-     * Connects to the SQLite Server
+     * Opens the connection pool against the configured PostgreSQL server.
      */
     public static void connect() {
 
-        // Checks if the credentials are missing
-        if (url == null) {
-            throw new RuntimeException("[Nifty] SQLite URL missing on the environment variables!");
+        String url = Config.getDatabaseUrl();
+
+        if (url == null || url.isBlank()) {
+            throw new RuntimeException("[Nifty] DATABASE_URL missing on the environment variables!");
         }
 
-        // Attempts to connect to the SQLite Server
-        System.out.println("[Nifty] Attempting to connect to SQLite...");
+        System.out.println("[Nifty] Attempting to connect to PostgreSQL...");
+
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(url);
+        config.setUsername(Config.getDatabaseUser());
+        config.setPassword(Config.getDatabasePassword());
+        config.setPoolName("nifty-db");
+        config.setMaximumPoolSize(6);
+        config.setMinimumIdle(1);
+        config.setConnectionTimeout(10_000);
+        config.setKeepaliveTime(300_000);
+        config.setMaxLifetime(1_800_000);
 
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection(url);
-            System.out.println("[Nifty] Successfully connected to SQLite!");
-            createTables(connection);
+            dataSource = new HikariDataSource(config);
+
+            // Fail fast on boot if the server is unreachable or credentials are wrong.
+            try (Connection connection = dataSource.getConnection()) {
+                connection.isValid(5);
+            }
+
+            System.out.println("[Nifty] Successfully connected to PostgreSQL!");
         } catch (Exception e) {
-            throw new RuntimeException("[Nifty] Failed to connect to SQLite with Error:\n", e);
+            throw new RuntimeException("[Nifty] Failed to connect to PostgreSQL with Error:\n", e);
         }
 
     }
 
     /**
-     * Gets the connection
-     * @return The connection
+     * Borrows a connection from the pool. The caller must close it
+     * (try-with-resources) to return it to the pool.
+     *
+     * @return A pooled connection
+     * @throws SQLException If no connection is available
      */
-    public static Connection getConnection() {
-        return connection;
-    }
-
-    /**
-     * Creates the tables, if it is a new database
-     * @param connection The connection
-     */
-    private static void createTables(Connection connection) {
-
-        try {
-
-            String guilds = "CREATE TABLE IF NOT EXISTS Guilds (" +
-                    "guild_id VARCHAR(32) NOT NULL UNIQUE," +
-                    "prefix VARCHAR(16)," +
-                    "inactivity_disconnect BOOLEAN," +
-                    "announcements VARCHAR(32)," +
-                    "PRIMARY KEY (guild_id)" +
-                    ");";
-
-            String perms = "CREATE TABLE IF NOT EXISTS Perms (" +
-                    "guild_id VARCHAR(32) NOT NULL UNIQUE," +
-                    "entity_id VARCHAR(32) NOT NULL," +
-                    "entity_type INT NOT NULL," +
-                    "permission INT NOT NULL," +
-                    "PRIMARY KEY (guild_id)" +
-                    ");";
-
-            String players = "CREATE TABLE IF NOT EXISTS Players (" +
-                    "guild_id VARCHAR(32) NOT NULL UNIQUE," +
-                    "channel_id VARCHAR(32)," +
-                    "voice_id VARCHAR(32)," +
-                    "position INT NOT NULL," +
-                    "playing BOOLEAN NOT NULL," +
-                    "looping VARCHAR(32)," +
-                    "shuffle VARCHAR(32)," +
-                    "autoplay VARCHAR(32)," +
-                    "speed FLOAT," +
-                    "pitch FLOAT," +
-                    "bass_boost FLOAT," +
-                    "rotation BOOLEAN," +
-                    "PRIMARY KEY (guild_id)" +
-                    ");";
-
-            String queues = "CREATE TABLE IF NOT EXISTS Queues (" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "guild_id VARCHAR(32) NOT NULL," +
-                    "track_id INT NOT NULL," +
-                    "track_name VARCHAR(256) NOT NULL," +
-                    "member_id VARCHAR(32) NOT NULL," +
-                    "encoded_track VARCHAR(1024) NOT NULL" +
-                    ");";
-
-            connection.createStatement().execute(guilds);
-            connection.createStatement().execute(perms);
-            connection.createStatement().execute(players);
-            connection.createStatement().execute(queues);
-
-        } catch (Exception e) {
-            throw new RuntimeException("[Nifty] Failed to create tables with Error:\n", e);
-        }
-
+    public static Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
     }
 
 }

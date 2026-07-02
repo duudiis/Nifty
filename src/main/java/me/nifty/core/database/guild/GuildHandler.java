@@ -1,5 +1,7 @@
 package me.nifty.core.database.guild;
 
+import me.nifty.core.database.BotIdentity;
+import me.nifty.core.database.GuildStore;
 import me.nifty.managers.DatabaseManager;
 
 import java.sql.Connection;
@@ -8,6 +10,11 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Per-guild settings for this bot instance, stored in {@code guild_settings}
+ * keyed by (bot_id, guild_id). A NULL column means "not configured" and the
+ * code default applies.
+ */
 public class GuildHandler {
 
     private static final Map<Long, Boolean> announcements = new HashMap<>();
@@ -25,17 +32,17 @@ public class GuildHandler {
             return announcements.get(guildId);
         }
 
-        Connection connection = DatabaseManager.getConnection();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT announcements FROM guild_settings WHERE bot_id = ? AND guild_id = ? AND announcements IS NOT NULL")) {
 
-        try {
-
-            PreparedStatement statement = connection.prepareStatement("SELECT announcements FROM Guilds WHERE guild_id = ? AND announcements IS NOT NULL");
-            statement.setLong(1, guildId);
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, guildId);
 
             ResultSet result = statement.executeQuery();
 
             if (result.next()) {
-                Boolean announcementsMode = result.getBoolean("announcements");
+                boolean announcementsMode = result.getBoolean("announcements");
 
                 announcements.put(guildId, announcementsMode);
                 return announcementsMode;
@@ -58,16 +65,18 @@ public class GuildHandler {
      */
     public static void setAnnouncementsMode(long guildId, boolean enabled) {
 
-        Connection connection = DatabaseManager.getConnection();
+        GuildStore.ensure(guildId);
 
-        try {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "INSERT INTO guild_settings (bot_id, guild_id, announcements) VALUES (?, ?, ?) " +
+                     "ON CONFLICT (bot_id, guild_id) DO UPDATE SET announcements = EXCLUDED.announcements")) {
 
-            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, announcements) VALUES (?, ?) ON CONFLICT DO UPDATE SET announcements = ?");
-            updateStatement.setLong(1, guildId);
-            updateStatement.setBoolean(2, enabled);
-            updateStatement.setBoolean(3, enabled);
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, guildId);
+            statement.setBoolean(3, enabled);
 
-            int updateResult = updateStatement.executeUpdate();
+            int updateResult = statement.executeUpdate();
 
             if (updateResult > 0) {
                 announcements.put(guildId, enabled);
@@ -89,17 +98,17 @@ public class GuildHandler {
             return inactivityDisconnects.get(guildId);
         }
 
-        Connection connection = DatabaseManager.getConnection();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT inactivity_disconnect FROM guild_settings WHERE bot_id = ? AND guild_id = ? AND inactivity_disconnect IS NOT NULL")) {
 
-        try {
-
-            PreparedStatement statement = connection.prepareStatement("SELECT inactivity_disconnect FROM Guilds WHERE guild_id = ? AND inactivity_disconnect IS NOT NULL");
-            statement.setLong(1, guildId);
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, guildId);
 
             ResultSet result = statement.executeQuery();
 
             if (result.next()) {
-                Boolean inactivityDisconnect = result.getBoolean("inactivity_disconnect");
+                boolean inactivityDisconnect = result.getBoolean("inactivity_disconnect");
 
                 inactivityDisconnects.put(guildId, inactivityDisconnect);
                 return inactivityDisconnect;
@@ -122,16 +131,18 @@ public class GuildHandler {
      */
     public static void setInactivityDisconnect(long guildId, boolean enabled) {
 
-        Connection connection = DatabaseManager.getConnection();
+        GuildStore.ensure(guildId);
 
-        try {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "INSERT INTO guild_settings (bot_id, guild_id, inactivity_disconnect) VALUES (?, ?, ?) " +
+                     "ON CONFLICT (bot_id, guild_id) DO UPDATE SET inactivity_disconnect = EXCLUDED.inactivity_disconnect")) {
 
-            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, inactivity_disconnect) VALUES (?, ?) ON CONFLICT DO UPDATE SET inactivity_disconnect = ?");
-            updateStatement.setLong(1, guildId);
-            updateStatement.setBoolean(2, enabled);
-            updateStatement.setBoolean(3, enabled);
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, guildId);
+            statement.setBoolean(3, enabled);
 
-            int updateResult = updateStatement.executeUpdate();
+            int updateResult = statement.executeUpdate();
 
             if (updateResult > 0) {
                 inactivityDisconnects.put(guildId, enabled);

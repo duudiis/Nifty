@@ -1,7 +1,7 @@
 package me.nifty.managers;
 
 import me.nifty.Config;
-import me.nifty.websocket.WebSocketClientEndpoint;
+import me.nifty.websocket.DashboardSocket;
 
 import java.net.URI;
 
@@ -25,7 +25,7 @@ public class WebSocketManager {
         }
 
         try {
-            new WebSocketClientEndpoint(new URI(url));
+            DashboardSocket.connect(new URI(url));
         } catch (Exception e) {
             // Never let dashboard wiring stop the bot from starting.
             System.out.println("[Nifty] Dashboard WebSocket failed to initialise: " + e.getMessage());

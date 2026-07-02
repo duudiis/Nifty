@@ -1,13 +1,27 @@
 package me.nifty.core.database.music;
 
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import me.nifty.core.database.BotIdentity;
+import me.nifty.core.database.GuildStore;
 import me.nifty.managers.DatabaseManager;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
 import me.nifty.utils.enums.Shuffle;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Types;
 
+/**
+ * The live player row for this (bot, guild) pair in the shared {@code players}
+ * table. Settings are cached in memory and written through on change.
+ *
+ * <p>Playback progress is a wall-clock anchor: {@code position_ms} plus
+ * {@code position_at} are written only on events (play/pause/seek/track
+ * change), never on a timer. Readers derive the current position as
+ * {@code position_ms + (playing ? now() - position_at : 0)}.</p>
+ */
 public class PlayerHandler {
 
     private final long guildId;
@@ -42,27 +56,24 @@ public class PlayerHandler {
      */
     private boolean create() {
 
-        Connection connection = DatabaseManager.getConnection();
+        GuildStore.ensure(this.guildId);
 
-        try {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "INSERT INTO players (bot_id, guild_id, queue_position, playing) VALUES (?, ?, 0, FALSE) " +
+                     "ON CONFLICT (bot_id, guild_id) DO NOTHING")) {
 
-            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM Players WHERE guild_id = ?");
-            selectStatement.setLong(1, guildId);
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, this.guildId);
 
-            ResultSet selectResult = selectStatement.executeQuery();
+            int insertResult = statement.executeUpdate();
 
-            if (selectResult.next()) {
+            // An existing row survives restarts — load its state back.
+            if (insertResult == 0) {
                 reload();
-                return true;
             }
 
-            PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO Players (guild_id, position, playing) VALUES (?, ?, ?)");
-            insertStatement.setLong(1, this.guildId);
-            insertStatement.setInt(2, 0);
-            insertStatement.setBoolean(3, false);
-
-            int insertResult = insertStatement.executeUpdate();
-            return insertResult == 1;
+            return true;
 
         } catch (Exception ignored) { }
 
@@ -75,26 +86,26 @@ public class PlayerHandler {
      */
     public void reload() {
 
-        Connection connection = DatabaseManager.getConnection();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT * FROM players WHERE bot_id = ? AND guild_id = ?")) {
 
-        try {
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, this.guildId);
 
-            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM Players WHERE guild_id = ?");
-            selectStatement.setLong(1, this.guildId);
-
-            ResultSet result = selectStatement.executeQuery();
+            ResultSet result = statement.executeQuery();
 
             if (result.next()) {
-                this.textChannelId = result.getLong("channel_id");
-                this.position = result.getInt("position");
+                this.textChannelId = result.getLong("text_channel_id");
+                this.position = result.getInt("queue_position");
 
-                this.autoplay = result.getString("autoplay") == null ? Autoplay.DISABLED : Autoplay.valueOf(result.getString("autoplay"));
-                this.loop = result.getString("looping") == null ? Loop.DISABLED : Loop.valueOf(result.getString("looping"));
-                this.shuffle = result.getString("shuffle") == null ? Shuffle.DISABLED : Shuffle.valueOf(result.getString("shuffle"));
+                this.autoplay = Autoplay.valueOf(result.getString("autoplay").toUpperCase());
+                this.loop = Loop.valueOf(result.getString("loop_mode").toUpperCase());
+                this.shuffle = Shuffle.valueOf(result.getString("shuffle").toUpperCase());
 
                 this.speed = result.getFloat("speed") == 0 ? 1.0f : result.getFloat("speed");
                 this.pitch = result.getFloat("pitch") == 0 ? 1.0f : result.getFloat("pitch");
-                this.bassBoost = result.getFloat("bass_boost") == 0 ? 0.0f : result.getFloat("bass_boost");
+                this.bassBoost = result.getFloat("bass_boost");
                 this.rotation = result.getBoolean("rotation");
             }
 
@@ -107,17 +118,42 @@ public class PlayerHandler {
      */
     public void delete() {
 
-        Connection connection = DatabaseManager.getConnection();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "DELETE FROM players WHERE bot_id = ? AND guild_id = ?")) {
 
-        try {
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, this.guildId);
 
-            PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM Players WHERE guild_id = ?");
-            deleteStatement.setLong(1, this.guildId);
-
-            deleteStatement.executeUpdate();
+            statement.executeUpdate();
 
         } catch (Exception ignored) { }
 
+    }
+
+    /**
+     * Runs a single-column UPDATE against this player's row.
+     */
+    private void update(String assignment, StatementBinder binder) {
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE players SET " + assignment + " WHERE bot_id = ? AND guild_id = ?")) {
+
+            int next = binder.bind(statement);
+            statement.setLong(next, BotIdentity.get());
+            statement.setLong(next + 1, this.guildId);
+
+            statement.executeUpdate();
+
+        } catch (Exception ignored) { }
+
+    }
+
+    @FunctionalInterface
+    private interface StatementBinder {
+        /** Binds the assignment parameters and returns the next free index. */
+        int bind(PreparedStatement statement) throws Exception;
     }
 
     /**
@@ -130,47 +166,59 @@ public class PlayerHandler {
     }
 
     /**
-     * Sets the current position of the player.
+     * Sets the current position (queue index) of the player.
      *
      * @param position The new position of the player.
      */
     public void setPosition(int position) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.position = position;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET position = ? WHERE guild_id = ?");
-            updateStatement.setInt(1, position);
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("queue_position = ?", statement -> {
+            statement.setInt(1, position);
+            return 2;
+        });
     }
 
     /**
-     * Sets if the player is currently playing a track or not.
+     * Sets whether the player is playing and anchors the wall-clock playback
+     * position at the same time (event-driven, never periodic).
      *
-     * @param playing Whether the player is currently playing or not.
+     * @param playing Whether the player is currently audible.
+     * @param positionMs The playback position (ms) at this event.
      */
-    public void setPlaying(boolean playing) {
+    public void setPlaying(boolean playing, long positionMs) {
+        update("playing = ?, position_ms = ?, position_at = now()", statement -> {
+            statement.setBoolean(1, playing);
+            statement.setLong(2, positionMs);
+            return 3;
+        });
+    }
 
-        Connection connection = DatabaseManager.getConnection();
+    /**
+     * Re-anchors the wall-clock playback position after a seek.
+     *
+     * @param positionMs The playback position (ms) just seeked to.
+     */
+    public void anchorPosition(long positionMs) {
+        update("position_ms = ?, position_at = now()", statement -> {
+            statement.setLong(1, positionMs);
+            return 2;
+        });
+    }
 
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET playing = ? WHERE guild_id = ?");
-            updateStatement.setBoolean(1, playing);
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+    /**
+     * Points the player row at its active queue session (NULL when idle).
+     *
+     * @param sessionId The active session id, or null to clear it.
+     */
+    public void setSessionId(Long sessionId) {
+        update("session_id = ?", statement -> {
+            if (sessionId == null) {
+                statement.setNull(1, Types.BIGINT);
+            } else {
+                statement.setLong(1, sessionId);
+            }
+            return 2;
+        });
     }
 
     /**
@@ -188,21 +236,11 @@ public class PlayerHandler {
      * @param textChannelId The new text channel id of the player.
      */
     public void setTextChannelId(long textChannelId) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.textChannelId = textChannelId;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET channel_id = ? WHERE guild_id = ?");
-            updateStatement.setLong(1, textChannelId);
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("text_channel_id = ?", statement -> {
+            statement.setLong(1, textChannelId);
+            return 2;
+        });
     }
 
     /**
@@ -211,19 +249,10 @@ public class PlayerHandler {
      * @param voiceChannelId The new voice channel id of the player.
      */
     public void setVoiceChannelId(long voiceChannelId) {
-
-        Connection connection = DatabaseManager.getConnection();
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET voice_id = ? WHERE guild_id = ?");
-            updateStatement.setLong(1, voiceChannelId);
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("voice_channel_id = ?", statement -> {
+            statement.setLong(1, voiceChannelId);
+            return 2;
+        });
     }
 
     /**
@@ -241,21 +270,11 @@ public class PlayerHandler {
      * @param autoplayMode The new autoplay mode of the player.
      */
     public void setAutoplayMode(Autoplay autoplayMode) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.autoplay = autoplayMode;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET autoplay = ? WHERE guild_id = ?");
-            updateStatement.setString(1, autoplayMode.name());
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("autoplay = ?", statement -> {
+            statement.setString(1, autoplayMode.name().toLowerCase());
+            return 2;
+        });
     }
 
     /**
@@ -273,21 +292,11 @@ public class PlayerHandler {
      * @param loopMode The loop mode to set.
      */
     public void setLoopMode(Loop loopMode) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.loop = loopMode;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET looping = ? WHERE guild_id = ?");
-            updateStatement.setString(1, loopMode.name());
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("loop_mode = ?", statement -> {
+            statement.setString(1, loopMode.name().toLowerCase());
+            return 2;
+        });
     }
 
     /**
@@ -305,21 +314,11 @@ public class PlayerHandler {
      * @param shuffleMode The shuffle mode to set.
      */
     public void setShuffleMode(Shuffle shuffleMode) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.shuffle = shuffleMode;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET shuffle = ? WHERE guild_id = ?");
-            updateStatement.setString(1, shuffleMode.name());
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("shuffle = ?", statement -> {
+            statement.setString(1, shuffleMode.name().toLowerCase());
+            return 2;
+        });
     }
 
     /**
@@ -337,21 +336,11 @@ public class PlayerHandler {
      * @param speed The new speed of the player.
      */
     public void setSpeed(float speed) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.speed = speed;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET speed = ? WHERE guild_id = ?");
-            updateStatement.setFloat(1, speed);
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("speed = ?", statement -> {
+            statement.setFloat(1, speed);
+            return 2;
+        });
     }
 
     /**
@@ -369,21 +358,11 @@ public class PlayerHandler {
      * @param pitch The new pitch of the player.
      */
     public void setPitch(float pitch) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.pitch = pitch;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET pitch = ? WHERE guild_id = ?");
-            updateStatement.setFloat(1, pitch);
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) {}
-
+        update("pitch = ?", statement -> {
+            statement.setFloat(1, pitch);
+            return 2;
+        });
     }
 
     /**
@@ -401,21 +380,11 @@ public class PlayerHandler {
      * @param bassBoost The new bass boost of the player.
      */
     public void setBassBoost(float bassBoost) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.bassBoost = bassBoost;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET bass_boost = ? WHERE guild_id = ?");
-            updateStatement.setFloat(1, bassBoost);
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("bass_boost = ?", statement -> {
+            statement.setFloat(1, bassBoost);
+            return 2;
+        });
     }
 
     /**
@@ -433,21 +402,11 @@ public class PlayerHandler {
      * @param rotation The new rotation of the player.
      */
     public void setRotation(boolean rotation) {
-
-        Connection connection = DatabaseManager.getConnection();
-
         this.rotation = rotation;
-
-        try {
-
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE Players SET rotation = ? WHERE guild_id = ?");
-            updateStatement.setBoolean(1, rotation);
-            updateStatement.setLong(2, guildId);
-
-            updateStatement.executeUpdate();
-
-        } catch (SQLException ignored) { }
-
+        update("rotation = ?", statement -> {
+            statement.setBoolean(1, rotation);
+            return 2;
+        });
     }
 
 }

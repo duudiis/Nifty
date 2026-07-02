@@ -1,10 +1,13 @@
-package me.nifty.utils.formatting;
+package me.nifty.websocket.payloads;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.Config;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.managers.JDAManager;
-import me.nifty.websocket.WebSocketClientEndpoint;
+import me.nifty.core.database.BotIdentity;
+import me.nifty.utils.formatting.Artwork;
+import me.nifty.utils.formatting.TrackTitle;
+import me.nifty.websocket.DashboardSocket;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -25,7 +28,7 @@ public class WsSessions {
 
     public static void reply(long userId) {
 
-        if (!WebSocketClientEndpoint.isConnected() || userId == 0) { return; }
+        if (!DashboardSocket.isConnected() || userId == 0) { return; }
 
         try {
 
@@ -45,6 +48,7 @@ public class WsSessions {
                 AudioChannel userChannel = voiceState.getChannel();
 
                 JSONObject session = new JSONObject();
+                session.put("botId", String.valueOf(BotIdentity.get()));
                 session.put("botName", Config.getDashboardBotName());
                 session.put("guildId", guild.getId());
                 session.put("guildName", guild.getName());
@@ -84,9 +88,10 @@ public class WsSessions {
 
             JSONObject base = new JSONObject();
             base.put("operation", "sessions");
+            base.put("botId", String.valueOf(BotIdentity.get()));
             base.put("data", data);
 
-            WebSocketClientEndpoint.send(base.toString());
+            DashboardSocket.send(base.toString());
 
         } catch (Exception ignored) {
             // Session discovery must never break the bot.

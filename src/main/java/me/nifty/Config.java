@@ -23,11 +23,27 @@ public class Config {
     }
 
     /**
-     * Gets the SQLite url
-     * @return The SQLite url
+     * Gets the PostgreSQL JDBC url (e.g. jdbc:postgresql://host:5432/nifty?sslmode=require)
+     * @return The database url
      */
-    public static String getSQLiteUrl() {
-        return config.get("SQLITE_URL");
+    public static String getDatabaseUrl() {
+        return config.get("DATABASE_URL");
+    }
+
+    /**
+     * Gets the database user
+     * @return The database user
+     */
+    public static String getDatabaseUser() {
+        return config.get("DATABASE_USER");
+    }
+
+    /**
+     * Gets the database password
+     * @return The database password
+     */
+    public static String getDatabasePassword() {
+        return config.get("DATABASE_PASSWORD");
     }
 
     /**

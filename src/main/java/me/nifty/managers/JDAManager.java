@@ -58,11 +58,9 @@ public class JDAManager {
         // Loads the auto completes
         AutoCompleteManager.load();
 
-        // Builds the JDA instance
+        // Builds the JDA instance. The dashboard add-on connects on ready
+        // (see Ready) so it can identify with the bot's id.
         jda = jdaBuilder.build();
-
-        // Connects the optional dashboard add-on (no-op if DASHBOARD_WS_URL is unset)
-        WebSocketManager.connect();
 
     }
 

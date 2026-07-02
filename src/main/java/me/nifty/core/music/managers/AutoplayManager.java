@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.nifty.core.database.BotIdentity;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.managers.AudioManager;
 import me.nifty.utils.formatting.ErrorEmbed;
@@ -41,6 +42,9 @@ public class AutoplayManager {
         }
 
         playerManager.getQueueHandler().addTrack(autoplayTrack, queueSize);
+
+        // Record the autoplay enqueue (attributed to the bot itself)
+        playerManager.getPlaybackAnalytics().trackQueued(BotIdentity.get(), autoplayTrack, "autoplay");
 
         playerManager.getAudioPlayer().playTrack(autoplayTrack);
         playerManager.getPlayerHandler().setPosition(queueSize);

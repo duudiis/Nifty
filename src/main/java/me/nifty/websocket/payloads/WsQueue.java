@@ -1,8 +1,11 @@
-package me.nifty.utils.formatting;
+package me.nifty.websocket.payloads;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.core.music.PlayerManager;
-import me.nifty.websocket.WebSocketClientEndpoint;
+import me.nifty.core.database.BotIdentity;
+import me.nifty.utils.formatting.Artwork;
+import me.nifty.utils.formatting.TrackTitle;
+import me.nifty.websocket.DashboardSocket;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import org.json.JSONArray;
@@ -22,7 +25,7 @@ public class WsQueue {
 
     public static void updateWsQueue(long guildId) {
 
-        if (!WebSocketClientEndpoint.isConnected()) { return; }
+        if (!DashboardSocket.isConnected()) { return; }
 
         try {
 
@@ -87,10 +90,11 @@ public class WsQueue {
 
             JSONObject base = new JSONObject();
             base.put("operation", "refresh_queue");
+            base.put("botId", String.valueOf(BotIdentity.get()));
             base.put("guildId", String.valueOf(guildId));
             base.put("data", data);
 
-            WebSocketClientEndpoint.send(base.toString());
+            DashboardSocket.send(base.toString());
 
         } catch (Exception ignored) {
             // Queue serialisation must never break playback.

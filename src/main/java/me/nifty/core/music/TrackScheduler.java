@@ -8,7 +8,7 @@ import me.nifty.core.music.handlers.AudioResultHandler;
 import me.nifty.managers.AudioManager;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
-import me.nifty.utils.formatting.WsQueue;
+import me.nifty.websocket.payloads.WsQueue;
 import net.dv8tion.jda.api.entities.Member;
 
 import java.util.List;
@@ -51,6 +51,7 @@ public class TrackScheduler {
      */
     public void skip() {
 
+        playerManager.getPlaybackAnalytics().markSkipped();
         audioPlayer.stopTrack();
 
         int queueSize = queueHandler.getQueueSize();
@@ -79,6 +80,7 @@ public class TrackScheduler {
      */
     public void back() {
 
+        playerManager.getPlaybackAnalytics().markSkipped();
         audioPlayer.stopTrack();
 
         int position = playerHandler.getPosition();
@@ -108,6 +110,7 @@ public class TrackScheduler {
         int queueSize = queueHandler.getQueueSize();
 
         if (position >= 0 && position < queueSize) {
+            playerManager.getPlaybackAnalytics().markSkipped();
             // Set the cursor before playing: playTrack fires onTrackStart, which
             // pushes the queue to the dashboard — if we set the position after,
             // that push reports the stale cursor and the dashboard desyncs.

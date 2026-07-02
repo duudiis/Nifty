@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import me.nifty.core.analytics.PlaybackAnalytics;
 import me.nifty.core.database.guild.GuildHandler;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.database.music.QueueHandler;
@@ -16,8 +17,8 @@ import me.nifty.utils.enums.Loop;
 import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.NowPlayingEmbed;
 import me.nifty.utils.formatting.TrackTitle;
-import me.nifty.utils.formatting.WsPlayer;
-import me.nifty.utils.formatting.WsQueue;
+import me.nifty.websocket.payloads.WsPlayer;
+import me.nifty.websocket.payloads.WsQueue;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -46,8 +47,16 @@ public class AudioEventsHandler extends AudioEventAdapter {
     @Override
     public void onPlayerResume(AudioPlayer player) {
 
-        // Sets the player to playing on the database
-        playerHandler.setPlaying(true);
+        AudioTrack playingTrack = audioPlayer.getPlayingTrack();
+        long positionMs = playingTrack != null ? playingTrack.getPosition() : 0;
+
+        // Sets the player to playing and re-anchors the wall-clock position
+        playerHandler.setPlaying(true, positionMs);
+
+        // Everyone in the channel hears again
+        if (playingTrack != null && PlaybackAnalytics.isBotAudible(playerManager.getGuild())) {
+            playerManager.getPlaybackAnalytics().resumed(PlaybackAnalytics.snapshotListeners(playerManager.getGuild()));
+        }
 
         // Cancels the inactivity timer
         InactivityUtils.stopTimer(InactivityType.PAUSED, playerManager.getGuild());
@@ -66,8 +75,14 @@ public class AudioEventsHandler extends AudioEventAdapter {
     @Override
     public void onPlayerPause(AudioPlayer player) {
 
-        // Sets the player to not playing on the database
-        playerHandler.setPlaying(false);
+        AudioTrack playingTrack = audioPlayer.getPlayingTrack();
+        long positionMs = playingTrack != null ? playingTrack.getPosition() : 0;
+
+        // Sets the player to not playing and anchors the paused position
+        playerHandler.setPlaying(false, positionMs);
+
+        // Everyone's listening segment ends while paused
+        playerManager.getPlaybackAnalytics().paused();
 
         // Creates the inactivity timer
         InactivityUtils.startTimer(InactivityType.PAUSED, playerManager.getGuild());
@@ -86,8 +101,13 @@ public class AudioEventsHandler extends AudioEventAdapter {
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
 
-        // Sets the player to playing on the database
-        playerHandler.setPlaying(true);
+        // Sets the player to playing and anchors the track's start position
+        playerHandler.setPlaying(!audioPlayer.isPaused(), track.getPosition());
+
+        // Opens the play + listening segments for everyone in the channel
+        boolean audible = !audioPlayer.isPaused() && PlaybackAnalytics.isBotAudible(playerManager.getGuild());
+        playerManager.getPlaybackAnalytics().playStarted(track,
+                PlaybackAnalytics.snapshotListeners(playerManager.getGuild()), audible);
 
         // Cancels the inactivity timer
         InactivityUtils.stopTimer(InactivityType.STOPPED, playerManager.getGuild());
@@ -120,7 +140,10 @@ public class AudioEventsHandler extends AudioEventAdapter {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
 
         // Sets the player to not playing on the database
-        playerHandler.setPlaying(false);
+        playerHandler.setPlaying(false, 0);
+
+        // Closes the play and everyone's listening segments
+        playerManager.getPlaybackAnalytics().playEnded(endReason, track.getPosition());
 
         // Creates the inactivity timer
         InactivityUtils.startTimer(InactivityType.STOPPED, playerManager.getGuild());

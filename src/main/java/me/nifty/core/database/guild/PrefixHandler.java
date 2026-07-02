@@ -1,6 +1,8 @@
 package me.nifty.core.database.guild;
 
 import me.nifty.Config;
+import me.nifty.core.database.BotIdentity;
+import me.nifty.core.database.GuildStore;
 import me.nifty.managers.DatabaseManager;
 
 import java.sql.Connection;
@@ -9,6 +11,10 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The command prefix per guild for this bot instance ({@code guild_settings},
+ * keyed by (bot_id, guild_id)). NULL means the default prefix.
+ */
 public class PrefixHandler {
 
     private static final String defaultPrefix = Config.getDefaultPrefix();
@@ -20,12 +26,12 @@ public class PrefixHandler {
             return prefixes.get(guildId);
         }
 
-        Connection connection = DatabaseManager.getConnection();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT prefix FROM guild_settings WHERE bot_id = ? AND guild_id = ? AND prefix IS NOT NULL")) {
 
-        try {
-
-            PreparedStatement statement = connection.prepareStatement("SELECT prefix FROM Guilds WHERE guild_id = ? AND prefix IS NOT NULL");
-            statement.setLong(1, guildId);
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, guildId);
 
             ResultSet result = statement.executeQuery();
 
@@ -47,16 +53,18 @@ public class PrefixHandler {
 
     public static boolean setPrefix(long guildId, String newPrefix) {
 
-        Connection connection = DatabaseManager.getConnection();
+        GuildStore.ensure(guildId);
 
-        try {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "INSERT INTO guild_settings (bot_id, guild_id, prefix) VALUES (?, ?, ?) " +
+                     "ON CONFLICT (bot_id, guild_id) DO UPDATE SET prefix = EXCLUDED.prefix")) {
 
-            PreparedStatement updateStatement = connection.prepareStatement("INSERT INTO Guilds (guild_id, prefix) VALUES (?, ?) ON CONFLICT DO UPDATE SET prefix = ?");
-            updateStatement.setLong(1, guildId);
-            updateStatement.setString(2, newPrefix);
-            updateStatement.setString(3, newPrefix);
+            statement.setLong(1, BotIdentity.get());
+            statement.setLong(2, guildId);
+            statement.setString(3, newPrefix);
 
-            int updateResult = updateStatement.executeUpdate();
+            int updateResult = statement.executeUpdate();
 
             if (updateResult > 0) {
                 prefixes.put(guildId, newPrefix);

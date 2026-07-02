@@ -15,6 +15,7 @@ public class EventsManager {
         jdaBuilder.addEventListeners(
             new AutoCompleteInteraction(),
             new ButtonInteraction(),
+            new GuildVoiceMuteDeafen(),
             new GuildVoiceUpdate(),
             new MessageReceived(),
             new Ready(),

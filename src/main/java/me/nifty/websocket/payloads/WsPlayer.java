@@ -1,10 +1,13 @@
-package me.nifty.utils.formatting;
+package me.nifty.websocket.payloads;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.utils.enums.Shuffle;
-import me.nifty.websocket.WebSocketClientEndpoint;
+import me.nifty.core.database.BotIdentity;
+import me.nifty.utils.formatting.Artwork;
+import me.nifty.utils.formatting.TrackTitle;
+import me.nifty.websocket.DashboardSocket;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import org.json.JSONObject;
@@ -18,7 +21,7 @@ public class WsPlayer {
     public static void updateWsPlayer(PlayerManager playerManager) {
 
         // Don't bother building a payload when nothing is listening.
-        if (!WebSocketClientEndpoint.isConnected()) { return; }
+        if (!DashboardSocket.isConnected()) { return; }
 
         if (playerManager == null) { return; }
 
@@ -26,6 +29,7 @@ public class WsPlayer {
 
             JSONObject base = new JSONObject();
             base.put("operation", "refresh_player");
+            base.put("botId", String.valueOf(BotIdentity.get()));
             base.put("guildId", playerManager.getGuild().getId());
 
             AudioPlayer audioPlayer = playerManager.getAudioPlayer();
@@ -34,7 +38,7 @@ public class WsPlayer {
             // Nothing playing: tell the dashboard the player is empty for this guild.
             if (playingTrack == null) {
                 base.put("data", new JSONObject());
-                WebSocketClientEndpoint.send(base.toString());
+                DashboardSocket.send(base.toString());
                 return;
             }
 
@@ -85,7 +89,7 @@ public class WsPlayer {
             player.put("track", track);
             base.put("data", player);
 
-            WebSocketClientEndpoint.send(base.toString());
+            DashboardSocket.send(base.toString());
 
         } catch (Exception ignored) {
             // Player serialisation must never break playback.

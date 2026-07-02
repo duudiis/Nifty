@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.nifty.core.database.UserStore;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.database.music.QueueHandler;
 import me.nifty.core.music.PlayerManager;
@@ -12,7 +13,7 @@ import me.nifty.utils.enums.Shuffle;
 import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.formatting.SearchResultSelectMenu;
 import me.nifty.utils.formatting.TrackTitle;
-import me.nifty.utils.formatting.WsQueue;
+import me.nifty.websocket.payloads.WsQueue;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -27,6 +28,8 @@ import java.util.List;
 
 public class AudioResultHandler implements AudioLoadResultHandler {
 
+    private final PlayerManager playerManager;
+
     private final AudioPlayer audioPlayer;
 
     private final PlayerHandler playerHandler;
@@ -40,6 +43,8 @@ public class AudioResultHandler implements AudioLoadResultHandler {
     private final List<String> flags;
 
     public AudioResultHandler(PlayerManager playerManager, Object event, Member member, List<String> flags) {
+        this.playerManager = playerManager;
+
         this.audioPlayer = playerManager.getAudioPlayer();
 
         this.playerHandler = playerManager.getPlayerHandler();
@@ -100,6 +105,9 @@ public class AudioResultHandler implements AudioLoadResultHandler {
 
         queueHandler.addTrack(track, queuePosition);
 
+        // Record the enqueue in the analytics history
+        playerManager.getPlaybackAnalytics().trackQueued(UserStore.UserRef.of(member), track, queuedVia());
+
         AudioTrack playingTrack = audioPlayer.getPlayingTrack();
 
         if (playingTrack == null || flags.contains("jump")) {
@@ -114,6 +122,7 @@ public class AudioResultHandler implements AudioLoadResultHandler {
             if (flags.contains("seek")) {
                 long timeMs = Long.parseLong(flags.get(flags.indexOf("seek") + 1));
                 audioPlayer.getPlayingTrack().setPosition(timeMs);
+                playerHandler.anchorPosition(timeMs);
             }
         }
 
@@ -179,6 +188,11 @@ public class AudioResultHandler implements AudioLoadResultHandler {
 
         queueHandler.addTracks(audioTracks, queuePosition);
 
+        // Record every enqueued playlist track in the analytics history
+        for (AudioTrack track : audioTracks) {
+            playerManager.getPlaybackAnalytics().trackQueued(UserStore.UserRef.of(member), track, queuedVia());
+        }
+
         AudioTrack playingTrack = audioPlayer.getPlayingTrack();
 
         if (playingTrack == null || flags.contains("jump")) {
@@ -194,6 +208,14 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         // Push the updated queue to the dashboard (no-op if disconnected)
         WsQueue.updateWsQueue(member.getGuild().getIdLong());
 
+    }
+
+    /**
+     * Where this enqueue came from: loads with no reply target were requested
+     * by the dashboard, everything else is a Discord command.
+     */
+    private String queuedVia() {
+        return (textChannel == null && interactionHook == null) ? "dashboard" : "command";
     }
 
     @Override

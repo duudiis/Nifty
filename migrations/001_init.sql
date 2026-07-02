@@ -25,12 +25,13 @@ CREATE TABLE guilds (
   id BIGINT PRIMARY KEY                       -- guild entity, shared across bots
 );
 
+-- NULL on any setting means "not configured" — the bot applies its default.
 CREATE TABLE guild_settings (
   bot_id                BIGINT NOT NULL REFERENCES bots(id) ON DELETE CASCADE,
   guild_id              BIGINT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
   prefix                TEXT,
-  inactivity_disconnect BOOLEAN NOT NULL DEFAULT TRUE,
-  announcements         TEXT,
+  inactivity_disconnect BOOLEAN,
+  announcements         BOOLEAN,
   PRIMARY KEY (bot_id, guild_id)
 );
 

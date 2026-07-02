@@ -86,6 +86,7 @@ public class RewindCommand extends BaseCommand {
 
         long newPosition = playerManager.getAudioPlayer().getPlayingTrack().getPosition() - rewindTime;
         playerManager.getAudioPlayer().getPlayingTrack().setPosition(newPosition);
+        playerManager.getPlayerHandler().anchorPosition(newPosition);
 
         EmbedBuilder rewindEmbed = new EmbedBuilder()
                 .setDescription("Rewound " + TrackTime.formatNatural(rewindTime))

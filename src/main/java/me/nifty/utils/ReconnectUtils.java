@@ -1,6 +1,7 @@
 package me.nifty.utils;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import me.nifty.core.database.BotIdentity;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.database.music.QueueHandler;
 import me.nifty.core.music.PlayerManager;
@@ -12,32 +13,56 @@ import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReconnectUtils {
 
+    private record PlayerRow(long guildId, long voiceChannelId, boolean playing, int position) { }
+
+    /**
+     * Restores this bot instance's players after a restart: rejoins the saved
+     * voice channels and resumes the saved queue positions.
+     *
+     * @param jda The ready JDA instance
+     */
     public static void reconnectPlayers(JDA jda) {
 
-        Connection connection = DatabaseManager.getConnection();
+        // Snapshot the rows first — reconnecting mutates the players table.
+        List<PlayerRow> rows = new ArrayList<>();
 
-        try {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT guild_id, voice_channel_id, playing, queue_position FROM players WHERE bot_id = ?")) {
 
-            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM Players");
-            ResultSet result = selectStatement.executeQuery();
+            statement.setLong(1, BotIdentity.get());
+
+            ResultSet result = statement.executeQuery();
 
             while (result.next()) {
+                rows.add(new PlayerRow(
+                        result.getLong("guild_id"),
+                        result.getLong("voice_channel_id"),
+                        result.getBoolean("playing"),
+                        result.getInt("queue_position")
+                ));
+            }
 
-                String guildId = result.getString("guild_id");
-                String voiceId = result.getString("voice_id");
+        } catch (Exception ignored) { }
 
-                Guild guild = jda.getGuildById(guildId);
+        for (PlayerRow row : rows) {
+
+            try {
+
+                Guild guild = jda.getGuildById(row.guildId());
 
                 if (guild == null) {
-                    new PlayerHandler(Long.getLong(guildId)).delete();
-                    new QueueHandler(Long.getLong(guildId)).clearQueue();
+                    new PlayerHandler(row.guildId()).delete();
+                    new QueueHandler(row.guildId()).clearQueue();
                     continue;
                 }
 
-                VoiceChannel voiceChannel = guild.getVoiceChannelById(voiceId);
+                VoiceChannel voiceChannel = guild.getVoiceChannelById(row.voiceChannelId());
                 if (voiceChannel == null) { VoiceUtils.disconnect(guild); continue; }
 
                 String joinResult = VoiceUtils.join(voiceChannel);
@@ -48,20 +73,14 @@ public class ReconnectUtils {
 
                 playerManager.getAudioFiltersManager().updateFilterFactory();
 
-                boolean wasPlaying = result.getBoolean("playing");
-
-                if (wasPlaying) {
-
+                if (row.playing()) {
                     AudioPlayer audioPlayer = playerManager.getAudioPlayer();
-                    int position = result.getInt("position");
-
-                    audioPlayer.playTrack(playerManager.getQueueHandler().getQueueTrack(position));
-
+                    audioPlayer.playTrack(playerManager.getQueueHandler().getQueueTrack(row.position()));
                 }
 
-            }
+            } catch (Exception ignored) { }
 
-        } catch (Exception ignored) { }
+        }
 
     }
 

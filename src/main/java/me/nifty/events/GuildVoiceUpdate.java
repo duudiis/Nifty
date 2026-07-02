@@ -1,11 +1,13 @@
 package me.nifty.events;
 
+import me.nifty.core.analytics.PlaybackAnalytics;
+import me.nifty.core.database.UserStore;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.utils.InactivityUtils;
 import me.nifty.utils.VoiceUtils;
 import me.nifty.utils.enums.InactivityType;
-import me.nifty.utils.formatting.WsSessions;
-import me.nifty.websocket.WebSocketClientEndpoint;
+import me.nifty.websocket.payloads.WsSessions;
+import me.nifty.websocket.DashboardSocket;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
@@ -42,7 +44,7 @@ public class GuildVoiceUpdate extends ListenerAdapter {
     /** Pushes refreshed sessions to the dashboard for whoever's view just changed. */
     private void pushDashboardSessions(GuildVoiceUpdateEvent event, Member updatedMember, boolean isSelf) {
 
-        if (!WebSocketClientEndpoint.isConnected()) { return; }
+        if (!DashboardSocket.isConnected()) { return; }
 
         try {
             if (isSelf) {
@@ -85,6 +87,17 @@ public class GuildVoiceUpdate extends ListenerAdapter {
             // Updates the voice channel id on the database
             if (playerManager != null) {
                 playerManager.getPlayerHandler().setVoiceChannelId(event.getChannelJoined().getIdLong());
+                playerManager.getPlaybackAnalytics().updateVoiceChannel(event.getChannelJoined().getIdLong());
+
+                // Moved between channels: old listeners stop hearing, the new
+                // channel's members start (when something is actually playing).
+                if (event.getChannelLeft() != null) {
+                    boolean audible = playerManager.getAudioPlayer().getPlayingTrack() != null
+                            && !playerManager.getAudioPlayer().isPaused()
+                            && PlaybackAnalytics.isBotAudible(event.getGuild());
+                    playerManager.getPlaybackAnalytics().botMoved(
+                            PlaybackAnalytics.snapshotListeners(event.getGuild()), audible);
+                }
             }
 
             // Server deafens the bot, if it has the permission
@@ -123,6 +136,8 @@ public class GuildVoiceUpdate extends ListenerAdapter {
 
         VoiceChannel voiceChannel = JDAAudioManager.getConnectedChannel().asVoiceChannel();
 
+        trackListeningSegments(event, voiceChannel);
+
         // If the member joined / moved to a voice channel and the bot is in the same voice channel
         if (event.getChannelJoined() != null && event.getChannelJoined().getIdLong() == voiceChannel.getIdLong()) {
 
@@ -153,6 +168,51 @@ public class GuildVoiceUpdate extends ListenerAdapter {
                 InactivityUtils.stopTimer(InactivityType.ALONE, event.getGuild());
             }
 
+        }
+
+    }
+
+    /**
+     * Opens/closes the member's listening segment when they enter or leave the
+     * channel the bot is playing in.
+     */
+    private void trackListeningSegments(GuildVoiceUpdateEvent event, VoiceChannel botChannel) {
+
+        PlayerManager playerManager = PlayerManager.get(event.getGuild());
+        if (playerManager == null) { return; }
+
+        try {
+
+            Member member = event.getEntity();
+            boolean moved = event.getChannelJoined() != null && event.getChannelLeft() != null;
+
+            boolean enteredBotChannel = event.getChannelJoined() != null
+                    && event.getChannelJoined().getIdLong() == botChannel.getIdLong();
+            boolean leftBotChannel = event.getChannelLeft() != null
+                    && event.getChannelLeft().getIdLong() == botChannel.getIdLong()
+                    && !enteredBotChannel;
+
+            if (enteredBotChannel) {
+
+                boolean deafened = member.getVoiceState() != null
+                        && (member.getVoiceState().isDeafened() || member.getVoiceState().isSelfDeafened());
+
+                boolean audible = playerManager.getAudioPlayer().getPlayingTrack() != null
+                        && !playerManager.getAudioPlayer().isPaused()
+                        && PlaybackAnalytics.isBotAudible(event.getGuild());
+
+                if (!deafened && audible) {
+                    playerManager.getPlaybackAnalytics().userStartedListening(
+                            UserStore.UserRef.of(member), moved ? "user_move" : "user_join");
+                }
+
+            } else if (leftBotChannel) {
+                playerManager.getPlaybackAnalytics().userStoppedListening(
+                        member.getIdLong(), moved ? "user_move" : "user_leave");
+            }
+
+        } catch (Exception ignored) {
+            // Analytics must never break voice handling.
         }
 
     }

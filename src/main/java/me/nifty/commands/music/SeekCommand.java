@@ -112,6 +112,7 @@ public class SeekCommand extends BaseCommand {
         }
 
         playerManager.getAudioPlayer().getPlayingTrack().setPosition(seekTime);
+        playerManager.getPlayerHandler().anchorPosition(seekTime);
 
         EmbedBuilder seekEmbed = new EmbedBuilder()
                 .setDescription("Seeked to " + TrackTime.formatNatural(seekTime))

@@ -2,6 +2,7 @@ package me.nifty.core.music;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import me.nifty.core.analytics.PlaybackAnalytics;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.database.music.QueueHandler;
 import me.nifty.core.music.handlers.AudioEventsHandler;
@@ -30,6 +31,8 @@ public class PlayerManager {
     private PlayerHandler playerHandler;
     private QueueHandler queueHandler;
 
+    private PlaybackAnalytics playbackAnalytics;
+
     /**
      * Creates a new Player Manager for the specified guild.
      * @param guild The guild to create the player manager for
@@ -55,6 +58,11 @@ public class PlayerManager {
 
         // Creates the database queue handler
         playerManager.setQueueHandler(new QueueHandler(guild.getIdLong()));
+
+        // Opens the analytics queue session for this player's lifetime
+        PlaybackAnalytics playbackAnalytics = new PlaybackAnalytics(guild.getIdLong());
+        playerManager.setPlaybackAnalytics(playbackAnalytics);
+        playbackAnalytics.startSession();
 
         // Creates the track scheduler, add listener, and sets it for the player manager
         TrackScheduler trackScheduler = new TrackScheduler(playerManager);
@@ -106,6 +114,25 @@ public class PlayerManager {
         PlayerManager playerManager = get(guild);
         if (playerManager == null) { return; }
 
+        // Gets the audio player from the player manager
+        AudioPlayer audioPlayer = playerManager.getAudioPlayer();
+
+        if (audioPlayer != null) {
+            // Stops the audio player first so the track-end analytics land
+            // before the session below is closed (the writer is serial).
+            audioPlayer.stopTrack();
+
+            // Destroys the audio player
+            audioPlayer.destroy();
+        }
+
+        // Closes the analytics queue session
+        PlaybackAnalytics playbackAnalytics = playerManager.getPlaybackAnalytics();
+
+        if (playbackAnalytics != null) {
+            playbackAnalytics.endSession();
+        }
+
         // Gets the queue handler from the player manager
         QueueHandler queueHandler = playerManager.getQueueHandler();
 
@@ -120,18 +147,6 @@ public class PlayerManager {
         if (playerHandler != null) {
             // Deletes the player handler
             playerManager.getPlayerHandler().delete();
-        }
-
-        // Gets the audio player from the player manager
-        AudioPlayer audioPlayer = playerManager.getAudioPlayer();
-
-        if (audioPlayer != null) {
-            // Stops the audio player
-            audioPlayer.setPaused(false);
-            audioPlayer.stopTrack();
-
-            // Destroys the audio player
-            audioPlayer.destroy();
         }
 
         // Removes the player manager from the map
@@ -177,6 +192,14 @@ public class PlayerManager {
 
     public void setQueueHandler(QueueHandler queueHandler) {
         this.queueHandler = queueHandler;
+    }
+
+    public PlaybackAnalytics getPlaybackAnalytics() {
+        return this.playbackAnalytics;
+    }
+
+    public void setPlaybackAnalytics(PlaybackAnalytics playbackAnalytics) {
+        this.playbackAnalytics = playbackAnalytics;
     }
 
     public AudioEventsHandler getAudioEventsHandler() {
