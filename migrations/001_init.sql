@@ -120,8 +120,17 @@ CREATE INDEX play_listeners_user_idx ON play_listeners (user_id, play_id DESC);
 CREATE TABLE liked_tracks (
   user_id  BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   track_id BIGINT NOT NULL REFERENCES tracks(id),
+  position INT    NOT NULL,                    -- manual order; new likes append at the end
   liked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (user_id, track_id)
+  PRIMARY KEY (user_id, track_id),
+  UNIQUE (user_id, position) DEFERRABLE INITIALLY DEFERRED
+);
+
+-- Per-user preferences, one row per user, created lazily by the dashboard.
+CREATE TABLE user_settings (
+  user_id         BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  liked_sort_by   TEXT NOT NULL DEFAULT 'custom' CHECK (liked_sort_by IN ('custom', 'added', 'title', 'artist', 'duration')),
+  liked_sort_desc BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Custom playlists: owned and editable, items live in playlist_tracks.
@@ -133,6 +142,8 @@ CREATE TABLE playlists (
   description TEXT,
   artwork_url TEXT,
   visibility  TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'unlisted', 'public')),
+  sort_by     TEXT NOT NULL DEFAULT 'custom' CHECK (sort_by IN ('custom', 'added', 'title', 'artist', 'duration')),
+  sort_desc   BOOLEAN NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
