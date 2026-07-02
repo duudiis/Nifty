@@ -13,19 +13,34 @@ CREATE TABLE users (
   last_seen_at  TIMESTAMPTZ
 );
 
+-- Bot instances (e.g. Nifty, Nifty 2). Each row is one bot account; bots
+-- upsert themselves at startup. Players, queues and guild settings are
+-- per-bot; users, tracks, analytics and the library are shared.
+CREATE TABLE bots (
+  id   BIGINT PRIMARY KEY,                    -- the bot account's Discord user id
+  name TEXT
+);
+
 CREATE TABLE guilds (
-  id                    BIGINT PRIMARY KEY,
+  id BIGINT PRIMARY KEY                       -- guild entity, shared across bots
+);
+
+CREATE TABLE guild_settings (
+  bot_id                BIGINT NOT NULL REFERENCES bots(id) ON DELETE CASCADE,
+  guild_id              BIGINT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
   prefix                TEXT,
   inactivity_disconnect BOOLEAN NOT NULL DEFAULT TRUE,
-  announcements         TEXT
+  announcements         TEXT,
+  PRIMARY KEY (bot_id, guild_id)
 );
 
 CREATE TABLE guild_permissions (
+  bot_id      BIGINT   NOT NULL REFERENCES bots(id) ON DELETE CASCADE,
   guild_id    BIGINT   NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
   entity_id   BIGINT   NOT NULL,              -- role or member id
   entity_type SMALLINT NOT NULL,
   permission  SMALLINT NOT NULL,
-  PRIMARY KEY (guild_id, entity_id)
+  PRIMARY KEY (bot_id, guild_id, entity_id)
 );
 
 -- ============================== track catalog ==============================
@@ -53,6 +68,7 @@ CREATE INDEX tracks_isrc_idx ON tracks (isrc) WHERE isrc IS NOT NULL;
 -- Groups queue_history and track_plays so past queues can be shown whole.
 CREATE TABLE queue_sessions (
   id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  bot_id           BIGINT NOT NULL REFERENCES bots(id),   -- which instance ran it
   guild_id         BIGINT NOT NULL REFERENCES guilds(id),
   voice_channel_id BIGINT,
   started_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -62,7 +78,8 @@ CREATE TABLE queue_sessions (
 CREATE INDEX queue_sessions_guild_idx ON queue_sessions (guild_id, started_at DESC);
 
 CREATE TABLE players (
-  guild_id         BIGINT PRIMARY KEY REFERENCES guilds(id) ON DELETE CASCADE,
+  bot_id           BIGINT NOT NULL REFERENCES bots(id) ON DELETE CASCADE,
+  guild_id         BIGINT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
   session_id       BIGINT REFERENCES queue_sessions(id), -- active session, NULL when idle
   text_channel_id  BIGINT,
   voice_channel_id BIGINT,
@@ -78,17 +95,19 @@ CREATE TABLE players (
   -- wall-clock anchor, written on events only (play/pause/seek/track change):
   -- current position = position_ms + (playing ? now() - position_at : 0)
   position_ms      BIGINT      NOT NULL DEFAULT 0,
-  position_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  position_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (bot_id, guild_id)
 );
 
 CREATE TABLE queue_tracks (
   id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  bot_id    BIGINT NOT NULL REFERENCES bots(id) ON DELETE CASCADE,
   guild_id  BIGINT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
   position  INT    NOT NULL,
   track_id  BIGINT NOT NULL REFERENCES tracks(id),
   queued_by BIGINT NOT NULL REFERENCES users(id),
   queued_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (guild_id, position) DEFERRABLE INITIALLY DEFERRED
+  UNIQUE (bot_id, guild_id, position) DEFERRABLE INITIALLY DEFERRED
 );
 
 -- ============================== analytics (append-only) ==============================
