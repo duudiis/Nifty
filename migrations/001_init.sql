@@ -124,6 +124,8 @@ CREATE TABLE liked_tracks (
   PRIMARY KEY (user_id, track_id)
 );
 
+-- Custom playlists: owned and editable, items live in playlist_tracks.
+-- Cloning a saved external playlist creates one of these (resolved at clone time).
 CREATE TABLE playlists (
   id          UUID   PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -131,11 +133,22 @@ CREATE TABLE playlists (
   description TEXT,
   artwork_url TEXT,
   visibility  TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'unlisted', 'public')),
-  source      TEXT NOT NULL DEFAULT 'custom'  CHECK (source IN ('custom', 'spotify', 'deezer', 'youtube', 'apple_music')),
-  source_url  TEXT,                           -- original link for imported playlists
-  synced_at   TIMESTAMPTZ,                    -- last re-import from source
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- External platform playlists saved to the library as-is: just a pointer,
+-- no items stored — the track list is resolved live at queue time, so it is
+-- always in sync with the platform by construction.
+CREATE TABLE saved_playlists (
+  id          UUID   PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source      TEXT   NOT NULL CHECK (source IN ('spotify', 'deezer', 'youtube', 'apple_music')),
+  source_url  TEXT   NOT NULL,
+  name        TEXT,                           -- display cache only, not source of truth
+  artwork_url TEXT,                           -- display cache only
+  saved_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, source_url)
 );
 
 CREATE TABLE playlist_tracks (
