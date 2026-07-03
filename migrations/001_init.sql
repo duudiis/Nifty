@@ -224,6 +224,21 @@ CREATE TABLE queued_collections (
 
 CREATE INDEX queued_collections_user_idx ON queued_collections (user_id, queued_at DESC);
 
+-- The user's library shelf: one ordered list mixing their own playlists and
+-- saved external collections (Liked songs is a fixed entry, not a row).
+-- Deleting the underlying playlist/saved collection removes the shelf entry.
+CREATE TABLE library_items (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  position    INT    NOT NULL,
+  playlist_id UUID REFERENCES playlists(id) ON DELETE CASCADE,
+  saved_id    UUID REFERENCES saved_collections(id) ON DELETE CASCADE,
+  added_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK ((playlist_id IS NULL) != (saved_id IS NULL)),
+  UNIQUE (user_id, position) DEFERRABLE INITIALLY DEFERRED,
+  UNIQUE NULLS NOT DISTINCT (user_id, playlist_id, saved_id)
+);
+
 CREATE TABLE playlist_tracks (
   id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   playlist_id UUID   NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
