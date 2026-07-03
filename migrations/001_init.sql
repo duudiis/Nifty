@@ -252,11 +252,15 @@ CREATE TABLE playlist_tracks (
 -- Per-user sort preference for any track collection. Playlists are shareable,
 -- so every user keeps their own view of each one; playlist_id NULL means the
 -- user's liked songs. 'custom' = the collection's canonical position order.
+-- Per-user sort preference for any playlist the dashboard shows, keyed by the
+-- dashboard's namespaced collection reference ("nifty:playlist:<uuid>",
+-- "nifty:playlist:liked", "spotify:playlist:<id>", ...). 'custom' means the
+-- collection's own manual order (owned playlists + liked songs only).
 CREATE TABLE collection_sorting (
-  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  playlist_id UUID REFERENCES playlists(id) ON DELETE CASCADE,
-  sort_by     TEXT NOT NULL DEFAULT 'custom' CHECK (sort_by IN ('custom', 'added', 'title', 'artist', 'duration')),
-  sort_desc   BOOLEAN NOT NULL DEFAULT FALSE,
-  UNIQUE NULLS NOT DISTINCT (user_id, playlist_id)
+  id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  collection_ref TEXT   NOT NULL,
+  sort_by        TEXT NOT NULL DEFAULT 'custom' CHECK (sort_by IN ('custom', 'added', 'title', 'artist', 'duration')),
+  sort_desc      BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE (user_id, collection_ref)
 );
