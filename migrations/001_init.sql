@@ -196,7 +196,7 @@ CREATE TABLE saved_collections (
   id          UUID   PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   kind        TEXT   NOT NULL CHECK (kind IN ('playlist', 'album', 'artist')),
-  source      TEXT   NOT NULL CHECK (source IN ('spotify', 'deezer', 'youtube', 'apple_music')),
+  source      TEXT   NOT NULL CHECK (source IN ('spotify', 'deezer', 'youtube', 'apple_music', 'tidal')),
   source_url  TEXT   NOT NULL,
   browse_ref  TEXT,                           -- dashboard entity reference (source:kind:id)
   name        TEXT,                           -- display cache only, not source of truth
