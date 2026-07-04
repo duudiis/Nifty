@@ -168,11 +168,12 @@ CREATE INDEX listening_segments_play_idx ON listening_segments (play_id);
 -- ============================== library ==============================
 
 CREATE TABLE liked_tracks (
-  user_id  BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  track_id BIGINT NOT NULL REFERENCES tracks(id),
-  position INT    NOT NULL,                    -- manual order; new likes append at the end
-  added_at TIMESTAMPTZ NOT NULL DEFAULT now(), -- effective add date (platform's for imports) — drives the "Date added" order
-  liked_at TIMESTAMPTZ NOT NULL DEFAULT now(), -- when the row was created in our DB
+  user_id       BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  track_id      BIGINT NOT NULL REFERENCES tracks(id),
+  position      INT    NOT NULL,               -- manual order; new likes append at the end
+  added_at      TIMESTAMPTZ NOT NULL DEFAULT now(), -- effective add date (platform's for imports) — drives the "Date added" order
+  liked_at      TIMESTAMPTZ NOT NULL DEFAULT now(), -- when the row was created in our DB
+  imported_from TEXT,                          -- provider this like was imported from (NULL = liked natively); removed when that account disconnects
   PRIMARY KEY (user_id, track_id),
   UNIQUE (user_id, position) DEFERRABLE INITIALLY DEFERRED
 );
