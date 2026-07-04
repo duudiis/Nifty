@@ -171,7 +171,8 @@ CREATE TABLE liked_tracks (
   user_id  BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   track_id BIGINT NOT NULL REFERENCES tracks(id),
   position INT    NOT NULL,                    -- manual order; new likes append at the end
-  liked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  added_at TIMESTAMPTZ NOT NULL DEFAULT now(), -- effective add date (platform's for imports) — drives the "Date added" order
+  liked_at TIMESTAMPTZ NOT NULL DEFAULT now(), -- when the row was created in our DB
   PRIMARY KEY (user_id, track_id),
   UNIQUE (user_id, position) DEFERRABLE INITIALLY DEFERRED
 );
@@ -263,4 +264,25 @@ CREATE TABLE collection_sorting (
   sort_by        TEXT NOT NULL DEFAULT 'custom' CHECK (sort_by IN ('custom', 'added', 'title', 'artist', 'duration')),
   sort_desc      BOOLEAN NOT NULL DEFAULT FALSE,
   UNIQUE (user_id, collection_ref)
+);
+
+-- ============================== external accounts ==============================
+
+-- The user's linked music accounts (OAuth), used to import their liked songs
+-- from other platforms. Tokens are encrypted at rest by the dashboard before
+-- they are stored here (the DB is internet-exposed). One row per (user,
+-- provider).
+CREATE TABLE music_connections (
+  user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider       TEXT   NOT NULL CHECK (provider IN ('spotify', 'deezer', 'youtube', 'tidal')),
+  external_id    TEXT,                         -- account id on the platform
+  external_name  TEXT,                         -- display name / handle
+  access_token   TEXT,                         -- encrypted (AES-256-GCM)
+  refresh_token  TEXT,                         -- encrypted
+  expires_at     TIMESTAMPTZ,
+  scopes         TEXT,
+  connected_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_synced_at TIMESTAMPTZ,
+  liked_count    INT NOT NULL DEFAULT 0,        -- liked songs imported at last sync
+  PRIMARY KEY (user_id, provider)
 );
