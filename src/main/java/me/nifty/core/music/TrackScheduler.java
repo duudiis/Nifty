@@ -63,12 +63,15 @@ public class TrackScheduler {
 
         int newPosition = position + 1;
 
+        // Set the cursor before playing: playTrack fires onTrackStart synchronously,
+        // which pushes the player snapshot to the dashboard — a cursor set afterwards
+        // would report the stale position and the dashboard would show the old track.
         if (queueSize > newPosition) {
-            audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
             playerHandler.setPosition(newPosition);
+            audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
         } else if (loopMode == Loop.QUEUE) {
-            audioPlayer.playTrack(queueHandler.getQueueTrack(0));
             playerHandler.setPosition(0);
+            audioPlayer.playTrack(queueHandler.getQueueTrack(0));
         } else if (autoplayMode == Autoplay.ENABLED) {
             playerManager.getAutoplayManager().autoplay();
         }
@@ -88,14 +91,15 @@ public class TrackScheduler {
 
         int newPosition = position - 1;
 
+        // Set the cursor before playing (see skip): the onTrackStart delta reads it.
         if (newPosition >= 0) {
-            audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
             playerHandler.setPosition(newPosition);
+            audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
         } else if (loopMode == Loop.QUEUE) {
             int queueSize = queueHandler.getQueueSize();
 
-            audioPlayer.playTrack(queueHandler.getQueueTrack(queueSize - 1));
             playerHandler.setPosition(queueSize - 1);
+            audioPlayer.playTrack(queueHandler.getQueueTrack(queueSize - 1));
         }
 
     }
@@ -270,17 +274,18 @@ public class TrackScheduler {
             Autoplay autoplayMode = playerHandler.getAutoplayMode();
             Loop loopMode = playerHandler.getLoopMode();
 
+            // Set the cursor before playing (see skip): the onTrackStart delta reads it.
             if (queueSize > currentPosition + 1) {
 
                 // If the queue has a track after the current track, play it.
-                audioPlayer.playTrack(queueHandler.getQueueTrack(currentPosition));
                 playerHandler.setPosition(currentPosition);
+                audioPlayer.playTrack(queueHandler.getQueueTrack(currentPosition));
 
             } else if (loopMode == Loop.QUEUE) {
 
                 // If the queue is looping and there is no next track, play the first track in the queue.
-                audioPlayer.playTrack(queueHandler.getQueueTrack(0));
                 playerHandler.setPosition(0);
+                audioPlayer.playTrack(queueHandler.getQueueTrack(0));
 
             } else if (autoplayMode == Autoplay.ENABLED) {
 
@@ -326,17 +331,18 @@ public class TrackScheduler {
             Autoplay autoplayMode = playerHandler.getAutoplayMode();
             Loop loopMode = playerHandler.getLoopMode();
 
+            // Set the cursor before playing (see skip): the onTrackStart delta reads it.
             if (queueSize > endPosition + 1) {
 
                 // If the queue has a track after the end of the range, play it.
-                audioPlayer.playTrack(queueHandler.getQueueTrack(startPosition));
                 playerHandler.setPosition(startPosition);
+                audioPlayer.playTrack(queueHandler.getQueueTrack(startPosition));
 
             } else if (loopMode == Loop.QUEUE) {
 
                 // If the queue is looping and there is no next track, play the first track in the queue.
-                audioPlayer.playTrack(queueHandler.getQueueTrack(0));
                 playerHandler.setPosition(0);
+                audioPlayer.playTrack(queueHandler.getQueueTrack(0));
 
             } else if (autoplayMode == Autoplay.ENABLED) {
 

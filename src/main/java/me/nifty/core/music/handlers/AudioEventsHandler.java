@@ -175,11 +175,13 @@ public class AudioEventsHandler extends AudioEventAdapter {
             // Sets the new position to the current position + 1
             int newPosition = position + 1;
 
-            // If the new position is greater than the queue size
+            // Set the cursor before playing: playTrack fires onTrackStart synchronously,
+            // which pushes the player snapshot to the dashboard — a cursor set afterwards
+            // would report the stale position and the dashboard would show the old track.
             if (queueSize > newPosition) {
                 // Sets the new position to the current position and plays the track
-                audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
                 playerHandler.setPosition(newPosition);
+                audioPlayer.playTrack(queueHandler.getQueueTrack(newPosition));
             } else if (loopMode == Loop.QUEUE) {
                 // If the loop mode is set to loop the queue
 
@@ -193,8 +195,8 @@ public class AudioEventsHandler extends AudioEventAdapter {
                 }
 
                 // Sets the new position to 0 and plays the track
-                audioPlayer.playTrack(queueHandler.getQueueTrack(0));
                 playerHandler.setPosition(0);
+                audioPlayer.playTrack(queueHandler.getQueueTrack(0));
 
             } else if (autoplayMode == Autoplay.ENABLED) {
                 // If the autoplay mode is set to autoplay

@@ -110,8 +110,10 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         AudioTrack playingTrack = audioPlayer.getPlayingTrack();
 
         if (playingTrack == null || flags.contains("jump")) {
-            audioPlayer.playTrack(track);
+            // Set the cursor before playing: the onTrackStart delta reads it, so a
+            // cursor set afterwards would make the dashboard show the wrong track.
             playerHandler.setPosition(queuePosition);
+            audioPlayer.playTrack(track);
 
             // "Play now" should actually play: resume if the player was paused.
             if (flags.contains("jump")) {
@@ -194,8 +196,10 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         AudioTrack playingTrack = audioPlayer.getPlayingTrack();
 
         if (playingTrack == null || flags.contains("jump")) {
-            audioPlayer.playTrack(audioTracks.get(0));
+            // Set the cursor before playing: the onTrackStart delta reads it, so a
+            // cursor set afterwards would make the dashboard show the wrong track.
             playerHandler.setPosition(queuePosition);
+            audioPlayer.playTrack(audioTracks.get(0));
 
             // "Play now" should actually play: resume if the player was paused.
             if (flags.contains("jump")) {
