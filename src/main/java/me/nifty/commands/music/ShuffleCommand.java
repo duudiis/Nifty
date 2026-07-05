@@ -1,6 +1,6 @@
 package me.nifty.commands.music;
 
-import me.nifty.websocket.payloads.WsUpdates;
+import me.nifty.websocket.payloads.WsDelta;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
@@ -64,7 +64,7 @@ public class ShuffleCommand extends BaseCommand {
         Shuffle newShuffleMode = newShuffleBool ? Shuffle.ENABLED : Shuffle.DISABLED;
 
         playerManager.getPlayerHandler().setShuffleMode(newShuffleMode);
-        WsUpdates.player(playerManager);
+        WsDelta.player(playerManager);
 
         if (newShuffleMode == Shuffle.ENABLED) {
             int currentPosition = playerManager.getPlayerHandler().getPosition();

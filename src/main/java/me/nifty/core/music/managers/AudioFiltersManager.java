@@ -7,7 +7,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.nifty.core.database.music.PlayerHandler;
 import me.nifty.core.music.PlayerManager;
-import me.nifty.websocket.payloads.WsUpdates;
+import me.nifty.websocket.payloads.WsDelta;
 
 import java.util.List;
 
@@ -99,7 +99,7 @@ public class AudioFiltersManager {
         if (playingTrack != null) {
             playerHandler.anchorPosition(playingTrack.getPosition());
         }
-        WsUpdates.player(playerManager);
+        WsDelta.player(playerManager);
     }
 
     public float getPitch() {

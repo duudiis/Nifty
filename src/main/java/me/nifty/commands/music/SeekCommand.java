@@ -1,6 +1,6 @@
 package me.nifty.commands.music;
 
-import me.nifty.websocket.payloads.WsUpdates;
+import me.nifty.websocket.payloads.WsDelta;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
@@ -114,7 +114,7 @@ public class SeekCommand extends BaseCommand {
 
         playerManager.getAudioPlayer().getPlayingTrack().setPosition(seekTime);
         playerManager.getPlayerHandler().anchorPosition(seekTime);
-        WsUpdates.player(playerManager);
+        WsDelta.player(playerManager);
 
         EmbedBuilder seekEmbed = new EmbedBuilder()
                 .setDescription("Seeked to " + TrackTime.formatNatural(seekTime))

@@ -1,6 +1,6 @@
 package me.nifty.commands.music;
 
-import me.nifty.websocket.payloads.WsUpdates;
+import me.nifty.websocket.payloads.WsDelta;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
@@ -88,7 +88,7 @@ public class FastForwardCommand extends BaseCommand {
         long newPosition = playerManager.getAudioPlayer().getPlayingTrack().getPosition() + fastForwardTime;
         playerManager.getAudioPlayer().getPlayingTrack().setPosition(newPosition);
         playerManager.getPlayerHandler().anchorPosition(newPosition);
-        WsUpdates.player(playerManager);
+        WsDelta.player(playerManager);
 
         EmbedBuilder fastForwardedEmbed = new EmbedBuilder()
                 .setDescription("Fast forwarded " + TrackTime.formatNatural(fastForwardTime))

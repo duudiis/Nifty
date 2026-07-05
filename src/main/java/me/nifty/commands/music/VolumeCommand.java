@@ -1,6 +1,6 @@
 package me.nifty.commands.music;
 
-import me.nifty.websocket.payloads.WsUpdates;
+import me.nifty.websocket.payloads.WsDelta;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import kotlin.Pair;
 import me.nifty.core.music.PlayerManager;
@@ -86,7 +86,7 @@ public class VolumeCommand extends BaseCommand {
 
         audioPlayer.setVolume(newVolume.intValue());
         playerManager.getPlayerHandler().setVolume(newVolume.intValue());
-        WsUpdates.player(playerManager);
+        WsDelta.player(playerManager);
 
         EmbedBuilder volumeEmbed = new EmbedBuilder()
                 .setDescription("Volume is now set to **" + newVolume + "%**")

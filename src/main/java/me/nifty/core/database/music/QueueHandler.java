@@ -7,7 +7,7 @@ import me.nifty.core.database.TrackStore;
 import me.nifty.core.database.UserStore;
 import me.nifty.managers.DatabaseManager;
 import me.nifty.utils.TrackUtils;
-import me.nifty.websocket.payloads.WsUpdates;
+import me.nifty.websocket.payloads.WsDelta;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -71,6 +71,8 @@ public class QueueHandler {
 
         if (trackIds.isEmpty()) { return; }
 
+        boolean committed = false;
+
         try (Connection connection = DatabaseManager.getConnection()) {
 
             connection.setAutoCommit(false);
@@ -102,6 +104,7 @@ public class QueueHandler {
                 }
 
                 connection.commit();
+                committed = true;
 
             } catch (Exception e) {
                 connection.rollback();
@@ -110,6 +113,12 @@ public class QueueHandler {
             }
 
         } catch (Exception ignored) { }
+
+        // Push the inserted run to the dashboard as one add delta (no-op if
+        // disconnected). Emitted after commit so a rolled-back insert says nothing.
+        if (committed) {
+            WsDelta.qAdd(this.guildId, position, trackIds.size());
+        }
 
     }
 
@@ -501,8 +510,9 @@ public class QueueHandler {
 
         } catch (Exception ignored) { }
 
-        // Push the reshuffled queue to the dashboard once (no-op if disconnected)
-        WsUpdates.queue(this.guildId);
+        // A reshuffle rewrites too many positions to replay individually —
+        // tell the dashboard to refetch the queue once (no-op if disconnected).
+        WsDelta.qResync(this.guildId);
 
     }
 
@@ -523,7 +533,7 @@ public class QueueHandler {
         } catch (Exception ignored) { }
 
         // Push the now-empty queue to the dashboard (no-op if disconnected)
-        WsUpdates.queue(this.guildId);
+        WsDelta.qClear(this.guildId);
 
     }
 
