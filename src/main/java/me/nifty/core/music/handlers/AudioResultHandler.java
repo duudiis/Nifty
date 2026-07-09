@@ -129,6 +129,10 @@ public class AudioResultHandler implements AudioLoadResultHandler {
 
         // The queue add delta is emitted by QueueHandler.addTrack itself.
 
+        // The queue grew — let autoplay prune duplicated suggestions and
+        // refresh its buffer against the new context (no-op when disabled).
+        playerManager.getAutoplayManager().onQueueExpanded();
+
     }
 
     @Override
@@ -208,6 +212,10 @@ public class AudioResultHandler implements AudioLoadResultHandler {
         }
 
         // The queue add delta is emitted by QueueHandler.addTracks itself.
+
+        // The queue grew — let autoplay prune duplicated suggestions and
+        // refresh its buffer against the new context (no-op when disabled).
+        playerManager.getAutoplayManager().onQueueExpanded();
 
     }
 

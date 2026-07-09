@@ -201,8 +201,8 @@ public class AudioEventsHandler extends AudioEventAdapter {
             } else if (autoplayMode == Autoplay.ENABLED) {
                 // If the autoplay mode is set to autoplay
 
-                // Gets the next track from the autoplay and plays it
-                playerManager.getAutoplayManager().autoplay();
+                // Feeds the queue from the autoplay buffer and plays it
+                playerManager.getAutoplayManager().playNext();
 
             }
 

@@ -132,8 +132,61 @@ public class DashboardActions {
                     case QUEUE -> Loop.TRACK;
                     default -> Loop.DISABLED;
                 };
+                // Loop and autoplay are mutually exclusive — turning loop on
+                // switches autoplay off (and clears its buffer) rather than
+                // rejecting the click.
+                if (next != Loop.DISABLED && playerManager.getAutoplayManager().isEnabled()) {
+                    playerManager.getAutoplayManager().setEnabled(false);
+                }
                 playerManager.getPlayerHandler().setLoopMode(next);
                 WsDelta.player(playerManager);
+            }
+
+            // The autoplay switch on the dashboard (queue section header /
+            // player bar). setEnabled pushes both the player and autoplay
+            // snapshots itself.
+            case "toggleAutoplay" -> {
+                playerManager.getAutoplayManager().setEnabled(!playerManager.getAutoplayManager().isEnabled());
+            }
+
+            // Remove a suggestion from the autoplay buffer (negative feedback).
+            case "autoplayRemove" -> {
+                long autoId = data.optLong("autoId", -1);
+                if (autoId != -1) {
+                    playerManager.getAutoplayManager().removeEntry(autoId, data.optLong("userId", 0));
+                }
+            }
+
+            // Drag-reorder within the autoplay buffer.
+            case "autoplayMove" -> {
+                long autoId = data.optLong("autoId", -1);
+                int toIndex = data.optInt("toIndex", -1);
+                if (autoId != -1 && toIndex >= 0) {
+                    playerManager.getAutoplayManager().moveEntry(autoId, toIndex);
+                }
+            }
+
+            // Promote a suggestion into the real queue, attributed to the user.
+            case "autoplayPlay" -> {
+                long autoId = data.optLong("autoId", -1);
+                if (autoId != -1) {
+                    playerManager.getAutoplayManager().promoteEntry(autoId, data.optLong("userId", 0), "now");
+                    unpause(playerManager);
+                }
+            }
+
+            case "autoplayPlayNext" -> {
+                long autoId = data.optLong("autoId", -1);
+                if (autoId != -1) {
+                    playerManager.getAutoplayManager().promoteEntry(autoId, data.optLong("userId", 0), "next");
+                }
+            }
+
+            case "autoplayQueue" -> {
+                long autoId = data.optLong("autoId", -1);
+                if (autoId != -1) {
+                    playerManager.getAutoplayManager().promoteEntry(autoId, data.optLong("userId", 0), "end");
+                }
             }
 
             case "shuffle" -> {

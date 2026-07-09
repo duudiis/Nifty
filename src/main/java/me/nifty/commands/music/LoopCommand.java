@@ -6,7 +6,6 @@ import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
-import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.parser.LoopParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -70,13 +69,15 @@ public class LoopCommand extends BaseCommand {
 
         PlayerManager playerManager = PlayerManager.get(guild);
 
-        Autoplay currentAutoPlay = playerManager.getPlayerHandler().getAutoplayMode();
-
-        if (currentAutoPlay != Autoplay.DISABLED) {
-            return new Pair<>(false, ErrorEmbed.get("AutoPlay and Loop cannot both be enabled at the same time!"));
-        }
-
         Loop newLoop = LoopParser.parse(input, playerManager);
+
+        // Loop and autoplay are mutually exclusive: enabling loop switches
+        // autoplay off (and clears its buffer) instead of rejecting.
+        boolean autoplayWasOn = playerManager.getPlayerHandler().getAutoplayMode() != Autoplay.DISABLED;
+
+        if (newLoop != Loop.DISABLED && autoplayWasOn) {
+            playerManager.getAutoplayManager().setEnabled(false);
+        }
 
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
@@ -86,6 +87,10 @@ public class LoopCommand extends BaseCommand {
             embedBuilder.setDescription("Now looping the **queue**.");
         } else {
             embedBuilder.setDescription("Looping is now **disabled**.");
+        }
+
+        if (newLoop != Loop.DISABLED && autoplayWasOn) {
+            embedBuilder.setFooter("AutoPlay was turned off.");
         }
 
         embedBuilder.setColor(guild.getSelfMember().getColor());

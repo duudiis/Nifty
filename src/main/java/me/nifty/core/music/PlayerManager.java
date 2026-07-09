@@ -144,6 +144,11 @@ public class PlayerManager {
             playerManager.getQueueHandler().clearQueue();
         }
 
+        // Clears the autoplay buffer — it mirrors the queue's lifetime
+        if (playerManager.getAutoplayManager() != null) {
+            playerManager.getAutoplayManager().clearBuffer();
+        }
+
         // Gets the player handler from the player manager
         PlayerHandler playerHandler = playerManager.getPlayerHandler();
 

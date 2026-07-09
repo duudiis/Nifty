@@ -130,6 +130,63 @@ public class WsDelta {
         send("q_resync", guildId, new JSONObject());
     }
 
+    /* ---------------- autoplay ---------------- */
+
+    /**
+     * Ships the autoplay section whole: the enabled flag plus the current
+     * recommendation buffer. The buffer is capped at ~20 rows, so a full
+     * snapshot is smaller than delta bookkeeping would be.
+     */
+    public static void autoplay(long guildId) {
+        if (!DashboardSocket.isConnected()) { return; }
+        try {
+
+            JSONObject data = new JSONObject();
+
+            boolean enabled = false;
+            try (Connection connection = DatabaseManager.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT autoplay FROM players WHERE bot_id = ? AND guild_id = ?")) {
+                statement.setLong(1, BotIdentity.get());
+                statement.setLong(2, guildId);
+                ResultSet result = statement.executeQuery();
+                if (result.next()) { enabled = "enabled".equals(result.getString("autoplay")); }
+            }
+
+            JSONArray tracks = new JSONArray();
+
+            try (Connection connection = DatabaseManager.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT at.id, at.position, t.title, t.artist, t.artwork_url, t.url, t.duration_ms " +
+                         "FROM autoplay_tracks at JOIN tracks t ON t.id = at.track_id " +
+                         "WHERE at.bot_id = ? AND at.guild_id = ? ORDER BY at.position ASC")) {
+
+                statement.setLong(1, BotIdentity.get());
+                statement.setLong(2, guildId);
+
+                ResultSet result = statement.executeQuery();
+                while (result.next()) {
+                    JSONObject track = new JSONObject();
+                    track.put("id", String.valueOf(result.getLong("id")));
+                    track.put("position", result.getInt("position"));
+                    track.put("title", nullable(result.getString("title")));
+                    track.put("artist", nullable(result.getString("artist")));
+                    track.put("artwork_url", nullable(result.getString("artwork_url")));
+                    track.put("url", nullable(result.getString("url")));
+                    long durationMs = result.getLong("duration_ms");
+                    track.put("duration_ms", result.wasNull() ? JSONObject.NULL : durationMs);
+                    tracks.put(track);
+                }
+            }
+
+            data.put("enabled", enabled);
+            data.put("tracks", tracks);
+
+            send("a_full", guildId, data);
+
+        } catch (Exception ignored) { }
+    }
+
     /* ---------------- helpers ---------------- */
 
     /** The queue cursor (current position) straight from the players row. */

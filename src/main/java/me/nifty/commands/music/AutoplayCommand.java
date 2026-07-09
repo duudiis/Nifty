@@ -5,7 +5,6 @@ import me.nifty.core.music.PlayerManager;
 import me.nifty.structures.BaseCommand;
 import me.nifty.utils.enums.Autoplay;
 import me.nifty.utils.enums.Loop;
-import me.nifty.utils.formatting.ErrorEmbed;
 import me.nifty.utils.parser.BoolParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -59,21 +58,24 @@ public class AutoplayCommand extends BaseCommand {
 
         PlayerManager playerManager = PlayerManager.get(guild);
 
-        Loop currentLoopMode = playerManager.getPlayerHandler().getLoopMode();
-
-        if (currentLoopMode != Loop.DISABLED) {
-            return new Pair<>(false, ErrorEmbed.get("AutoPlay and Loop cannot both be enabled at the same time!"));
-        }
-
         Autoplay currentAutoPlay = playerManager.getPlayerHandler().getAutoplayMode();
 
         boolean newAutoplayMode = BoolParser.parse(input, currentAutoPlay == Autoplay.ENABLED);
 
-        playerManager.getPlayerHandler().setAutoplayMode(newAutoplayMode ? Autoplay.ENABLED : Autoplay.DISABLED);
+        boolean loopWasOn = playerManager.getPlayerHandler().getLoopMode() != Loop.DISABLED;
+
+        // The manager owns the switch: it fills/clears the recommendation
+        // buffer, turns loop off (mutually exclusive) and pushes the dashboard
+        // deltas.
+        playerManager.getAutoplayManager().setEnabled(newAutoplayMode);
 
         EmbedBuilder autoplayEmbed = new EmbedBuilder()
                 .setDescription("AutoPlay is now " + (newAutoplayMode ? "**enabled**" : "**disabled**"))
                 .setColor(guild.getSelfMember().getColor());
+
+        if (newAutoplayMode && loopWasOn) {
+            autoplayEmbed.setFooter("Loop was turned off.");
+        }
 
         return new Pair<>(true, autoplayEmbed.build());
 

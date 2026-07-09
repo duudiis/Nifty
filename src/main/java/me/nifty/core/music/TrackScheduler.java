@@ -73,7 +73,7 @@ public class TrackScheduler {
             playerHandler.setPosition(0);
             audioPlayer.playTrack(queueHandler.getQueueTrack(0));
         } else if (autoplayMode == Autoplay.ENABLED) {
-            playerManager.getAutoplayManager().autoplay();
+            playerManager.getAutoplayManager().playNext();
         }
 
     }
@@ -289,8 +289,9 @@ public class TrackScheduler {
 
             } else if (autoplayMode == Autoplay.ENABLED) {
 
-                // If autoplay is enabled and there is no next track, play the autoplay track.
-                playerManager.getAutoplayManager().autoplay();
+                // If autoplay is enabled and there is no next track, feed the
+                // queue from the autoplay buffer.
+                playerManager.getAutoplayManager().playNext();
 
             }
 
@@ -346,8 +347,9 @@ public class TrackScheduler {
 
             } else if (autoplayMode == Autoplay.ENABLED) {
 
-                // If autoplay is enabled and there is no next track, play the autoplay track.
-                playerManager.getAutoplayManager().autoplay();
+                // If autoplay is enabled and there is no next track, feed the
+                // queue from the autoplay buffer.
+                playerManager.getAutoplayManager().playNext();
 
             } else {
 
