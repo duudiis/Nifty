@@ -50,7 +50,7 @@ public class AudioEventsHandler extends AudioEventAdapter {
         long positionMs = playingTrack != null ? playingTrack.getPosition() : 0;
 
         // Sets the player to playing and re-anchors the wall-clock position
-        playerHandler.setPlaying(true, positionMs, playingTrack != null);
+        playerHandler.resumePlaying(positionMs, playingTrack != null);
 
         // Everyone in the channel hears again
         if (playingTrack != null && PlaybackAnalytics.isBotAudible(playerManager.getGuild())) {

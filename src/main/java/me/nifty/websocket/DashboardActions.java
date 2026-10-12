@@ -185,7 +185,7 @@ public class DashboardActions {
             case "autoplayQueue" -> {
                 long autoId = data.optLong("autoId", -1);
                 if (autoId != -1) {
-                    playerManager.getAutoplayManager().promoteEntry(autoId, data.optLong("userId", 0), "end");
+                    playerManager.getAutoplayManager().promoteEntry(autoId, data.optLong("userId", 0), "end", data.optInt("toIndex", -1));
                 }
             }
 

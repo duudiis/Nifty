@@ -44,14 +44,30 @@ public class QueueHandler {
     }
 
     /**
+     * Adds a track and returns the committed queue entry's stable row id.
+     * Callers that reposition the new entry must use its id, since other
+     * queue changes can invalidate both the insertion index and queue size.
+     *
+     * @return The inserted queue_tracks id, or -1 if insertion failed.
+     */
+    public long addTrackReturningEntryId(AudioTrack audioTrack, int position) {
+        List<Long> entryIds = insertTracks(Collections.singletonList(audioTrack), position);
+        return entryIds.isEmpty() ? -1 : entryIds.getFirst();
+    }
+
+    /**
      * Adds multiple tracks to the queue in one transaction.
      *
      * @param audioTracks The tracks to add.
      * @param position The position to add the tracks at.
      */
     public void addTracks(List<AudioTrack> audioTracks, int position) {
+        insertTracks(audioTracks, position);
+    }
 
-        if (audioTracks == null || audioTracks.isEmpty()) { return; }
+    private List<Long> insertTracks(List<AudioTrack> audioTracks, int position) {
+
+        if (audioTracks == null || audioTracks.isEmpty()) { return List.of(); }
 
         // Resolve catalog ids and make sure the queuing users exist before the
         // queue rows reference them (both have their own connections).
@@ -69,9 +85,10 @@ public class QueueHandler {
             queuedBy.add(memberId);
         }
 
-        if (trackIds.isEmpty()) { return; }
+        if (trackIds.isEmpty()) { return List.of(); }
 
         boolean committed = false;
+        List<Long> entryIds = new ArrayList<>(trackIds.size());
 
         try (Connection connection = DatabaseManager.getConnection()) {
 
@@ -89,7 +106,8 @@ public class QueueHandler {
                 }
 
                 try (PreparedStatement insert = connection.prepareStatement(
-                        "INSERT INTO queue_tracks (bot_id, guild_id, position, track_id, queued_by) VALUES (?, ?, ?, ?, ?)")) {
+                        "INSERT INTO queue_tracks (bot_id, guild_id, position, track_id, queued_by) VALUES (?, ?, ?, ?, ?)",
+                        new String[] { "id" })) {
 
                     for (int i = 0; i < trackIds.size(); i++) {
                         insert.setLong(1, BotIdentity.get());
@@ -101,6 +119,12 @@ public class QueueHandler {
                     }
 
                     insert.executeBatch();
+
+                    try (ResultSet generated = insert.getGeneratedKeys()) {
+                        while (generated.next()) {
+                            entryIds.add(generated.getLong("id"));
+                        }
+                    }
                 }
 
                 connection.commit();
@@ -118,7 +142,10 @@ public class QueueHandler {
         // disconnected). Emitted after commit so a rolled-back insert says nothing.
         if (committed) {
             WsDelta.qAdd(this.guildId, position, trackIds.size());
+            return List.copyOf(entryIds);
         }
+
+        return List.of();
 
     }
 

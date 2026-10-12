@@ -201,6 +201,21 @@ public class PlayerHandler {
     }
 
     /**
+     * Resume from the persisted pause/seek anchor. Lavaplayer can report the
+     * pre-seek decoder position until it consumes audio again; using that value
+     * here would undo a seek made while paused in every dashboard snapshot.
+     */
+    public void resumePlaying(long fallbackPositionMs, boolean trackLoaded) {
+        update("position_ms = CASE WHEN track_loaded AND NOT playing AND ? THEN position_ms ELSE ? END, " +
+                "position_at = now(), playing = TRUE, track_loaded = ?", statement -> {
+            statement.setBoolean(1, trackLoaded);
+            statement.setLong(2, fallbackPositionMs);
+            statement.setBoolean(3, trackLoaded);
+            return 4;
+        });
+    }
+
+    /**
      * Re-anchors the wall-clock playback position after a seek.
      *
      * @param positionMs The playback position (ms) just seeked to.

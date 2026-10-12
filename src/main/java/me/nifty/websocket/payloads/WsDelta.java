@@ -179,6 +179,10 @@ public class WsDelta {
                 }
             }
 
+            PlayerManager manager = PlayerManager.get(guildId);
+            if (manager != null && manager.getAutoplayManager() != null) {
+                enabled = manager.getAutoplayManager().isEnabled();
+            }
             data.put("enabled", enabled);
             data.put("tracks", tracks);
 
@@ -251,6 +255,10 @@ public class WsDelta {
             data.put("volume", result.getInt("volume"));
             data.put("speed", speed);
             data.put("position", result.getInt("queue_position"));
+            PlayerManager manager = PlayerManager.get(guildId);
+            if (manager != null && manager.getAutoplayManager() != null) {
+                data.put("autoplay", manager.getAutoplayManager().isEnabled());
+            }
             data.put("track", trackJson(result, false));
             return data;
 

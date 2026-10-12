@@ -234,6 +234,11 @@ public class AutoplayManager {
      * @param placement "now" (play immediately), "next", or "end".
      */
     public void promoteEntry(long entryId, long userId, String placement) {
+        promoteEntry(entryId, userId, placement, -1);
+    }
+
+    /** An explicit queue index is used when dragging a suggestion into the queue. */
+    public void promoteEntry(long entryId, long userId, String placement, int toIndex) {
 
         AutoplayStore.Entry entry = store.take(entryId);
         if (entry == null || entry.track() == null) {
@@ -245,17 +250,36 @@ public class AutoplayManager {
         track.setUserData(userId != 0 ? userId : BotIdentity.get());
 
         int queueSize = playerManager.getQueueHandler().getQueueSize();
-        int position = "end".equals(placement) || queueSize == 0
+        int position = toIndex >= 0 || "end".equals(placement) || queueSize == 0
                 ? queueSize
                 : playerManager.getPlayerHandler().getPosition() + 1;
 
-        playerManager.getQueueHandler().addTrack(track, position);
-        playerManager.getPlaybackAnalytics().trackQueued(track.getUserData() instanceof Long id ? id : 0L, track, "dashboard");
+        long queueEntryId = playerManager.getQueueHandler().addTrackReturningEntryId(track, position);
+        if (queueEntryId != -1) {
+            playerManager.getPlaybackAnalytics().trackQueued(track.getUserData() instanceof Long id ? id : 0L, track, "dashboard");
+
+            if (toIndex >= 0) {
+                int lastPosition = playerManager.getQueueHandler().getQueueSize() - 1;
+                int insertedPosition = playerManager.getQueueHandler().getEntryPosition(queueEntryId);
+                int target = Math.min(toIndex, lastPosition);
+                // q_add is emitted before addTrackReturningEntryId returns.
+                // Resolve the committed row, not the old append index: another
+                // add/remove during insertion must never move its replacement.
+                // The scheduler preserves the current track's cursor when the
+                // promoted entry moves before it.
+                if (insertedPosition >= 0 && target >= 0 && target != insertedPosition) {
+                    playerManager.getTrackScheduler().move(insertedPosition, target);
+                }
+            }
+        }
 
         WsDelta.autoplay(playerManager.getGuild().getIdLong());
 
-        if ("now".equals(placement)) {
-            playerManager.getTrackScheduler().jump(position);
+        if (queueEntryId != -1 && "now".equals(placement)) {
+            int insertedPosition = playerManager.getQueueHandler().getEntryPosition(queueEntryId);
+            if (insertedPosition >= 0) {
+                playerManager.getTrackScheduler().jump(insertedPosition);
+            }
         }
 
         requestRefill();
